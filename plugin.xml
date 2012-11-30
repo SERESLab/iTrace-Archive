@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.perspectives">
+      <perspective
+            class="edu.ysu.itrace.PerspectiveFactory"
+            id="edu.ysu.itrace.perspectivefactory"
+            name="itrace">
+      </perspective>
+   </extension>
+   <extension
+         point="org.eclipse.ui.perspectiveExtensions">
+      <perspectiveExtension
+            targetID="edu.ysu.itrace.perspectivefactory">
+      </perspectiveExtension>
+   </extension>
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            class="edu.ysu.itrace.ControlView"
+            id="edu.ysu.itrace.controlview"
+            name="itrace controller"
+            restorable="true">
+      </view>
+   </extension>
+
+</plugin>
