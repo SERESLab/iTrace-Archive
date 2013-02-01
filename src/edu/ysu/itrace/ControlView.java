@@ -5,9 +5,14 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Random;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.ShellEvent;
+import org.eclipse.swt.events.ShellListener;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
@@ -17,9 +22,9 @@ import org.eclipse.ui.IPartListener2;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchPartReference;
 import org.eclipse.ui.IWorkbenchPartSite;
-import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.internal.PartSite;
 import org.eclipse.ui.part.ViewPart;
+import org.eclipse.ui.progress.UIJob;
 
 import edu.ysu.itrace.gaze.GazeHandlerFactory;
 import edu.ysu.itrace.gaze.IGazeHandler;
@@ -29,8 +34,9 @@ import edu.ysu.itrace.gaze.IGazeResponse;
  * ViewPart for managing and controlling the plugin.
  */
 @SuppressWarnings("restriction")
-public class ControlView extends ViewPart implements IPartListener2 {
+public class ControlView extends ViewPart implements IPartListener2, ShellListener {
 	
+	private static final int LISTEN_MS = 100;
 	private static final String KEY_HANDLER = "gazeHandler";
 	
 	private IEyeTracker tracker;
@@ -38,7 +44,7 @@ public class ControlView extends ViewPart implements IPartListener2 {
 	private AoiRepository aoiRepository;
 	private LinkFinder linkFinder;
 	private Shell rootShell;
-	
+	private UIJob listenJob = null;
 	
 	
 	@Override
@@ -49,11 +55,10 @@ public class ControlView extends ViewPart implements IPartListener2 {
 		while (rootShell != parent.getShell()) {
 			rootShell = rootShell.getShell();
 		}
-		
+		rootShell.addShellListener(this);
 		
 		// add listener for determining part visibility
-		IWorkbenchWindow workbenchWindow = getSite().getWorkbenchWindow();
-		workbenchWindow.getPartService().addPartListener(this);
+		getSite().getWorkbenchWindow().getPartService().addPartListener(this);
 		
 		
 		// set up UI
@@ -78,6 +83,13 @@ public class ControlView extends ViewPart implements IPartListener2 {
 		
 		// initialize plugin
 		selectTracker(0);
+	}
+	
+	@Override
+	public void dispose(){
+		stopTracking();
+		getSite().getWorkbenchWindow().getPartService().removePartListener(this);
+		super.dispose();
 	}
 
 	@Override
@@ -117,6 +129,40 @@ public class ControlView extends ViewPart implements IPartListener2 {
 		}
 	}
 	
+	@Override
+	public void shellActivated(ShellEvent e) {
+		if(listenJob != null){
+			listenJob.schedule(LISTEN_MS);
+		}
+	}
+
+	@Override
+	public void shellClosed(ShellEvent e) {
+		if(listenJob != null){
+			listenJob.cancel();
+		}
+	}
+
+	@Override
+	public void shellDeactivated(ShellEvent e) {
+		if(listenJob != null){
+			listenJob.cancel();
+		}
+	}
+
+	@Override
+	public void shellDeiconified(ShellEvent e) {
+		if(listenJob != null){
+			listenJob.schedule(LISTEN_MS);
+		}
+	}
+
+	@Override
+	public void shellIconified(ShellEvent e) {
+		if(listenJob != null){
+			listenJob.cancel();
+		}
+	}
 	
 	/*
 	 * Adds gaze handlers to the child controls of the specified workbench
@@ -230,19 +276,36 @@ public class ControlView extends ViewPart implements IPartListener2 {
 	private void startTracking(){
 		if(tracker != null) {
 			
-			
-			Random rnd = new Random();
-			int x = rnd.nextInt(rootShell.getBounds().width);
-			int y = rnd.nextInt(rootShell.getBounds().height);
-			handleGaze(x, y);
-			// TODO get gaze x,y from eye tracker device, call handleGaze for each
-
+			if(listenJob == null){
+				listenJob = new UIJob("Tracking Gazes"){
+					@Override
+					public IStatus runInUIThread(IProgressMonitor monitor) {
+						
+						
+						
+						Random rnd = new Random();
+						int x = rnd.nextInt(rootShell.getBounds().width);
+						int y = rnd.nextInt(rootShell.getBounds().height);
+						handleGaze(x, y);
+						// TODO get gaze x,y from eye tracker device, call handleGaze for each
+						
+						
+						
+						schedule(LISTEN_MS);
+						return Status.OK_STATUS;
+					}
+				};
+				listenJob.schedule(LISTEN_MS);
+			}
 		}
 	}
 	
 	private void stopTracking(){
 		if(tracker != null) {
-			
+			if(listenJob != null){
+				listenJob.cancel();
+				listenJob = null;
+			}
 		}
 	}
 }
