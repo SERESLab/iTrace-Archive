@@ -11,6 +11,13 @@ public class EyeTrackerFactory {
 	}
 	
 	public static IEyeTracker getConcreteEyeTracker(int i) {
-		return getAvailableEyeTrackers().get(i);
+		return new IEyeTracker(){
+
+			@Override
+			public Gaze getGaze() {
+				// TODO Auto-generated method stub
+				return null;
+			}};
+		//return getAvailableEyeTrackers().get(i);
 	}
 }
