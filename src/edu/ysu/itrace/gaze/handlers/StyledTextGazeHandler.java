@@ -13,26 +13,30 @@ import edu.ysu.itrace.gaze.IGazeResponse;
 public class StyledTextGazeHandler implements IGazeHandler {
 
 	private IWorkbenchPartReference partRef;
+	private StyledText targetStyledText;
+	
+	/**
+	 * Constructs a new gaze handler for the target StyledText object within
+	 * the workbench part specified by partRef.
+	 */
+	public StyledTextGazeHandler(Object target, IWorkbenchPartReference partRef){
+		assert(target instanceof StyledText);
+		this.targetStyledText = (StyledText)target;
+		this.partRef = partRef;
+	}
+	
 	
 	@Override
-	public IGazeResponse handleGaze(final int x, final int y, Object target) {
-		assert(target instanceof StyledText);
-		
-		final StyledText st = (StyledText)target;
+	public IGazeResponse handleGaze(final int x, final int y) {
 		
 		return new IGazeResponse(){
 			@Override
 			public String toLogString() {
-				int lineIndex = st.getLineIndex(y);
-				return partRef.getPartName() + " at (" + x + ", " + y + "): " + st.getLine(lineIndex);
+				int lineIndex = targetStyledText.getLineIndex(y);
+				return partRef.getPartName() + " at (" + x + ", " + y + "): "
+						+ targetStyledText.getLine(lineIndex);
 			}
-			
 		};
-	}
-
-	@Override
-	public void setPartReference(IWorkbenchPartReference partRef) {
-		this.partRef = partRef;
 	}
 
 }

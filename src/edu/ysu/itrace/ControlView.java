@@ -196,9 +196,8 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 				}
 				
 				if(setHandler && !remove){
-					IGazeHandler handler = GazeHandlerFactory.createHandler(control);
+					IGazeHandler handler = GazeHandlerFactory.createHandler(control, partRef);
 					if(handler != null){
-						handler.setPartReference(partRef);
 						control.setData(KEY_HANDLER, handler);
 					}
 				}
@@ -246,7 +245,7 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 					if(handlerObject != null){
 						IGazeHandler handler = (IGazeHandler)handlerObject;
 						IGazeResponse response = handler.handleGaze(screenX - childScreenBounds.x,
-								screenY - childScreenBounds.y, child);
+								screenY - childScreenBounds.y);
 						handleGazeResponse(response, child);
 					}
 				}
