@@ -160,7 +160,7 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 	
 	/*
 	 * Adds gaze handlers to the child controls of the specified workbench
-	 * part. If remove is true, the handlers are removed instead.
+	 * part reference. If remove is true, the handlers are removed instead.
 	 */
 	private void setHandlers(IWorkbenchPartReference partRef, boolean remove){
 		
@@ -241,12 +241,11 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 						}
 					}
 					
-					Object handlerObject = child.getData(KEY_HANDLER);
-					if(handlerObject != null){
-						IGazeHandler handler = (IGazeHandler)handlerObject;
+					IGazeHandler handler = (IGazeHandler)child.getData(KEY_HANDLER);
+					if(handler != null){
 						IGazeResponse response = handler.handleGaze(screenX - childScreenBounds.x,
 								screenY - childScreenBounds.y);
-						handleGazeResponse(response, child);
+						handleGazeResponse(response);
 					}
 				}
 			}
@@ -257,7 +256,7 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 	/*
 	 * Handles the gaze response.
 	 */
-	private void handleGazeResponse(IGazeResponse response, Control control){
+	private void handleGazeResponse(IGazeResponse response){
 		
 		System.out.println(response.toLogString());
 		// TODO log response, generate links, etc.
