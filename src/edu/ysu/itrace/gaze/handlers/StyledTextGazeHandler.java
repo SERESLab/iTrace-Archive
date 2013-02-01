@@ -1,6 +1,7 @@
 package edu.ysu.itrace.gaze.handlers;
 
 import org.eclipse.swt.custom.StyledText;
+import org.eclipse.ui.IWorkbenchPartReference;
 
 import edu.ysu.itrace.gaze.IGazeHandler;
 import edu.ysu.itrace.gaze.IGazeResponse;
@@ -11,6 +12,7 @@ import edu.ysu.itrace.gaze.IGazeResponse;
  */
 public class StyledTextGazeHandler implements IGazeHandler {
 
+	private IWorkbenchPartReference partRef;
 	
 	@Override
 	public IGazeResponse handleGaze(final int x, final int y, Object target) {
@@ -22,10 +24,15 @@ public class StyledTextGazeHandler implements IGazeHandler {
 			@Override
 			public String toLogString() {
 				int lineIndex = st.getLineIndex(y);
-				return "Line at (" + x + ", " + y + "): " + st.getLine(lineIndex);
+				return partRef.getPartName() + " at (" + x + ", " + y + "): " + st.getLine(lineIndex);
 			}
 			
 		};
+	}
+
+	@Override
+	public void setPartReference(IWorkbenchPartReference partRef) {
+		this.partRef = partRef;
 	}
 
 }

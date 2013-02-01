@@ -115,18 +115,12 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 	
 	@Override
 	public void partVisible(IWorkbenchPartReference partRef) {
-		IWorkbenchPart part = partRef.getPart(false);
-		if(part != null){
-			setHandlers(part, false);
-		}
+		setHandlers(partRef, false);
 	}
 	
 	@Override
 	public void partHidden(IWorkbenchPartReference partRef) {
-		IWorkbenchPart part = partRef.getPart(false);
-		if(part != null){
-			setHandlers(part, true);
-		}
+		setHandlers(partRef, true);
 	}
 	
 	@Override
@@ -168,7 +162,12 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 	 * Adds gaze handlers to the child controls of the specified workbench
 	 * part. If remove is true, the handlers are removed instead.
 	 */
-	private void setHandlers(IWorkbenchPart part, boolean remove){
+	private void setHandlers(IWorkbenchPartReference partRef, boolean remove){
+		
+		IWorkbenchPart part = partRef.getPart(false);
+		if(part == null){
+			return;
+		}
 		
 		IWorkbenchPartSite site = part.getSite();
 		if (site instanceof PartSite){
@@ -199,6 +198,7 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 				if(setHandler && !remove){
 					IGazeHandler handler = GazeHandlerFactory.createHandler(control);
 					if(handler != null){
+						handler.setPartReference(partRef);
 						control.setData(KEY_HANDLER, handler);
 					}
 				}
@@ -247,7 +247,7 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 						IGazeHandler handler = (IGazeHandler)handlerObject;
 						IGazeResponse response = handler.handleGaze(screenX - childScreenBounds.x,
 								screenY - childScreenBounds.y, child);
-						handleGazeResponse(response);
+						handleGazeResponse(response, child);
 					}
 				}
 			}
@@ -258,7 +258,7 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 	/*
 	 * Handles the gaze response.
 	 */
-	private void handleGazeResponse(IGazeResponse response){
+	private void handleGazeResponse(IGazeResponse response, Control control){
 		
 		System.out.println(response.toLogString());
 		// TODO log response, generate links, etc.
