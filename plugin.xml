@@ -24,5 +24,16 @@
             restorable="true">
       </view>
    </extension>
+   <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            class="edu.ysu.onionuml.ui.ModelViewer"
+            contributorClass="edu.ysu.onionuml.ui.ModelViewerActionBarContributor"
+            default="false"
+            extensions="cml"
+            id="edu.ysu.onionuml.ui.modelviewer"
+            name="UML Model Viewer">
+      </editor>
+   </extension>
 
 </plugin>

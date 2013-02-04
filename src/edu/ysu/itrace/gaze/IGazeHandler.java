@@ -9,7 +9,8 @@ public interface IGazeHandler {
 
 	/**
 	 * Handles the gaze at the specified x and y coordinates relative
-	 * to the target object.
+	 * to the target object. Return value may be null if the gaze is not
+	 * meaningful to the target.
 	 */
 	public IGazeResponse handleGaze(int x, int y);
 }

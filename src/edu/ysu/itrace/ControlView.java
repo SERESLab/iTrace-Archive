@@ -1,7 +1,9 @@
 package edu.ysu.itrace;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Random;
 
@@ -258,7 +260,17 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 	 */
 	private void handleGazeResponse(IGazeResponse response){
 		
-		System.out.println(response.toLogString());
+		if(response != null){
+			System.out.println("--------------");
+			System.out.println(response.getName() + " - " + response.getType());
+			for(Iterator<Entry<String,String>> entries = response.getProperties().entrySet().iterator();
+					entries.hasNext(); ){
+				Entry<String,String> pair = entries.next();
+				System.out.println(pair.getKey() + ": " + pair.getValue());
+			}
+			System.out.println("--------------");
+		}
+		
 		// TODO log response, generate links, etc.
 	}
 	

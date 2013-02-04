@@ -1,5 +1,8 @@
 package edu.ysu.itrace.gaze.handlers;
 
+import java.util.Hashtable;
+import java.util.Map;
+
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.ui.IWorkbenchPartReference;
 
@@ -29,14 +32,40 @@ public class StyledTextGazeHandler implements IGazeHandler {
 	@Override
 	public IGazeResponse handleGaze(final int x, final int y) {
 		
-		return new IGazeResponse(){
+		IGazeResponse response = new IGazeResponse(){
+			
+			private String name = partRef.getPartName();
+			private String type = null;
+			private Map<String,String> properties = new Hashtable<String,String>();
+			
+			// construct the type and properties for the response
+			{
+				int index = targetStyledText.getLineIndex(y);
+				String line = targetStyledText.getLine(index).trim();
+				
+				if(line.length() > 0){
+					this.type = "source_code";
+					this.properties.put("gaze_line", line);
+				}
+			}
+			
 			@Override
-			public String toLogString() {
-				int lineIndex = targetStyledText.getLineIndex(y);
-				return partRef.getPartName() + " at (" + x + ", " + y + "): "
-						+ targetStyledText.getLine(lineIndex);
+			public String getName() {
+				return this.name;
+			}
+			
+			@Override
+			public String getType() {
+				return this.type;
+			}
+			
+			@Override
+			public Map<String, String> getProperties() {
+				return this.properties;
 			}
 		};
+		
+		return (response.getType() != null ? response : null);
 	}
 
 }
