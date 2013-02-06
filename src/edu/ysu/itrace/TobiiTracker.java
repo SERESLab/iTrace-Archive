@@ -2,6 +2,8 @@ package edu.ysu.itrace;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.Date;
+import edu.ysu.itrace.exceptions.EyeTrackerConnectException;
 
 public class TobiiTracker implements IEyeTracker
 {
@@ -23,21 +25,46 @@ public class TobiiTracker implements IEyeTracker
 		private native boolean jniBeginTobiiMainloop();
 	}
 
-	private int screen_width = 0, screen_height = 0;
 	private BackgroundThread bg_thread = null;
-	private ByteBuffer native_data = null;
+	private volatile ByteBuffer native_data = null;
 	private LinkedBlockingQueue<Gaze> gaze_points = new LinkedBlockingQueue<Gaze>();
 
 	static { System.loadLibrary("TobiiTracker"); }
 
-	public TobiiTracker(int screen_width, int screen_height)
+	public TobiiTracker() throws EyeTrackerConnectException
 	{
 		//Initialise the background thread which functions as the main loop in the
 		//Tobii SDK.
 		bg_thread = new BackgroundThread(this);
-		bg_thread.run();
+		bg_thread.start();
 		while (native_data == null); //Wait until background thread sets native_data
-		jniConnectTobiiTracker(10);
+		if (!jniConnectTobiiTracker(10))
+		{
+			this.close();
+			throw new EyeTrackerConnectException();
+		}
+	}
+
+	public static void main(String[] args)
+	{
+		try
+		{
+			TobiiTracker tobii_tracker = new TobiiTracker();
+			System.out.println("Connected successfully to eyetracker.");
+
+			tobii_tracker.startTracking();
+			Gaze gaze = tobii_tracker.getGaze();
+			System.out.println("Gaze at " + gaze.getTimeStamp() + ": (" +
+				gaze.getX() + ", " + gaze.getY() + ")");
+			tobii_tracker.stopTracking();
+
+			tobii_tracker.close();
+		}
+		catch (EyeTrackerConnectException e)
+		{
+			System.out.println("Failed to connect to Tobii eyetracker.");
+		}
+		System.out.println("Done!");
 	}
 
 	public Gaze getGaze()
@@ -52,16 +79,16 @@ public class TobiiTracker implements IEyeTracker
 		}
 	}
 
-	private void newGazePoint(long timestamp, double left_x, double left_y,
+	public void newGazePoint(long timestamp, double left_x, double left_y,
 		double right_x, double right_y)
 	{
 		//Average left and right eyes for each value.
-		int x = (int) Math.round(((left_x + right_x) / 2) * screen_width);
-		int y = (int) Math.round(((left_y + right_y) / 2) * screen_height);
+		double x = (left_x + right_x) / 2;
+		double y = (left_y + right_y) / 2;
 
 		try
 		{
-			gaze_points.put(new Gaze(x, y, 0));
+			gaze_points.put(new Gaze(x, y, new Date(timestamp)));
 		}
 		catch (InterruptedException e)
 		{

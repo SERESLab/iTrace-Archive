@@ -12,7 +12,7 @@ using namespace tobii::sdk::cpp;
 
 struct TobiiNativeData
 {
-	JNIEnv* java_environment;
+	JavaVM* jvm;
 	jobject j_tobii_tracker;
 	jobject j_background_thread;
 	mainloop main_loop;
@@ -36,12 +36,13 @@ jfieldID getFieldID(JNIEnv* env, jobject obj, const char* name, const char* sig)
 	jfieldID jfid = env->GetFieldID(jclass, name, sig);
 	if (jfid == NULL)
 		return NULL;
+	return jfid;
 }
 
 TobiiNativeData* getTobiiNativeData(JNIEnv* env, jobject obj)
 {
 	jfieldID jfid_native_data = getFieldID(env, obj, "native_data",
-		"Ljava/nio/ByteBuffer");
+		"Ljava/nio/ByteBuffer;");
 	if (jfid_native_data == NULL)
 		return NULL;
 	jobject native_data_bb = env->GetObjectField(obj, jfid_native_data);
@@ -64,23 +65,23 @@ JNIEXPORT jboolean JNICALL
 
 	//Get native data ByteBuffer field in TobiiTracker object.
 	jfieldID jfid_parent = getFieldID(env, obj, "parent",
-		"Ledu/ysu/itrace/TobiiTracker");
+		"Ledu/ysu/itrace/TobiiTracker;");
 	if (jfid_parent == NULL)
 		return JNI_FALSE;
 	jobject parent_tobii_tracker = env->GetObjectField(obj, jfid_parent);
 	jfieldID jfid_native_data = getFieldID(env, parent_tobii_tracker,
-		"native_data", "Ljava/nio/ByteBuffer");
+		"native_data", "Ljava/nio/ByteBuffer;");
 	if (jfid_native_data == NULL)
 		return JNI_FALSE;
 	//Create structure to hold instance-specific data.
 	TobiiNativeData* native_data = new TobiiNativeData();
 	jobject native_data_bb = env->NewDirectByteBuffer((void*) native_data,
 		sizeof(TobiiNativeData));
-	//Set java environment and BackgroundThread reference.
-	native_data->java_environment = env;
-	native_data->j_background_thread = obj;
+	//Set java virtual machine and BackgroundThread reference.
+	env->GetJavaVM(&native_data->jvm);
+	native_data->j_background_thread = env->NewGlobalRef(obj);
 	//Store structure reference in Java object.
-	env->SetObjectField(obj, jfid_native_data, native_data_bb);
+	env->SetObjectField(parent_tobii_tracker, jfid_native_data, native_data_bb);
 
 	//Run!
 	native_data->main_loop.run();
@@ -107,7 +108,7 @@ JNIEXPORT jboolean JNICALL
 	if (native_data == NULL)
 		return JNI_FALSE;
 	//Set TobiiTracker reference.
-	native_data->j_tobii_tracker = obj;
+	native_data->j_tobii_tracker = env->NewGlobalRef(obj);
 
 	//Find Tobii trackers.
 	discovery::eyetracker_browser browser(native_data->main_loop);
@@ -150,12 +151,17 @@ JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_TobiiTracker_close
 
 void handleGazeData(tracking::gaze_data_item::pointer gaze_data)
 {
-	JNIEnv* env = g_native_data_current->java_environment;
+	JNIEnv* env = NULL;
+	jint rs = g_native_data_current->jvm->GetEnv((void**) &env, JNI_VERSION_1_6);
+	if (rs != JNI_OK || env == NULL)
+		return;
 	jobject obj = g_native_data_current->j_tobii_tracker;
 
 	jclass tobii_tracker_class = env->GetObjectClass(obj);
+	if (tobii_tracker_class == NULL)
+		return;
 	jmethodID jmid_new_gaze_point = env->GetMethodID(tobii_tracker_class,
-		"newGazePoint", "(J;D;D;D;D)V");
+		"newGazePoint", "(JDDDD)V");
 	//Just pretend nothing happened.
 	if (jmid_new_gaze_point == NULL)
 		return;
@@ -190,4 +196,5 @@ JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_TobiiTracker_stopTracking
 {
 	g_native_data_current->eye_tracker->stop_tracking();
 	g_native_data_current = NULL;
+	return JNI_TRUE;
 }
