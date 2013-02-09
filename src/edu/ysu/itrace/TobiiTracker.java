@@ -7,7 +7,7 @@ import edu.ysu.itrace.exceptions.EyeTrackerConnectException;
 
 public class TobiiTracker implements IEyeTracker
 {
-	private class BackgroundThread extends Thread
+	private static class BackgroundThread extends Thread
 	{
 		private TobiiTracker parent = null;
 
@@ -23,6 +23,52 @@ public class TobiiTracker implements IEyeTracker
 		}
 
 		private native boolean jniBeginTobiiMainloop();
+	}
+
+	private static class Calibrator
+	{
+		private TobiiTracker parent = null;
+
+		public Calibrator(TobiiTracker tracker)
+		{
+			parent = tracker;
+
+			//Test calibration
+			try
+			{
+				while (true)
+				{
+					jniStartCalibration();
+					System.out.println("View top-left point");
+					Thread.sleep(1000);
+					jniAddPoint(0.25, 0.25);
+					System.out.println("View top-centre point");
+					Thread.sleep(1000);
+					jniAddPoint(0.50, 0.25);
+					System.out.println("View top-right point");
+					Thread.sleep(1000);
+					jniAddPoint(0.75, 0.25);
+					System.out.println("View bottom-left point");
+					Thread.sleep(1000);
+					jniAddPoint(0.25, 0.75);
+					System.out.println("View bottom-centre point");
+					Thread.sleep(1000);
+					jniAddPoint(0.50, 0.75);
+					System.out.println("View bottom-right point");
+					Thread.sleep(1000);
+					jniAddPoint(0.75, 0.75);
+					if (jniStopCalibration())
+						break;
+				}
+			}
+			catch (InterruptedException e)
+			{
+			}
+		}
+
+		private native void jniAddPoint(double x, double y);
+		private native void jniStartCalibration();
+		private native boolean jniStopCalibration();
 	}
 
 	private BackgroundThread bg_thread = null;
@@ -52,10 +98,16 @@ public class TobiiTracker implements IEyeTracker
 			TobiiTracker tobii_tracker = new TobiiTracker();
 			System.out.println("Connected successfully to eyetracker.");
 
+			Calibrator calibration = new Calibrator(tobii_tracker);
+
 			tobii_tracker.startTracking();
-			Gaze gaze = tobii_tracker.getGaze();
-			System.out.println("Gaze at " + gaze.getTimeStamp() + ": (" +
-				gaze.getX() + ", " + gaze.getY() + ")");
+			long start = (new Date()).getTime();
+			while ((new Date()).getTime() < start + 25000)
+			{
+				Gaze gaze = tobii_tracker.getGaze();
+				System.out.println("Gaze at " + gaze.getTimeStamp() + ": (" +
+					gaze.getX() + ", " + gaze.getY() + ")");
+			}
 			tobii_tracker.stopTracking();
 
 			tobii_tracker.close();
@@ -88,7 +140,7 @@ public class TobiiTracker implements IEyeTracker
 
 		try
 		{
-			gaze_points.put(new Gaze(x, y, new Date(timestamp)));
+			gaze_points.put(new Gaze(x, y, new Date(timestamp / 1000)));
 		}
 		catch (InterruptedException e)
 		{

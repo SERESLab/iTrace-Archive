@@ -7,6 +7,7 @@
 #include <tobii/sdk/cpp/tracking/gaze-data-item.hpp>
 #include "edu_ysu_itrace_TobiiTracker.h"
 #include "edu_ysu_itrace_TobiiTracker_BackgroundThread.h"
+#include "edu_ysu_itrace_TobiiTracker_Calibrator.h"
 
 using namespace tobii::sdk::cpp;
 
@@ -196,5 +197,64 @@ JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_TobiiTracker_stopTracking
 {
 	g_native_data_current->eye_tracker->stop_tracking();
 	g_native_data_current = NULL;
+	return JNI_TRUE;
+}
+
+JNIEXPORT void
+	JNICALL Java_edu_ysu_itrace_TobiiTracker_00024Calibrator_jniAddPoint
+	(JNIEnv* env, jobject obj, jdouble x, jdouble y)
+{
+	//Get native data from parent TobiiTracker
+	jfieldID jfid_parent = getFieldID(env, obj, "parent",
+		"Ledu/ysu/itrace/TobiiTracker;");
+	if (jfid_parent == NULL)
+		return;
+	jobject parent_tobii_tracker = env->GetObjectField(obj, jfid_parent);
+	TobiiNativeData* native_data = getTobiiNativeData(env, parent_tobii_tracker);
+
+	//Add new calibration point
+	native_data->eye_tracker->add_calibration_point(tracking::point_2d((double) x,
+		(double) y));
+}
+
+JNIEXPORT void JNICALL
+	Java_edu_ysu_itrace_TobiiTracker_00024Calibrator_jniStartCalibration
+	(JNIEnv* env, jobject obj)
+{
+	//Get native data from parent TobiiTracker
+	jfieldID jfid_parent = getFieldID(env, obj, "parent",
+		"Ledu/ysu/itrace/TobiiTracker;");
+	if (jfid_parent == NULL)
+		return;
+	jobject parent_tobii_tracker = env->GetObjectField(obj, jfid_parent);
+	TobiiNativeData* native_data = getTobiiNativeData(env, parent_tobii_tracker);
+
+	//Start and clear calibration
+	native_data->eye_tracker->start_calibration();
+	native_data->eye_tracker->clear_calibration();
+}
+
+JNIEXPORT jboolean JNICALL
+	Java_edu_ysu_itrace_TobiiTracker_00024Calibrator_jniStopCalibration
+	(JNIEnv* env, jobject obj)
+{
+	//Get native data from parent TobiiTracker
+	jfieldID jfid_parent = getFieldID(env, obj, "parent",
+		"Ledu/ysu/itrace/TobiiTracker;");
+	if (jfid_parent == NULL)
+		return JNI_FALSE;
+	jobject parent_tobii_tracker = env->GetObjectField(obj, jfid_parent);
+	TobiiNativeData* native_data = getTobiiNativeData(env, parent_tobii_tracker);
+
+	try
+	{
+		//Compute and stop calibration
+		native_data->eye_tracker->compute_calibration();
+		native_data->eye_tracker->stop_calibration();
+	}
+	catch (eyetracker_exception e)
+	{
+		return JNI_FALSE;
+	}
 	return JNI_TRUE;
 }
