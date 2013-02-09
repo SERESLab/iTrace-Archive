@@ -1,0 +1,19 @@
+Building the Tobii library
+=====
+
+1. Download the Tobii Analytics SDK 3.0 (http://www.tobii.com/
+     eye-tracking-research/global/products/software/
+     tobii-software-development-kit/tobii-software-development-kit/)
+2. Extract the libraries to your library path and headers to your include path.
+3. Install Boost 1.40. Required libraries include filesystem, system, regex,
+     and thread.
+4. Use the GNU C++ compiler (g++) to compile edu_ysu_itrace_TobiiTracker.cpp to
+     libTobiiTracker.so/TobiiTracker.dll.
+
+Compilation notes:
+=====
+
+- The result must be compiled to a shared library and must be linked against all
+    dependencies (Boost and Tobii SDK).
+- On Windows, include the flags "-D_JNI_IMPLEMENTATION_ -Wl,--kill-at" to the
+    G++ compiler in MinGW.
