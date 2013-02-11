@@ -136,18 +136,18 @@ JNIEXPORT jboolean JNICALL
 	return JNI_TRUE;
 }
 
-JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_TobiiTracker_close
+JNIEXPORT void JNICALL Java_edu_ysu_itrace_TobiiTracker_close
 	(JNIEnv* env, jobject obj)
 {
 	//Get native data from object.
 	TobiiNativeData* native_data = getTobiiNativeData(env, obj);
 	if (native_data == NULL)
-		return JNI_FALSE;
+		return /*JNI_FALSE*/;
 
 	//Shut down main loop
 	native_data->main_loop.quit();
 
-	return JNI_TRUE;
+	return /*JNI_TRUE*/;
 }
 
 void handleGazeData(tracking::gaze_data_item::pointer gaze_data)
@@ -172,32 +172,32 @@ void handleGazeData(tracking::gaze_data_item::pointer gaze_data)
 		gaze_data->right_gaze_point_2d.x, gaze_data->right_gaze_point_2d.y);
 }
 
-JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_TobiiTracker_startTracking
+JNIEXPORT void JNICALL Java_edu_ysu_itrace_TobiiTracker_startTracking
 	(JNIEnv* env, jobject obj)
 {
 	//Do not continue if already tracking
 	if (g_native_data_current != NULL)
-		return JNI_FALSE;
+		return /*JNI_FALSE*/;
 
 	//Get native data from object.
 	TobiiNativeData* native_data = getTobiiNativeData(env, obj);
 	if (native_data == NULL)
-		return JNI_FALSE;
+		return /*JNI_FALSE*/;
 	//Set native data for current tracking TobiiTracker.
 	g_native_data_current = native_data;
 
 	native_data->eye_tracker->start_tracking();
 	native_data->eye_tracker->add_gaze_data_received_listener(handleGazeData);
 
-	return JNI_TRUE;
+	return /*JNI_TRUE*/;
 }
 
-JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_TobiiTracker_stopTracking
+JNIEXPORT void JNICALL Java_edu_ysu_itrace_TobiiTracker_stopTracking
 	(JNIEnv *, jobject)
 {
 	g_native_data_current->eye_tracker->stop_tracking();
 	g_native_data_current = NULL;
-	return JNI_TRUE;
+	return /*JNI_TRUE*/;
 }
 
 JNIEXPORT void

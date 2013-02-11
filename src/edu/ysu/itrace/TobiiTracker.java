@@ -130,17 +130,16 @@ public class TobiiTracker implements IEyeTracker
 			this.close();
 			throw new EyeTrackerConnectException();
 		}
-		//Calibrate
-		Calibrator calibration = new Calibrator(null);
-		calibration.calibrate();
 	}
 
 	public static void main(String[] args)
 	{
+		TobiiTracker tobii_tracker = null;
 		try
 		{
-			TobiiTracker tobii_tracker = new TobiiTracker();
+			tobii_tracker = new TobiiTracker();
 			System.out.println("Connected successfully to eyetracker.");
+			tobii_tracker.calibrate();
 
 			tobii_tracker.startTracking();
 			long start = (new Date()).getTime();
@@ -160,9 +159,16 @@ public class TobiiTracker implements IEyeTracker
 		}
 		catch (CalibrationException e)
 		{
+			tobii_tracker.close();
 			System.out.println("Could not calibrate. Try again.");
 		}
 		System.out.println("Done!");
+	}
+
+	public void calibrate() throws CalibrationException
+	{
+		Calibrator calibration = new Calibrator(null);
+		calibration.calibrate();
 	}
 
 	public Gaze getGaze()
@@ -195,7 +201,7 @@ public class TobiiTracker implements IEyeTracker
 	}
 
 	private native boolean jniConnectTobiiTracker(int timeout_seconds);
-	public native boolean close();
-	public native boolean startTracking();
-	public native boolean stopTracking();
+	public native void close();
+	public native void startTracking();
+	public native void stopTracking();
 }

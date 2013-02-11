@@ -159,3 +159,7 @@ pip-log.txt
 
 # Mac crap
 .DS_Store
+
+#JNI
+jni/libTobiiTracker.so
+jni/TobiiTracker.dll

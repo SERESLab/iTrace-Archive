@@ -20,7 +20,7 @@ JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_TobiiTracker_jniConnectTobiiTrack
  * Method:    close
  * Signature: ()Z
  */
-JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_TobiiTracker_close
+JNIEXPORT void JNICALL Java_edu_ysu_itrace_TobiiTracker_close
   (JNIEnv *, jobject);
 
 /*
@@ -28,7 +28,7 @@ JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_TobiiTracker_close
  * Method:    startTracking
  * Signature: ()Z
  */
-JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_TobiiTracker_startTracking
+JNIEXPORT void JNICALL Java_edu_ysu_itrace_TobiiTracker_startTracking
   (JNIEnv *, jobject);
 
 /*
@@ -36,7 +36,7 @@ JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_TobiiTracker_startTracking
  * Method:    stopTracking
  * Signature: ()Z
  */
-JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_TobiiTracker_stopTracking
+JNIEXPORT void JNICALL Java_edu_ysu_itrace_TobiiTracker_stopTracking
   (JNIEnv *, jobject);
 
 #ifdef __cplusplus
