@@ -9,21 +9,18 @@ public class MirametrixTracker implements IEyeTracker {
 	}
 
 	@Override
-	public boolean close() {
+	public void close() {
 		// TODO Auto-generated method stub
-		return false;
 	}
 
 	@Override
-	public boolean startTracking() {
+	public void startTracking() {
 		// TODO Auto-generated method stub
-		return false;
 	}
 
 	@Override
-	public boolean stopTracking() {
+	public void stopTracking() {
 		// TODO Auto-generated method stub
-		return false;
 	}
 
 }

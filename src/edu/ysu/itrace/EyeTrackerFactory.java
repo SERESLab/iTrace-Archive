@@ -1,6 +1,8 @@
 package edu.ysu.itrace;
 
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Random;
 
 public class EyeTrackerFactory {
 	
@@ -15,26 +17,23 @@ public class EyeTrackerFactory {
 
 			@Override
 			public Gaze getGaze() {
-				// TODO Auto-generated method stub
-				return null;
+				Random r = new Random();
+				return new Gaze(r.nextDouble(), r.nextDouble(), new Date());
 			}
 
 			@Override
-			public boolean close() {
+			public void close() {
 				// TODO Auto-generated method stub
-				return false;
 			}
 
 			@Override
-			public boolean startTracking() {
+			public void startTracking() {
 				// TODO Auto-generated method stub
-				return false;
 			}
 
 			@Override
-			public boolean stopTracking() {
+			public void stopTracking() {
 				// TODO Auto-generated method stub
-				return false;
 			}};
 		//return getAvailableEyeTrackers().get(i);
 	}
