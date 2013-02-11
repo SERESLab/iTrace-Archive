@@ -167,7 +167,7 @@ public class TobiiTracker implements IEyeTracker
 
 	public void calibrate() throws CalibrationException
 	{
-		Calibrator calibration = new Calibrator(null);
+		Calibrator calibration = new Calibrator(this);
 		calibration.calibrate();
 	}
 
@@ -189,6 +189,16 @@ public class TobiiTracker implements IEyeTracker
 		//Average left and right eyes for each value.
 		double x = (left_x + right_x) / 2;
 		double y = (left_y + right_y) / 2;
+
+		//Clamp values to [0.0, 1.0].
+		if (x >= 1.0)
+			x = 1.0;
+		else if (x <= 0.0)
+			x = 0.0;
+		if (y >= 1.0)
+			y = 1.0;
+		else if (y <= 0.0)
+			y = 0.0;
 
 		try
 		{
