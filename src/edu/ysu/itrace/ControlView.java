@@ -1,12 +1,18 @@
 package edu.ysu.itrace;
 
+import java.io.FileWriter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map.Entry;
 import java.util.Queue;
-import java.util.Random;
 
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
+
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -48,6 +54,9 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 	private Shell rootShell;
 	private UIJob listenJob = null;
 	
+	private XMLStreamWriter gazeWriter;
+	private XMLStreamWriter responseWriter;
+	
 	
 	@Override
 	public void createPartControl(Composite parent) {
@@ -78,7 +87,11 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 		stopButton.addSelectionListener(new SelectionAdapter(){
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				stopTracking();
+				try {
+					stopTracking();
+				} catch (XMLStreamException e1) {
+					throw new RuntimeException(e1.getMessage());
+				}
 			}
 		});
 		
@@ -89,7 +102,11 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 	
 	@Override
 	public void dispose(){
-		stopTracking();
+		try {
+			stopTracking();
+		} catch (XMLStreamException e) {
+			throw new RuntimeException(e.getMessage());
+		}
 		getSite().getWorkbenchWindow().getPartService().removePartListener(this);
 		super.dispose();
 	}
@@ -217,6 +234,15 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 	 */
 	private void handleGaze(int screenX, int screenY){
 		
+		try {
+			gazeWriter.writeStartElement("GazePoint");
+			gazeWriter.writeAttribute("x", String.valueOf(screenX));
+			gazeWriter.writeAttribute("y", String.valueOf(screenY));
+			gazeWriter.writeEndElement();
+		} catch (XMLStreamException e) {
+			// ignore write errors
+		}
+		
 		Queue<Control[]> childrenQueue = new LinkedList<Control[]>();
 		Queue<Rectangle> parentBoundsQueue = new LinkedList<Rectangle>();
 		childrenQueue.add(rootShell.getChildren());
@@ -247,7 +273,9 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 					if(handler != null){
 						IGazeResponse response = handler.handleGaze(screenX - childScreenBounds.x,
 								screenY - childScreenBounds.y);
-						handleGazeResponse(response);
+						if(response != null){
+							handleGazeResponse(response);
+						}
 					}
 				}
 			}
@@ -260,18 +288,24 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 	 */
 	private void handleGazeResponse(IGazeResponse response){
 		
-		if(response != null){
-			System.out.println("--------------");
-			System.out.println(response.getName() + " - " + response.getType());
+		try {
+			gazeWriter.writeStartElement("GazeResponse");
+			gazeWriter.writeAttribute("artifactName", String.valueOf(response.getName()));
+			gazeWriter.writeAttribute("artifactType", String.valueOf(response.getType()));
 			for(Iterator<Entry<String,String>> entries = response.getProperties().entrySet().iterator();
 					entries.hasNext(); ){
 				Entry<String,String> pair = entries.next();
-				System.out.println(pair.getKey() + ": " + pair.getValue());
+				gazeWriter.writeStartElement("ResponseProperty");
+				gazeWriter.writeAttribute("name", String.valueOf(pair.getKey()));
+				gazeWriter.writeAttribute("value", String.valueOf(pair.getValue()));
+				gazeWriter.writeEndElement();
 			}
-			System.out.println("--------------");
+			gazeWriter.writeEndElement();
+		} catch (XMLStreamException e) {
+			// ignore write errors
 		}
 		
-		// TODO log response, generate links, etc.
+		// TODO generate links
 	}
 	
 	
@@ -284,6 +318,23 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 	}
 	
 	private void startTracking(){
+		
+		// create log files
+		Date d = new Date();
+		XMLOutputFactory outFactory = XMLOutputFactory.newInstance();
+        try {
+        	String workspaceLocation = ResourcesPlugin.getWorkspace().getRoot().getLocation().toString();
+			gazeWriter = outFactory.createXMLStreamWriter(new FileWriter(workspaceLocation + "/gazes-" + d.getTime() + ".xml"));
+			responseWriter = outFactory.createXMLStreamWriter(new FileWriter(workspaceLocation + "/responses-" + d.getTime() + ".xml"));
+			gazeWriter.writeStartDocument("utf-8");
+			responseWriter.writeStartDocument("utf-8");
+			gazeWriter.writeStartElement("Gazes");
+			responseWriter.writeStartElement("GazeResponses");
+        } catch (Exception e) {
+			throw new RuntimeException("Log files could not be created.");
+		}
+		
+        
 		if(tracker != null) {
 			
 			if(listenJob == null){
@@ -291,16 +342,12 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 					@Override
 					public IStatus runInUIThread(IProgressMonitor monitor) {
 						
-						
-						
-						Random rnd = new Random();
-						int x = rnd.nextInt(rootShell.getBounds().width);
-						int y = rnd.nextInt(rootShell.getBounds().height);
-						handleGaze(x, y);
-						// TODO get gaze x,y from eye tracker device, call handleGaze for each
-						
-						
-						
+						Gaze g = tracker.getGaze();
+						if(g != null){
+							int screenX = (int) (g.getX() * rootShell.getBounds().width);
+							int screenY = (int) (g.getY() * rootShell.getBounds().height);
+							handleGaze(screenX, screenY);
+						}
 						schedule(LISTEN_MS);
 						return Status.OK_STATUS;
 					}
@@ -310,11 +357,21 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 		}
 	}
 	
-	private void stopTracking(){
+	private void stopTracking() throws XMLStreamException{
+		
 		if(tracker != null) {
 			if(listenJob != null){
 				listenJob.cancel();
 				listenJob = null;
+				
+				gazeWriter.writeEndElement();
+				gazeWriter.writeEndDocument();
+				gazeWriter.flush();
+				gazeWriter.close();
+				responseWriter.writeEndElement();
+				responseWriter.writeEndDocument();
+				responseWriter.flush();
+				responseWriter.close();
 			}
 		}
 	}
