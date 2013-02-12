@@ -34,6 +34,8 @@ import org.eclipse.ui.internal.PartSite;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
 
+import edu.ysu.itrace.exceptions.CalibrationException;
+import edu.ysu.itrace.exceptions.EyeTrackerConnectException;
 import edu.ysu.itrace.gaze.GazeHandlerFactory;
 import edu.ysu.itrace.gaze.IGazeHandler;
 import edu.ysu.itrace.gaze.IGazeResponse;
@@ -49,8 +51,6 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 	
 	private IEyeTracker tracker;
 	private GazeRepository gazeRepository;
-	private AoiRepository aoiRepository;
-	private LinkFinder linkFinder;
 	private Shell rootShell;
 	private UIJob listenJob = null;
 	
@@ -274,7 +274,7 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 						IGazeResponse response = handler.handleGaze(screenX - childScreenBounds.x,
 								screenY - childScreenBounds.y);
 						if(response != null){
-							handleGazeResponse(response);
+							handleGazeResponse(response, screenX, screenY);
 						}
 					}
 				}
@@ -286,26 +286,27 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 	/*
 	 * Handles the gaze response.
 	 */
-	private void handleGazeResponse(IGazeResponse response){
-		
+	private void handleGazeResponse(IGazeResponse response, int screenX, int screenY){
+
 		try {
-			gazeWriter.writeStartElement("GazeResponse");
-			gazeWriter.writeAttribute("artifactName", String.valueOf(response.getName()));
-			gazeWriter.writeAttribute("artifactType", String.valueOf(response.getType()));
+			responseWriter.writeStartElement("GazeResponse");
+			responseWriter.writeAttribute("artifactName", String.valueOf(response.getName()));
+			responseWriter.writeAttribute("artifactType", String.valueOf(response.getType()));
 			for(Iterator<Entry<String,String>> entries = response.getProperties().entrySet().iterator();
 					entries.hasNext(); ){
 				Entry<String,String> pair = entries.next();
-				gazeWriter.writeStartElement("ResponseProperty");
-				gazeWriter.writeAttribute("name", String.valueOf(pair.getKey()));
-				gazeWriter.writeAttribute("value", String.valueOf(pair.getValue()));
-				gazeWriter.writeEndElement();
+				responseWriter.writeStartElement("ResponseProperty");
+				responseWriter.writeAttribute("name", String.valueOf(pair.getKey()));
+				responseWriter.writeAttribute("value", String.valueOf(pair.getValue()));
+				responseWriter.writeEndElement();
 			}
-			gazeWriter.writeEndElement();
+			responseWriter.writeEndElement();
 		} catch (XMLStreamException e) {
 			// ignore write errors
 		}
 		
-		// TODO generate links
+		Gaze gaze = new Gaze(screenX, screenY, new Date(), response);
+		gazeRepository.addGaze(gaze);
 	}
 	
 	
@@ -314,7 +315,12 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 	}
 	
 	private void selectTracker(int index) {
-		tracker = EyeTrackerFactory.getConcreteEyeTracker(index);
+		try {
+			tracker = EyeTrackerFactory.getConcreteEyeTracker(index);
+		} catch (EyeTrackerConnectException | CalibrationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	private void startTracking(){

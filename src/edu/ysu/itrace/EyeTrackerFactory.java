@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Random;
 
+import edu.ysu.itrace.exceptions.CalibrationException;
+import edu.ysu.itrace.exceptions.EyeTrackerConnectException;
+
 public class EyeTrackerFactory {
 	
 	public static ArrayList<IEyeTracker> getAvailableEyeTrackers(){
@@ -12,8 +15,10 @@ public class EyeTrackerFactory {
 		return null;
 	}
 	
-	public static IEyeTracker getConcreteEyeTracker(int i) {
-		return new IEyeTracker(){
+	public static IEyeTracker getConcreteEyeTracker(int i) throws EyeTrackerConnectException, CalibrationException {
+		return new TobiiTracker();
+		
+		/*return new IEyeTracker(){
 
 			@Override
 			public Gaze getGaze() {
@@ -36,5 +41,6 @@ public class EyeTrackerFactory {
 				// TODO Auto-generated method stub
 			}};
 		//return getAvailableEyeTrackers().get(i);
+		 */
 	}
 }

@@ -131,7 +131,8 @@ public class TobiiTracker implements IEyeTracker
 			throw new EyeTrackerConnectException();
 		}
 	}
-
+	
+	/*
 	public static void main(String[] args)
 	{
 		TobiiTracker tobii_tracker = null;
@@ -164,6 +165,7 @@ public class TobiiTracker implements IEyeTracker
 		}
 		System.out.println("Done!");
 	}
+	*/
 
 	public void calibrate() throws CalibrationException
 	{
