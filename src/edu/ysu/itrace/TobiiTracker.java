@@ -73,32 +73,46 @@ public class TobiiTracker implements IEyeTracker
 		public void calibrate() throws CalibrationException
 		{
 			setVisible(true);
-			jniStartCalibration();
-			for (int i = 0; i < CALIBRATION_POINTS; ++i)
+			try
 			{
-				displayCalibrationPoint(i);
-				try
+				jniStartCalibration();
+				for (int i = 0; i < CALIBRATION_POINTS; ++i)
 				{
-					Thread.sleep(MILISECONDS_BETWEEN_POINTS);
+					displayCalibrationPoint(i);
+					try
+					{
+						Thread.sleep(MILISECONDS_BETWEEN_POINTS);
+					}
+					catch (InterruptedException e)
+					{
+						jniStopCalibration();
+						throw new CalibrationException("Thread.sleep interrupted.");
+					}
+					Rectangle window_bounds = GraphicsEnvironment.
+						getLocalGraphicsEnvironment().getMaximumWindowBounds();
+					double x = (calibration_points[i].getLocationOnScreen().x +
+						(0.5 * calibration_points[i].getWidth())) / window_bounds.width;
+					double y = (calibration_points[i].getLocationOnScreen().y +
+						(0.5 * calibration_points[i].getHeight())) / window_bounds.height;
+					System.out.println("(" + x + ", " + y + ")");
+					jniAddPoint(x, y);
 				}
-				catch (InterruptedException e)
-				{
-					jniStopCalibration();
-					throw new CalibrationException();
-				}
-				Rectangle window_bounds = GraphicsEnvironment.
-					getLocalGraphicsEnvironment().getMaximumWindowBounds();
-				double x = (calibration_points[i].getLocationOnScreen().x +
-					(0.5 * calibration_points[i].getWidth())) / window_bounds.width;
-				double y = (calibration_points[i].getLocationOnScreen().y +
-					(0.5 * calibration_points[i].getHeight())) / window_bounds.height;
-				System.out.println("(" + x + ", " + y + ")");
-				jniAddPoint(x, y);
+				jniStopCalibration();
 			}
-			if (!jniStopCalibration())
-				throw new CalibrationException();
-			setVisible(false);
-			return;
+			//Rethrow CalibrationExceptions.
+			catch (CalibrationException e)
+			{
+				throw e;
+			}
+			//All JNI exceptions converted to Calibration exceptions.
+			catch (Exception e)
+			{
+				throw new CalibrationException(e.getMessage());
+			}
+			finally
+			{
+				setVisible(false);
+			}
 		}
 
 		private void displayCalibrationPoint(int i)
@@ -107,9 +121,12 @@ public class TobiiTracker implements IEyeTracker
 				calibration_points[j].setVisible(i == j);
 		}
 
-		private native void jniAddPoint(double x, double y);
-		private native void jniStartCalibration();
-		private native boolean jniStopCalibration();
+		private native void jniAddPoint(double x, double y) throws RuntimeException,
+			IOException;
+		private native void jniStartCalibration() throws RuntimeException,
+			IOException;
+		private native void jniStopCalibration() throws RuntimeException,
+			IOException;
 	}
 
 	private BackgroundThread bg_thread = null;
@@ -131,8 +148,7 @@ public class TobiiTracker implements IEyeTracker
 			throw new EyeTrackerConnectException();
 		}
 	}
-	
-	/*
+
 	public static void main(String[] args)
 	{
 		TobiiTracker tobii_tracker = null;
@@ -163,9 +179,13 @@ public class TobiiTracker implements IEyeTracker
 			tobii_tracker.close();
 			System.out.println("Could not calibrate. Try again.");
 		}
+		catch (IOException e)
+		{
+			tobii_tracker.close();
+			System.out.println("IO failure occurred.");
+		}
 		System.out.println("Done!");
 	}
-	*/
 
 	public void calibrate() throws CalibrationException
 	{
@@ -214,6 +234,6 @@ public class TobiiTracker implements IEyeTracker
 
 	private native boolean jniConnectTobiiTracker(int timeout_seconds);
 	public native void close();
-	public native void startTracking();
-	public native void stopTracking();
+	public native void startTracking() throws RuntimeException, IOException;
+	public native void stopTracking() throws RuntimeException, IOException;
 }

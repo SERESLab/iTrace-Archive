@@ -28,7 +28,7 @@ JNIEXPORT void JNICALL Java_edu_ysu_itrace_TobiiTracker_00024Calibrator_jniStart
  * Method:    jniStopCalibration
  * Signature: ()V
  */
-JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_TobiiTracker_00024Calibrator_jniStopCalibration
+JNIEXPORT void JNICALL Java_edu_ysu_itrace_TobiiTracker_00024Calibrator_jniStopCalibration
   (JNIEnv *, jobject);
 
 #ifdef __cplusplus

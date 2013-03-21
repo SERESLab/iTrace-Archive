@@ -29,6 +29,13 @@ discovery::eyetracker_info::pointer g_et_info =
 //Also not very clean.
 TobiiNativeData* g_native_data_current = NULL;
 
+void throwJException(JNIEnv* env, const char* jclass_name, const char* msg)
+{
+	jclass jclass = env->FindClass(jclass_name);
+	env->ThrowNew(jclass, msg);
+	env->DeleteLocalRef(jclass);
+}
+
 jfieldID getFieldID(JNIEnv* env, jobject obj, const char* name, const char* sig)
 {
 	jclass jclass = env->GetObjectClass(obj);
@@ -132,8 +139,6 @@ JNIEXPORT jboolean JNICALL
 	const discovery::factory_info fact_info(*et_info);
 	native_data->eye_tracker =
 		tracking::create_eyetracker(fact_info, native_data->main_loop);
-
-	return JNI_TRUE;
 }
 
 JNIEXPORT void JNICALL Java_edu_ysu_itrace_TobiiTracker_close
@@ -142,12 +147,14 @@ JNIEXPORT void JNICALL Java_edu_ysu_itrace_TobiiTracker_close
 	//Get native data from object.
 	TobiiNativeData* native_data = getTobiiNativeData(env, obj);
 	if (native_data == NULL)
-		return /*JNI_FALSE*/;
+	{
+		throwJException(env, "java/lang/RuntimeException",
+			"Cannot find native data.");
+		return;
+	}
 
 	//Shut down main loop
 	native_data->main_loop.quit();
-
-	return /*JNI_TRUE*/;
 }
 
 void handleGazeData(tracking::gaze_data_item::pointer gaze_data)
@@ -177,27 +184,47 @@ JNIEXPORT void JNICALL Java_edu_ysu_itrace_TobiiTracker_startTracking
 {
 	//Do not continue if already tracking
 	if (g_native_data_current != NULL)
-		return /*JNI_FALSE*/;
+	{
+		throwJException(env, "java/io/IOException", "Already tracking.");
+		return;
+	}
 
 	//Get native data from object.
 	TobiiNativeData* native_data = getTobiiNativeData(env, obj);
 	if (native_data == NULL)
-		return /*JNI_FALSE*/;
+	{
+		throwJException(env, "java/lang/RuntimeException",
+			"Cannot find native data.");
+		return;
+	}
 	//Set native data for current tracking TobiiTracker.
 	g_native_data_current = native_data;
 
-	native_data->eye_tracker->start_tracking();
-	native_data->eye_tracker->add_gaze_data_received_listener(handleGazeData);
-
-	return /*JNI_TRUE*/;
+	try
+	{
+		native_data->eye_tracker->start_tracking();
+		native_data->eye_tracker->add_gaze_data_received_listener(handleGazeData);
+	}
+	catch (eyetracker_exception e)
+	{
+		throwJException(env, "java/io/IOException", e.what());
+		return;
+	}
 }
 
 JNIEXPORT void JNICALL Java_edu_ysu_itrace_TobiiTracker_stopTracking
-	(JNIEnv *, jobject)
+	(JNIEnv* env, jobject obj)
 {
-	g_native_data_current->eye_tracker->stop_tracking();
-	g_native_data_current = NULL;
-	return /*JNI_TRUE*/;
+	try
+	{
+		g_native_data_current->eye_tracker->stop_tracking();
+		g_native_data_current = NULL;
+	}
+	catch (eyetracker_exception e)
+	{
+		throwJException(env, "java/io/IOException", e.what());
+		return;
+	}
 }
 
 JNIEXPORT void
@@ -208,13 +235,25 @@ JNIEXPORT void
 	jfieldID jfid_parent = getFieldID(env, obj, "parent",
 		"Ledu/ysu/itrace/TobiiTracker;");
 	if (jfid_parent == NULL)
+	{
+		throwJException(env, "java/lang/RuntimeException",
+			"Parent TobiiTracker not found.");
 		return;
+	}
 	jobject parent_tobii_tracker = env->GetObjectField(obj, jfid_parent);
 	TobiiNativeData* native_data = getTobiiNativeData(env, parent_tobii_tracker);
 
-	//Add new calibration point
-	native_data->eye_tracker->add_calibration_point(tracking::point_2d((double) x,
-		(double) y));
+	try
+	{
+		//Add new calibration point
+		native_data->eye_tracker->add_calibration_point(tracking::point_2d(
+			(double) x, (double) y));
+	}
+	catch (eyetracker_exception e)
+	{
+		throwJException(env, "java/io/IOException", e.what());
+		return;
+	}
 }
 
 JNIEXPORT void JNICALL
@@ -225,16 +264,28 @@ JNIEXPORT void JNICALL
 	jfieldID jfid_parent = getFieldID(env, obj, "parent",
 		"Ledu/ysu/itrace/TobiiTracker;");
 	if (jfid_parent == NULL)
+	{
+		throwJException(env, "java/lang/RuntimeException",
+			"Parent TobiiTracker not found.");
 		return;
+	}
 	jobject parent_tobii_tracker = env->GetObjectField(obj, jfid_parent);
 	TobiiNativeData* native_data = getTobiiNativeData(env, parent_tobii_tracker);
 
-	//Start and clear calibration
-	native_data->eye_tracker->start_calibration();
-	native_data->eye_tracker->clear_calibration();
+	try
+	{
+		//Start and clear calibration
+		native_data->eye_tracker->start_calibration();
+		native_data->eye_tracker->clear_calibration();
+	}
+	catch (eyetracker_exception e)
+	{
+		throwJException(env, "java/io/IOException", e.what());
+		return;
+	}
 }
 
-JNIEXPORT jboolean JNICALL
+JNIEXPORT void JNICALL
 	Java_edu_ysu_itrace_TobiiTracker_00024Calibrator_jniStopCalibration
 	(JNIEnv* env, jobject obj)
 {
@@ -242,7 +293,11 @@ JNIEXPORT jboolean JNICALL
 	jfieldID jfid_parent = getFieldID(env, obj, "parent",
 		"Ledu/ysu/itrace/TobiiTracker;");
 	if (jfid_parent == NULL)
-		return JNI_FALSE;
+	{
+		throwJException(env, "java/lang/RuntimeException",
+			"Parent TobiiTracker not found.");
+		return;
+	}
 	jobject parent_tobii_tracker = env->GetObjectField(obj, jfid_parent);
 	TobiiNativeData* native_data = getTobiiNativeData(env, parent_tobii_tracker);
 
@@ -254,7 +309,7 @@ JNIEXPORT jboolean JNICALL
 	}
 	catch (eyetracker_exception e)
 	{
-		return JNI_FALSE;
+		throwJException(env, "java/io/IOException", e.what());
+		return;
 	}
-	return JNI_TRUE;
 }
