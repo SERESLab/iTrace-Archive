@@ -13,7 +13,7 @@ tmp/
 local.properties
 .settings/
 .loadpath
-
+*.dll
 # External tool builders
 .externalToolBuilders/
 
