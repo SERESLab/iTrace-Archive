@@ -4,6 +4,11 @@ Bundle-Name: Itrace
 Bundle-SymbolicName: edu.ysu.itrace;singleton:=true
 Bundle-Version: 1.0.0.0
 Bundle-Activator: edu.ysu.itrace.Activator
+Bundle-NativeCode: \
+ jni/libTobiiTracker_x86.so; osname=linux; processor=x86
+ jni/libTobiiTracker_x86_64.so; osname=linux; processor=x86_64
+ jni/libTobiiTracker_x86.dll; osname=Win32; processor=x86
+ jni/libTobiiTracker_x86_64.dll; osname=Win32; processor=x86_64
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.eclipse.ui.ide;bundle-version="3.7.0",
