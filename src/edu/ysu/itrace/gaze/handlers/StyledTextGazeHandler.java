@@ -4,6 +4,7 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.ui.IWorkbenchPartReference;
 
 import edu.ysu.itrace.gaze.IGazeHandler;
@@ -40,13 +41,22 @@ public class StyledTextGazeHandler implements IGazeHandler {
 			
 			// construct the type and properties for the response
 			{
-				int index = targetStyledText.getLineIndex(y);
-				String line = targetStyledText.getLine(index).trim();
-				
-				if(line.length() > 0){
-					this.type = "source_code";
-					this.properties.put("gaze_line", line);
+				try{
+					int lineIndex = targetStyledText.getLineIndex(y);
+					int lineOffset = targetStyledText.getOffsetAtLine(lineIndex);
+					int offset = targetStyledText.getOffsetAtLocation(new Point(x, y));
+					int col = offset - lineOffset;
+					int lineHeight = targetStyledText.getLineHeight(offset);
+					int fontHeight = targetStyledText.getFont().getFontData()[0].getHeight();
+					
+					this.properties.put("line-height", String.valueOf(lineHeight));
+					this.properties.put("font-height", String.valueOf(fontHeight));
+					this.properties.put("line", String.valueOf(lineIndex));
+					this.properties.put("col", String.valueOf(col));
 				}
+				catch(Exception e){}
+				
+				this.type = "text";
 			}
 			
 			@Override

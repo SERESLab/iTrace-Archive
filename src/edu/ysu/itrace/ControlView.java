@@ -48,13 +48,13 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 	
 	private static final int LISTEN_MS = 100;
 	private static final String KEY_HANDLER = "gazeHandler";
+	private static final String EOL = System.getProperty("line.separator");
 	
 	private IEyeTracker tracker;
 	private GazeRepository gazeRepository;
 	private Shell rootShell;
 	private UIJob listenJob = null;
 	
-	private XMLStreamWriter gazeWriter;
 	private XMLStreamWriter responseWriter;
 	
 	
@@ -232,23 +232,14 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 	 * Finds the control under the specified screen coordinates and calls
 	 * its gaze handler on the localized point.
 	 */
-	private void handleGaze(int screenX, int screenY){
-		
-		try {
-			gazeWriter.writeStartElement("GazePoint");
-			gazeWriter.writeAttribute("x", String.valueOf(screenX));
-			gazeWriter.writeAttribute("y", String.valueOf(screenY));
-			gazeWriter.writeEndElement();
-		} catch (XMLStreamException e) {
-			// ignore write errors
-		}
+	private void handleGaze(int screenX, int screenY, Gaze gaze){
 		
 		Queue<Control[]> childrenQueue = new LinkedList<Control[]>();
 		Queue<Rectangle> parentBoundsQueue = new LinkedList<Rectangle>();
 		childrenQueue.add(rootShell.getChildren());
 		
 		Rectangle rootBounds = rootShell.getBounds();
-		Rectangle rootArea = rootShell.getDisplay().getClientArea();
+		Rectangle rootArea = rootShell.getDisplay().getPrimaryMonitor().getClientArea();
 		rootBounds.x += rootArea.x;
 		rootBounds.y += rootArea.y;
 		parentBoundsQueue.add(rootBounds);
@@ -274,7 +265,7 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 						IGazeResponse response = handler.handleGaze(screenX - childScreenBounds.x,
 								screenY - childScreenBounds.y);
 						if(response != null){
-							handleGazeResponse(response, screenX, screenY);
+							handleGazeResponse(response, screenX, screenY, gaze);
 						}
 					}
 				}
@@ -286,26 +277,31 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 	/*
 	 * Handles the gaze response.
 	 */
-	private void handleGazeResponse(IGazeResponse response, int screenX, int screenY){
+	private void handleGazeResponse(IGazeResponse response, int screenX, int screenY, Gaze gaze){
 
 		try {
-			responseWriter.writeStartElement("GazeResponse");
-			responseWriter.writeAttribute("artifactName", String.valueOf(response.getName()));
-			responseWriter.writeAttribute("artifactType", String.valueOf(response.getType()));
-			for(Iterator<Entry<String,String>> entries = response.getProperties().entrySet().iterator();
-					entries.hasNext(); ){
-				Entry<String,String> pair = entries.next();
-				responseWriter.writeStartElement("ResponseProperty");
-				responseWriter.writeAttribute("name", String.valueOf(pair.getKey()));
-				responseWriter.writeAttribute("value", String.valueOf(pair.getValue()));
+			if(response.getProperties().size() > 0){
+				responseWriter.writeStartElement("response");
+				responseWriter.writeAttribute("file", response.getName());
+				responseWriter.writeAttribute("type", response.getType());
+				responseWriter.writeAttribute("x", String.valueOf(screenX));
+				responseWriter.writeAttribute("y", String.valueOf(screenY));
+				responseWriter.writeAttribute("timestamp", String.valueOf(gaze.getTimeStamp().getTime()));
+				
+				// TODO write validation codes
+				
+				for(Iterator<Entry<String,String>> entries = response.getProperties().entrySet().iterator();
+						entries.hasNext(); ){
+					Entry<String,String> pair = entries.next();
+					responseWriter.writeAttribute(pair.getKey(), pair.getValue());
+				}
 				responseWriter.writeEndElement();
+				responseWriter.writeCharacters(EOL);
 			}
-			responseWriter.writeEndElement();
 		} catch (XMLStreamException e) {
 			// ignore write errors
 		}
 		
-		Gaze gaze = new Gaze(screenX, screenY, new Date(), response);
 		gazeRepository.addGaze(gaze);
 	}
 	
@@ -330,12 +326,22 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 		XMLOutputFactory outFactory = XMLOutputFactory.newInstance();
         try {
         	String workspaceLocation = ResourcesPlugin.getWorkspace().getRoot().getLocation().toString();
-			gazeWriter = outFactory.createXMLStreamWriter(new FileWriter(workspaceLocation + "/gazes-" + d.getTime() + ".xml"));
-			responseWriter = outFactory.createXMLStreamWriter(new FileWriter(workspaceLocation + "/responses-" + d.getTime() + ".xml"));
-			gazeWriter.writeStartDocument("utf-8");
+			Rectangle screenRect = rootShell.getDisplay().getPrimaryMonitor().getClientArea();
+			
+			responseWriter = outFactory.createXMLStreamWriter(new FileWriter(workspaceLocation + "/gaze-responses-" + d.getTime() + ".xml"));
 			responseWriter.writeStartDocument("utf-8");
-			gazeWriter.writeStartElement("Gazes");
-			responseWriter.writeStartElement("GazeResponses");
+			responseWriter.writeCharacters(EOL);
+			responseWriter.writeStartElement("environment");
+			responseWriter.writeCharacters(EOL);
+			responseWriter.writeStartElement("screen");
+			responseWriter.writeAttribute("width", String.valueOf(screenRect.width));
+			responseWriter.writeAttribute("height", String.valueOf(screenRect.height));
+			responseWriter.writeEndElement();
+			responseWriter.writeCharacters(EOL);
+			responseWriter.writeEndElement();
+			responseWriter.writeCharacters(EOL);
+			responseWriter.writeStartElement("gaze-responses");
+			responseWriter.writeCharacters(EOL);
         } catch (Exception e) {
 			throw new RuntimeException("Log files could not be created.");
 		}
@@ -350,9 +356,10 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 						
 						Gaze g = tracker.getGaze();
 						if(g != null){
-							int screenX = (int) (g.getX() * rootShell.getBounds().width);
-							int screenY = (int) (g.getY() * rootShell.getBounds().height);
-							handleGaze(screenX, screenY);
+							Rectangle screenRect = rootShell.getDisplay().getPrimaryMonitor().getClientArea();
+							int screenX = (int) (g.getX() * screenRect.width);
+							int screenY = (int) (g.getY() * screenRect.height);
+							handleGaze(screenX, screenY, g);
 						}
 						schedule(LISTEN_MS);
 						return Status.OK_STATUS;
@@ -370,12 +377,10 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 				listenJob.cancel();
 				listenJob = null;
 				
-				gazeWriter.writeEndElement();
-				gazeWriter.writeEndDocument();
-				gazeWriter.flush();
-				gazeWriter.close();
 				responseWriter.writeEndElement();
+				responseWriter.writeCharacters(EOL);
 				responseWriter.writeEndDocument();
+				responseWriter.writeCharacters(EOL);
 				responseWriter.flush();
 				responseWriter.close();
 			}
