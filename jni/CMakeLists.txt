@@ -12,10 +12,8 @@ if(BUILD_TOBIITRACKER)
 	find_package(Boost 1.40 REQUIRED COMPONENTS filesystem regex thread system)
 	find_package(JNI REQUIRED)
 	include_directories(${JNI_INCLUDE_DIRS})
-	add_library(TobiiTracker_${CMAKE_SYSTEM_PROCESSOR} SHARED
-		edu_ysu_itrace_TobiiTracker.cpp)
+	add_library(TobiiTracker SHARED edu_ysu_itrace_TobiiTracker.cpp)
 	include_directories(${Boost_INCLUDE_DIR})
-	target_link_libraries(TobiiTracker_${CMAKE_SYSTEM_PROCESSOR}
-		tobiisdk ${Boost_FILESYSTEM_LIBRARY} ${Boost_REGEX_LIBRARY}
-		${Boost_THREAD_LIBRARY} ${Boost_SYSTEM_LIBRARY})
+	target_link_libraries(TobiiTracker tobiisdk ${Boost_FILESYSTEM_LIBRARY}
+		${Boost_REGEX_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_SYSTEM_LIBRARY})
 endif(BUILD_TOBIITRACKER)
