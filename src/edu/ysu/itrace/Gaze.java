@@ -13,23 +13,12 @@ public class Gaze {
 	private double right_validity;
 
 	private Date timeStamp;
-	private IGazeResponse response;
 	
 	public Gaze(double x, double y, double left_validity, double right_validity, 
 			Date timestamp) {
 		this.x = x;
 		this.y = y;
 		this.timeStamp = timestamp;
-		this.left_validity = left_validity;
-		this.right_validity = right_validity;
-	}
-	
-	public Gaze(double x, double y, double left_validity, double right_validity, 
-			Date timestamp, IGazeResponse response) {
-		this.x = x;
-		this.y = y;
-		this.timeStamp = timestamp;
-		this.response = response;
 		this.left_validity = left_validity;
 		this.right_validity = right_validity;
 	}

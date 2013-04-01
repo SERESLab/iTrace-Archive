@@ -1,6 +1,7 @@
 package edu.ysu.itrace;
 
 import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -73,6 +74,21 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 		
 		
 		// set up UI
+		Button calibrateButton = new Button(parent, SWT.PUSH);
+		calibrateButton.setText("Calibrate");
+		calibrateButton.addSelectionListener(new SelectionAdapter(){
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				if(tracker != null){
+					try {
+						tracker.calibrate();
+					} catch (CalibrationException e1) {
+						throw new RuntimeException(e1.getMessage());
+					}
+				}
+			}
+		});
+		
 		Button startButton = new Button(parent, SWT.PUSH);
 		startButton.setText("Start Tracking");
 		startButton.addSelectionListener(new SelectionAdapter(){
@@ -104,6 +120,7 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 	public void dispose(){
 		try {
 			stopTracking();
+			tracker.close();
 		} catch (XMLStreamException e) {
 			throw new RuntimeException(e.getMessage());
 		}
@@ -145,35 +162,35 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 	@Override
 	public void shellActivated(ShellEvent e) {
 		if(listenJob != null){
-			listenJob.schedule(LISTEN_MS);
+			//listenJob.schedule(LISTEN_MS);
 		}
 	}
 
 	@Override
 	public void shellClosed(ShellEvent e) {
 		if(listenJob != null){
-			listenJob.cancel();
+			//listenJob.cancel();
 		}
 	}
 
 	@Override
 	public void shellDeactivated(ShellEvent e) {
 		if(listenJob != null){
-			listenJob.cancel();
+			//listenJob.cancel();
 		}
 	}
 
 	@Override
 	public void shellDeiconified(ShellEvent e) {
 		if(listenJob != null){
-			listenJob.schedule(LISTEN_MS);
+			//listenJob.schedule(LISTEN_MS);
 		}
 	}
 
 	@Override
 	public void shellIconified(ShellEvent e) {
 		if(listenJob != null){
-			listenJob.cancel();
+			//listenJob.cancel();
 		}
 	}
 	
@@ -250,7 +267,6 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 				Rectangle childScreenBounds = child.getBounds();
 				childScreenBounds.x += parentBounds.x;
 				childScreenBounds.y += parentBounds.y;
-				
 				if(childScreenBounds.contains(screenX, screenY)){
 					if(child instanceof Composite){
 						Control[] nextChildren = ((Composite)child).getChildren();
@@ -278,7 +294,7 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 	 * Handles the gaze response.
 	 */
 	private void handleGazeResponse(IGazeResponse response, int screenX, int screenY, Gaze gaze){
-
+		
 		try {
 			if(response.getProperties().size() > 0){
 				responseWriter.writeStartElement("response");
@@ -349,6 +365,13 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
         
 		if(tracker != null) {
 			
+			try {
+				tracker.startTracking();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			
 			if(listenJob == null){
 				listenJob = new UIJob("Tracking Gazes"){
 					@Override
@@ -373,6 +396,14 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 	private void stopTracking() throws XMLStreamException{
 		
 		if(tracker != null) {
+			
+			try {
+				tracker.stopTracking();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			
 			if(listenJob != null){
 				listenJob.cancel();
 				listenJob = null;
