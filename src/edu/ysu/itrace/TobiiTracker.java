@@ -164,7 +164,8 @@ public class TobiiTracker implements IEyeTracker
 			{
 				Gaze gaze = tobii_tracker.getGaze();
 				System.out.println("Gaze at " + gaze.getTimeStamp() + ": (" +
-					gaze.getX() + ", " + gaze.getY() + ")");
+					gaze.getX() + ", " + gaze.getY() + ") with validity (Left: " +
+					gaze.getLeftValidity() + ", Right: " + gaze.getRightValidity() + ")");
 			}
 			tobii_tracker.stopTracking();
 
@@ -206,7 +207,7 @@ public class TobiiTracker implements IEyeTracker
 	}
 
 	public void newGazePoint(long timestamp, double left_x, double left_y,
-		double right_x, double right_y)
+		double right_x, double right_y, int left_validity, int right_validity)
 	{
 		//Average left and right eyes for each value.
 		double x = (left_x + right_x) / 2;
@@ -222,9 +223,13 @@ public class TobiiTracker implements IEyeTracker
 		else if (y <= 0.0)
 			y = 0.0;
 
+		double gaze_left_validity = 1.0 - ((double) left_validity / 4.0);
+		double gaze_right_validity = 1.0 - ((double) right_validity / 4.0);
+
 		try
 		{
-			gaze_points.put(new Gaze(x, y, new Date(timestamp / 1000)));
+			gaze_points.put(new Gaze(x, y, gaze_left_validity, gaze_right_validity,
+				new Date(timestamp / 1000)));
 		}
 		catch (InterruptedException e)
 		{

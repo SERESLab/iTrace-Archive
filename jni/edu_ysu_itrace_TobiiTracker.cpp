@@ -169,14 +169,15 @@ void handleGazeData(tracking::gaze_data_item::pointer gaze_data)
 	if (tobii_tracker_class == NULL)
 		return;
 	jmethodID jmid_new_gaze_point = env->GetMethodID(tobii_tracker_class,
-		"newGazePoint", "(JDDDD)V");
+		"newGazePoint", "(JDDDDII)V");
 	//Just pretend nothing happened.
 	if (jmid_new_gaze_point == NULL)
 		return;
 	//Call newGazePoint.
 	env->CallVoidMethod(obj, jmid_new_gaze_point, (jlong) gaze_data->time_stamp,
 		gaze_data->left_gaze_point_2d.x, gaze_data->right_gaze_point_2d.y,
-		gaze_data->right_gaze_point_2d.x, gaze_data->right_gaze_point_2d.y);
+		gaze_data->right_gaze_point_2d.x, gaze_data->right_gaze_point_2d.y,
+		gaze_data->left_validity, gaze_data->right_validity);
 }
 
 JNIEXPORT void JNICALL Java_edu_ysu_itrace_TobiiTracker_startTracking
