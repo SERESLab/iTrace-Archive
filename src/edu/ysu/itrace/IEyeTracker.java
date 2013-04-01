@@ -1,12 +1,19 @@
 package edu.ysu.itrace;
 
 import java.io.IOException;
+import edu.ysu.itrace.exceptions.CalibrationException;
 
 public interface IEyeTracker {
 	/**
 	Closes eye tracker connection.
 	*/
 	public void close();
+	/**
+	Opens eye tracker calibration and exits after calibration completes.
+	@throws CalibrationException if the eye tracker fails to calibrate or if
+		there is a failure setting up the calibration environment.
+	*/
+	public void calibrate() throws CalibrationException;
 	/**
 	Starts eye tracking and collecting data.
 	@throws IOException Failed to start eye tracking.

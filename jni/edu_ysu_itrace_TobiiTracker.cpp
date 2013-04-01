@@ -139,6 +139,7 @@ JNIEXPORT jboolean JNICALL
 	const discovery::factory_info fact_info(*et_info);
 	native_data->eye_tracker =
 		tracking::create_eyetracker(fact_info, native_data->main_loop);
+	return JNI_TRUE;
 }
 
 JNIEXPORT void JNICALL Java_edu_ysu_itrace_TobiiTracker_close

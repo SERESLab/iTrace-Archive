@@ -23,4 +23,9 @@ public class MirametrixTracker implements IEyeTracker {
 		// TODO Auto-generated method stub
 	}
 
+	@Override
+	public void calibrate() throws CalibrationException {
+		// TODO Auto-generated method stub
+	}
+
 }

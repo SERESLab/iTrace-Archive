@@ -9,6 +9,11 @@ import java.awt.*;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.net.URISyntaxException;
+import java.net.URL;
+import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.Platform;
+import org.osgi.framework.Bundle;
 import java.io.IOException;
 
 public class TobiiTracker implements IEyeTracker
@@ -34,7 +39,7 @@ public class TobiiTracker implements IEyeTracker
 	private static class Calibrator extends JFrame
 	{
 		private TobiiTracker parent = null;
-		private final int CALIBRATION_POINTS = 6;
+		private final int CALIBRATION_POINTS = 9;
 		private JLabel[] calibration_points = new JLabel[CALIBRATION_POINTS];
 		private final int MILISECONDS_BETWEEN_POINTS = 2000;
 
@@ -43,13 +48,26 @@ public class TobiiTracker implements IEyeTracker
 			parent = tracker;
 
 			//Create calibration points
-			JPanel grid = new JPanel(new GridLayout(2, 3));
+			JPanel grid = new JPanel(new GridLayout(3, 3));
 			BufferedImage calibration_point = null;
 			try
 			{
-				calibration_point = ImageIO.read(new File("res/calibration_point.png"));
+				Bundle bundle = Platform.getBundle("edu.ysu.itrace");
+				//Eclipse
+				if (bundle != null)
+				{
+					URL file_url = bundle.getEntry("res/calibration_point.png");
+					calibration_point =
+						ImageIO.read(new File(FileLocator.resolve(file_url).toURI()));
+				}
+				//No eclipse
+				else
+				{
+					calibration_point =
+						ImageIO.read(new File("res/calibration_point.png"));
+				}
 			}
-			catch (IOException e)
+			catch (IOException | URISyntaxException e)
 			{
 				throw new CalibrationException();
 			}
