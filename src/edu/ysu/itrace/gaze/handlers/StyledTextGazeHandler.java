@@ -7,6 +7,7 @@ import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.ui.IWorkbenchPartReference;
 
+import edu.ysu.itrace.Gaze;
 import edu.ysu.itrace.gaze.IGazeHandler;
 import edu.ysu.itrace.gaze.IGazeResponse;
 
@@ -31,7 +32,7 @@ public class StyledTextGazeHandler implements IGazeHandler {
 	
 	
 	@Override
-	public IGazeResponse handleGaze(final int x, final int y) {
+	public IGazeResponse handleGaze(final int x, final int y, final Gaze gaze) {
 		
 		IGazeResponse response = new IGazeResponse(){
 			
@@ -72,6 +73,11 @@ public class StyledTextGazeHandler implements IGazeHandler {
 			@Override
 			public Map<String, String> getProperties() {
 				return this.properties;
+			}
+			
+			@Override
+			public Gaze getGaze(){
+				return gaze;
 			}
 		};
 		

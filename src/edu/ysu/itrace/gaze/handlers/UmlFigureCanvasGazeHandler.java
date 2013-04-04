@@ -12,6 +12,7 @@ import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.IWorkbenchPartReference;
 
+import edu.ysu.itrace.Gaze;
 import edu.ysu.itrace.gaze.IGazeHandler;
 import edu.ysu.itrace.gaze.IGazeResponse;
 import edu.ysu.onionuml.ui.graphics.figures.ClassFigure;
@@ -38,7 +39,7 @@ public class UmlFigureCanvasGazeHandler implements IGazeHandler {
 	
 	
 	@Override
-	public IGazeResponse handleGaze(final int x, final int y) {
+	public IGazeResponse handleGaze(final int x, final int y, final Gaze gaze) {
 		
 		IGazeResponse response = new IGazeResponse(){
 			
@@ -110,6 +111,11 @@ public class UmlFigureCanvasGazeHandler implements IGazeHandler {
 			@Override
 			public Map<String, String> getProperties() {
 				return this.properties;
+			}
+			
+			@Override
+			public Gaze getGaze(){
+				return gaze;
 			}
 		};
 		

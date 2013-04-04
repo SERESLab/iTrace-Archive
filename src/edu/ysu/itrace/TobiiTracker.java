@@ -1,20 +1,32 @@
 package edu.ysu.itrace;
 
-import java.nio.ByteBuffer;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.Date;
-import edu.ysu.itrace.exceptions.*;
-import javax.swing.*;
-import java.awt.*;
-import javax.imageio.ImageIO;
+import java.awt.Dimension;
+import java.awt.DisplayMode;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
+import java.awt.GridLayout;
+import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.ByteBuffer;
+import java.util.Date;
+import java.util.concurrent.LinkedBlockingQueue;
+
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
 import org.osgi.framework.Bundle;
-import java.io.IOException;
+
+import edu.ysu.itrace.exceptions.CalibrationException;
+import edu.ysu.itrace.exceptions.EyeTrackerConnectException;
 
 public class TobiiTracker implements IEyeTracker
 {
@@ -106,13 +118,11 @@ public class TobiiTracker implements IEyeTracker
 						jniStopCalibration();
 						throw new CalibrationException("Thread.sleep interrupted.");
 					}
-					Rectangle window_bounds = GraphicsEnvironment.
-						getLocalGraphicsEnvironment().getMaximumWindowBounds();
+					Dimension window_bounds = Toolkit.getDefaultToolkit().getScreenSize();
 					double x = (calibration_points[i].getLocationOnScreen().x +
 						(0.5 * calibration_points[i].getWidth())) / window_bounds.width;
 					double y = (calibration_points[i].getLocationOnScreen().y +
 						(0.5 * calibration_points[i].getHeight())) / window_bounds.height;
-					System.out.println("(" + x + ", " + y + ")");
 					jniAddPoint(x, y);
 				}
 				jniStopCalibration();
@@ -174,6 +184,16 @@ public class TobiiTracker implements IEyeTracker
 		{
 			tobii_tracker = new TobiiTracker();
 			System.out.println("Connected successfully to eyetracker.");
+
+			Dimension window_bounds = Toolkit.getDefaultToolkit().getScreenSize();
+			System.out.println("Screen size: (" + window_bounds.width + ", " + window_bounds.height + ")");
+			try
+			{
+				Thread.sleep(3000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			
 			tobii_tracker.calibrate();
 
 			tobii_tracker.startTracking();
@@ -182,7 +202,7 @@ public class TobiiTracker implements IEyeTracker
 			{
 				Gaze gaze = tobii_tracker.getGaze();
 				System.out.println("Gaze at " + gaze.getTimeStamp() + ": (" +
-					gaze.getX() + ", " + gaze.getY() + ") with validity (Left: " +
+					(int) (gaze.getX() * window_bounds.width) + ", " + (int) (gaze.getY() * window_bounds.height) + ") with validity (Left: " +
 					gaze.getLeftValidity() + ", Right: " + gaze.getRightValidity() + ")");
 			}
 			tobii_tracker.stopTracking();
@@ -214,14 +234,7 @@ public class TobiiTracker implements IEyeTracker
 
 	public Gaze getGaze()
 	{
-		try
-		{
-			return gaze_points.take();
-		}
-		catch (InterruptedException e)
-		{
-			return null;
-		}
+		return gaze_points.poll();
 	}
 
 	public void newGazePoint(long timestamp, double left_x, double left_y,
@@ -246,8 +259,13 @@ public class TobiiTracker implements IEyeTracker
 
 		try
 		{
-			gaze_points.put(new Gaze(x, y, gaze_left_validity, gaze_right_validity,
-				new Date(timestamp / 1000)));
+			Gaze gaze = new Gaze(x, y, gaze_left_validity, gaze_right_validity,
+				new Date(timestamp / 1000));
+			/*Dimension window_bounds = Toolkit.getDefaultToolkit().getScreenSize();
+			System.out.println("Gaze at " + gaze.getTimeStamp() + ": (" + gaze.getX() + ", " + gaze.getY() + "), (" +
+					(int) (gaze.getX() * window_bounds.width) + ", " + (int) (gaze.getY() * window_bounds.height) + ") with validity (Left: " +
+					gaze.getLeftValidity() + ", Right: " + gaze.getRightValidity() + ")");*/
+			gaze_points.put(gaze);
 		}
 		catch (InterruptedException e)
 		{

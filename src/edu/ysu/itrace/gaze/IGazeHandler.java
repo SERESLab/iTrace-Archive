@@ -1,5 +1,7 @@
 package edu.ysu.itrace.gaze;
 
+import edu.ysu.itrace.Gaze;
+
 
 
 /**
@@ -8,9 +10,9 @@ package edu.ysu.itrace.gaze;
 public interface IGazeHandler {
 
 	/**
-	 * Handles the gaze at the specified x and y coordinates relative
+	 * Handles the specified gaze at the specified x and y coordinates relative
 	 * to the target object. Return value may be null if the gaze is not
 	 * meaningful to the target.
 	 */
-	public IGazeResponse handleGaze(int x, int y);
+	public IGazeResponse handleGaze(int x, int y, Gaze gaze);
 }

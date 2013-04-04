@@ -1,5 +1,7 @@
 package edu.ysu.itrace;
 
+import java.awt.Dimension;
+import java.awt.Toolkit;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -8,6 +10,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map.Entry;
 import java.util.Queue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -22,6 +25,7 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.ShellEvent;
 import org.eclipse.swt.events.ShellListener;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
@@ -47,16 +51,147 @@ import edu.ysu.itrace.gaze.IGazeResponse;
 @SuppressWarnings("restriction")
 public class ControlView extends ViewPart implements IPartListener2, ShellListener {
 	
-	private static final int LISTEN_MS = 100;
+	private static final int POLL_GAZES_MS = 5;
 	private static final String KEY_HANDLER = "gazeHandler";
 	private static final String EOL = System.getProperty("line.separator");
 	
 	private IEyeTracker tracker;
 	private GazeRepository gazeRepository;
 	private Shell rootShell;
-	private UIJob listenJob = null;
 	
-	private XMLStreamWriter responseWriter;
+	private volatile boolean trackingInProgress;
+	private LinkedBlockingQueue<IGazeResponse> gazeResponses = new LinkedBlockingQueue<IGazeResponse>();
+	
+	
+	
+	/*
+	 * Gets gazes from the eye tracker, calls gaze handlers, and adds responses to the queue for 
+	 * the response handler thread to process.
+	 */
+	private UIJob gazeHandlerJob =  new UIJob("Tracking Gazes"){
+		{
+			setPriority(INTERACTIVE);
+		}
+		
+		@Override
+		public IStatus runInUIThread(IProgressMonitor monitor) {
+			
+			Gaze g = tracker.getGaze();
+			if (g != null) {
+				Dimension screenRect = Toolkit.getDefaultToolkit().getScreenSize();
+				int screenX = (int) (g.getX() * screenRect.width);
+				int screenY = (int) (g.getY() * screenRect.height);
+				IGazeResponse response = handleGaze(screenX, screenY, g);
+				
+				if(response != null){
+					try{
+						gazeResponses.add(response);
+					}
+					catch(IllegalStateException ise){
+						System.err.println("Error! Gaze response queue is full!");
+					}
+				}
+			}
+
+			if (trackingInProgress || g != null) {
+				schedule(POLL_GAZES_MS);
+			} else {
+				gazeHandlerJob.cancel();
+			}
+
+			return Status.OK_STATUS;
+		}
+	};
+	
+	
+	
+	/*
+	 * Outputs all gaze responses to an XML file separate from the UI thread.
+	 */
+	private Thread responseHandlerThread = new Thread(){
+        @Override
+        public void run(){
+        	XMLStreamWriter responseWriter;
+        	FileWriter outFile;
+    		XMLOutputFactory outFactory = XMLOutputFactory.newInstance();
+    		String workspaceLocation = ResourcesPlugin.getWorkspace().getRoot().getLocation().toString();
+			Dimension screenRect = Toolkit.getDefaultToolkit().getScreenSize();
+			
+            try {
+    			outFile = new FileWriter(workspaceLocation + "/gaze-responses-" + (new Date()).getTime() + ".xml");
+    			responseWriter = outFactory.createXMLStreamWriter(outFile);
+    			responseWriter.writeStartDocument("utf-8");
+    			responseWriter.writeCharacters(EOL);
+    			responseWriter.writeStartElement("environment");
+    			responseWriter.writeCharacters(EOL);
+    			responseWriter.writeEmptyElement("screen");
+    			responseWriter.writeAttribute("width", String.valueOf(screenRect.width));
+    			responseWriter.writeAttribute("height", String.valueOf(screenRect.height));
+    			responseWriter.writeCharacters(EOL);
+    			responseWriter.writeEndElement();
+    			responseWriter.writeCharacters(EOL);
+    			responseWriter.writeStartElement("gaze-responses");
+    			responseWriter.writeCharacters(EOL);
+            } catch (Exception e) {
+    			throw new RuntimeException("Log files could not be created.");
+    		}
+            
+            
+            
+            while(true){
+            	if(!trackingInProgress && gazeResponses.size() <= 0){
+            		break;
+            	}
+            	
+            	IGazeResponse response = gazeResponses.poll();
+            	
+            	if(response != null){
+	            	try {
+	        			if(response.getProperties().size() > 0){
+	        				int screenX = (int) (screenRect.width * response.getGaze().getX());
+	        				int screenY = (int) (screenRect.height * response.getGaze().getY());
+	        				
+	        				responseWriter.writeEmptyElement("response");
+	        				responseWriter.writeAttribute("file", response.getName());
+	        				responseWriter.writeAttribute("type", response.getType());
+	        				responseWriter.writeAttribute("x", String.valueOf(screenX));
+	        				responseWriter.writeAttribute("y", String.valueOf(screenY));
+	        				responseWriter.writeAttribute("left-valid", String.valueOf(response.getGaze().getLeftValidity()));
+	        				responseWriter.writeAttribute("right-valid", String.valueOf(response.getGaze().getRightValidity()));
+	        				responseWriter.writeAttribute("timestamp", String.valueOf(response.getGaze().getTimeStamp().getTime()));
+	        				
+	        				for(Iterator<Entry<String,String>> entries = response.getProperties().entrySet().iterator();
+	        						entries.hasNext(); ){
+	        					Entry<String,String> pair = entries.next();
+	        					responseWriter.writeAttribute(pair.getKey(), pair.getValue());
+	        				}
+	        				responseWriter.writeCharacters(EOL);
+	        			}
+	        		} catch (XMLStreamException e) {
+	        			// ignore write errors
+	        		}
+            	}
+            }
+            
+            
+            
+            try {
+				responseWriter.writeEndElement();
+				responseWriter.writeCharacters(EOL);
+				responseWriter.writeEndDocument();
+				responseWriter.writeCharacters(EOL);
+				responseWriter.flush();
+				responseWriter.close();
+				outFile.close();
+				System.out.println("Gaze responses saved.");
+			} catch (XMLStreamException | IOException e) {
+				// ignore write errors
+			}
+        	
+        }
+    };
+	
+	
 	
 	
 	@Override
@@ -64,8 +199,8 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 		
 		// find root shell
 		rootShell = parent.getShell();
-		while (rootShell != parent.getShell()) {
-			rootShell = rootShell.getShell();
+		while (rootShell.getParent() != null) {
+			rootShell = rootShell.getParent().getShell();
 		}
 		rootShell.addShellListener(this);
 		
@@ -103,26 +238,19 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 		stopButton.addSelectionListener(new SelectionAdapter(){
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				try {
-					stopTracking();
-				} catch (XMLStreamException e1) {
-					throw new RuntimeException(e1.getMessage());
-				}
+				stopTracking();
 			}
 		});
 		
 		
-		// initialize plugin
-		selectTracker(0);
+		selectTracker(0); // TODO allow user to select the right tracker
 	}
 	
 	@Override
 	public void dispose(){
-		try {
-			stopTracking();
+		stopTracking();
+		if(tracker != null){
 			tracker.close();
-		} catch (XMLStreamException e) {
-			throw new RuntimeException(e.getMessage());
 		}
 		getSite().getWorkbenchWindow().getPartService().removePartListener(this);
 		super.dispose();
@@ -161,37 +289,27 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 	
 	@Override
 	public void shellActivated(ShellEvent e) {
-		if(listenJob != null){
-			//listenJob.schedule(LISTEN_MS);
-		}
+		gazeHandlerJob.schedule(POLL_GAZES_MS);
 	}
 
 	@Override
 	public void shellClosed(ShellEvent e) {
-		if(listenJob != null){
-			//listenJob.cancel();
-		}
+		gazeHandlerJob.cancel();
 	}
 
 	@Override
 	public void shellDeactivated(ShellEvent e) {
-		if(listenJob != null){
-			//listenJob.cancel();
-		}
+		gazeHandlerJob.cancel();
 	}
 
 	@Override
 	public void shellDeiconified(ShellEvent e) {
-		if(listenJob != null){
-			//listenJob.schedule(LISTEN_MS);
-		}
+		gazeHandlerJob.schedule(POLL_GAZES_MS);
 	}
 
 	@Override
 	public void shellIconified(ShellEvent e) {
-		if(listenJob != null){
-			//listenJob.cancel();
-		}
+		gazeHandlerJob.cancel();
 	}
 	
 	/*
@@ -199,7 +317,7 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 	 * part reference. If remove is true, the handlers are removed instead.
 	 */
 	private void setHandlers(IWorkbenchPartReference partRef, boolean remove){
-		
+
 		IWorkbenchPart part = partRef.getPart(false);
 		if(part == null){
 			return;
@@ -247,78 +365,39 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 	
 	/*
 	 * Finds the control under the specified screen coordinates and calls
-	 * its gaze handler on the localized point.
+	 * its gaze handler on the localized point. Returns the gaze response
+	 * or null if the gaze is not handled.
 	 */
-	private void handleGaze(int screenX, int screenY, Gaze gaze){
+	private IGazeResponse handleGaze(int screenX, int screenY, Gaze gaze){
 		
 		Queue<Control[]> childrenQueue = new LinkedList<Control[]>();
-		Queue<Rectangle> parentBoundsQueue = new LinkedList<Rectangle>();
 		childrenQueue.add(rootShell.getChildren());
 		
-		Rectangle rootBounds = rootShell.getBounds();
-		Rectangle rootArea = rootShell.getDisplay().getPrimaryMonitor().getClientArea();
-		rootBounds.x += rootArea.x;
-		rootBounds.y += rootArea.y;
-		parentBoundsQueue.add(rootBounds);
+		Rectangle monitorBounds = rootShell.getMonitor().getBounds();
 		
 		while(!childrenQueue.isEmpty()){
-			Rectangle parentBounds = parentBoundsQueue.remove();
 			for(Control child : childrenQueue.remove()){
 				Rectangle childScreenBounds = child.getBounds();
-				childScreenBounds.x += parentBounds.x;
-				childScreenBounds.y += parentBounds.y;
+				Point screenPos = child.toDisplay(0,0);
+				childScreenBounds.x = screenPos.x - monitorBounds.x;
+				childScreenBounds.y = screenPos.y - monitorBounds.y;
 				if(childScreenBounds.contains(screenX, screenY)){
 					if(child instanceof Composite){
 						Control[] nextChildren = ((Composite)child).getChildren();
 						if(nextChildren.length > 0 && nextChildren[0] != null){
 							childrenQueue.add(nextChildren);
-							parentBoundsQueue.add(childScreenBounds);
 						}
 					}
 					
 					IGazeHandler handler = (IGazeHandler)child.getData(KEY_HANDLER);
 					if(handler != null){
-						IGazeResponse response = handler.handleGaze(screenX - childScreenBounds.x,
-								screenY - childScreenBounds.y);
-						if(response != null){
-							handleGazeResponse(response, screenX, screenY, gaze);
-						}
+						return handler.handleGaze(screenX - childScreenBounds.x, screenY - childScreenBounds.y, gaze);
 					}
 				}
 			}
 		}
-	}
-	
-	
-	/*
-	 * Handles the gaze response.
-	 */
-	private void handleGazeResponse(IGazeResponse response, int screenX, int screenY, Gaze gaze){
 		
-		try {
-			if(response.getProperties().size() > 0){
-				responseWriter.writeStartElement("response");
-				responseWriter.writeAttribute("file", response.getName());
-				responseWriter.writeAttribute("type", response.getType());
-				responseWriter.writeAttribute("x", String.valueOf(screenX));
-				responseWriter.writeAttribute("y", String.valueOf(screenY));
-				responseWriter.writeAttribute("timestamp", String.valueOf(gaze.getTimeStamp().getTime()));
-				
-				// TODO write validation codes
-				
-				for(Iterator<Entry<String,String>> entries = response.getProperties().entrySet().iterator();
-						entries.hasNext(); ){
-					Entry<String,String> pair = entries.next();
-					responseWriter.writeAttribute(pair.getKey(), pair.getValue());
-				}
-				responseWriter.writeEndElement();
-				responseWriter.writeCharacters(EOL);
-			}
-		} catch (XMLStreamException e) {
-			// ignore write errors
-		}
-		
-		gazeRepository.addGaze(gaze);
+		return null;
 	}
 	
 	
@@ -330,91 +409,44 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 		try {
 			tracker = EyeTrackerFactory.getConcreteEyeTracker(index);
 		} catch (EyeTrackerConnectException | CalibrationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new RuntimeException("Could not connect to eye tracker.");
 		}
 	}
 	
 	private void startTracking(){
-		
-		// create log files
-		Date d = new Date();
-		XMLOutputFactory outFactory = XMLOutputFactory.newInstance();
-        try {
-        	String workspaceLocation = ResourcesPlugin.getWorkspace().getRoot().getLocation().toString();
-			Rectangle screenRect = rootShell.getDisplay().getPrimaryMonitor().getClientArea();
-			
-			responseWriter = outFactory.createXMLStreamWriter(new FileWriter(workspaceLocation + "/gaze-responses-" + d.getTime() + ".xml"));
-			responseWriter.writeStartDocument("utf-8");
-			responseWriter.writeCharacters(EOL);
-			responseWriter.writeStartElement("environment");
-			responseWriter.writeCharacters(EOL);
-			responseWriter.writeStartElement("screen");
-			responseWriter.writeAttribute("width", String.valueOf(screenRect.width));
-			responseWriter.writeAttribute("height", String.valueOf(screenRect.height));
-			responseWriter.writeEndElement();
-			responseWriter.writeCharacters(EOL);
-			responseWriter.writeEndElement();
-			responseWriter.writeCharacters(EOL);
-			responseWriter.writeStartElement("gaze-responses");
-			responseWriter.writeCharacters(EOL);
-        } catch (Exception e) {
-			throw new RuntimeException("Log files could not be created.");
+		if(trackingInProgress){
+			return;
 		}
 		
-        
+		trackingInProgress = true;
+		
 		if(tracker != null) {
-			
 			try {
 				tracker.startTracking();
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
+			} catch (IOException e) {
+				throw new RuntimeException("Could not start tracking.");
 			}
 			
-			if(listenJob == null){
-				listenJob = new UIJob("Tracking Gazes"){
-					@Override
-					public IStatus runInUIThread(IProgressMonitor monitor) {
-						
-						Gaze g = tracker.getGaze();
-						if(g != null){
-							Rectangle screenRect = rootShell.getDisplay().getPrimaryMonitor().getClientArea();
-							int screenX = (int) (g.getX() * screenRect.width);
-							int screenY = (int) (g.getY() * screenRect.height);
-							handleGaze(screenX, screenY, g);
-						}
-						schedule(LISTEN_MS);
-						return Status.OK_STATUS;
-					}
-				};
-				listenJob.schedule(LISTEN_MS);
-			}
+			responseHandlerThread.start();
+			gazeHandlerJob.schedule(POLL_GAZES_MS);
 		}
 	}
 	
-	private void stopTracking() throws XMLStreamException{
+	private void stopTracking(){
+		if(!trackingInProgress){
+			return;
+		}
+		
+		trackingInProgress = false;
 		
 		if(tracker != null) {
 			
 			try {
 				tracker.stopTracking();
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
+			} catch (IOException e) {
+				throw new RuntimeException("Could not stop tracking.");
 			}
 			
-			if(listenJob != null){
-				listenJob.cancel();
-				listenJob = null;
-				
-				responseWriter.writeEndElement();
-				responseWriter.writeCharacters(EOL);
-				responseWriter.writeEndDocument();
-				responseWriter.writeCharacters(EOL);
-				responseWriter.flush();
-				responseWriter.close();
-			}
 		}
 	}
 }
