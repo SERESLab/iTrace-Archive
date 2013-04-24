@@ -47,12 +47,8 @@ public class StyledTextGazeHandler implements IGazeHandler {
 					int lineOffset = targetStyledText.getOffsetAtLine(lineIndex);
 					int offset = targetStyledText.getOffsetAtLocation(new Point(x, y));
 					int col = offset - lineOffset;
-					int lineHeight = targetStyledText.getLineHeight(offset);
-					int fontHeight = targetStyledText.getFont().getFontData()[0].getHeight();
 					
-					this.properties.put("line-height", String.valueOf(lineHeight));
-					this.properties.put("font-height", String.valueOf(fontHeight));
-					this.properties.put("line", String.valueOf(lineIndex));
+					this.properties.put("line", String.valueOf(lineIndex + 1));
 					this.properties.put("col", String.valueOf(col));
 				}
 				catch(Exception e){}

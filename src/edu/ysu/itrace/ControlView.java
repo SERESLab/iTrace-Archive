@@ -21,6 +21,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.ShellEvent;
@@ -30,6 +31,8 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IPartListener2;
 import org.eclipse.ui.IWorkbenchPart;
@@ -62,7 +65,7 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 	private volatile boolean trackingInProgress;
 	private LinkedBlockingQueue<IGazeResponse> gazeResponses = new LinkedBlockingQueue<IGazeResponse>();
 	
-	
+	private int line_height, font_height;
 	
 	/*
 	 * Gets gazes from the eye tracker, calls gaze handlers, and adds responses to the queue for 
@@ -76,28 +79,34 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 		@Override
 		public IStatus runInUIThread(IProgressMonitor monitor) {
 			
-			Gaze g = tracker.getGaze();
-			if (g != null) {
-				Dimension screenRect = Toolkit.getDefaultToolkit().getScreenSize();
-				int screenX = (int) (g.getX() * screenRect.width);
-				int screenY = (int) (g.getY() * screenRect.height);
-				IGazeResponse response = handleGaze(screenX, screenY, g);
-				
-				if(response != null){
-					try{
-						gazeResponses.add(response);
-					}
-					catch(IllegalStateException ise){
-						System.err.println("Error! Gaze response queue is full!");
+			int loops = 0;
+			Gaze g = null;
+			do
+			{
+				g = tracker.getGaze();
+				if (g != null) {
+					Dimension screenRect = Toolkit.getDefaultToolkit().getScreenSize();
+					int screenX = (int) (g.getX() * screenRect.width);
+					int screenY = (int) (g.getY() * screenRect.height);
+					IGazeResponse response = handleGaze(screenX, screenY, g);
+					
+					if(response != null){
+						try{
+							gazeResponses.add(response);
+						}
+						catch(IllegalStateException ise){
+							System.err.println("Error! Gaze response queue is full!");
+						}
 					}
 				}
-			}
 
-			if (trackingInProgress || g != null) {
-				schedule(POLL_GAZES_MS);
-			} else {
-				gazeHandlerJob.cancel();
-			}
+				if (trackingInProgress || g != null) {
+					schedule(POLL_GAZES_MS);
+				} else {
+					gazeHandlerJob.cancel();
+				}
+				++loops;
+			} while (loops < 15 && g != null);
 
 			return Status.OK_STATUS;
 		}
@@ -122,15 +131,25 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
     			responseWriter = outFactory.createXMLStreamWriter(outFile);
     			responseWriter.writeStartDocument("utf-8");
     			responseWriter.writeCharacters(EOL);
+    			responseWriter.writeStartElement("itrace-records");
+    			responseWriter.writeCharacters(EOL);
     			responseWriter.writeStartElement("environment");
     			responseWriter.writeCharacters(EOL);
-    			responseWriter.writeEmptyElement("screen");
+    			responseWriter.writeEmptyElement("screen-size");
     			responseWriter.writeAttribute("width", String.valueOf(screenRect.width));
     			responseWriter.writeAttribute("height", String.valueOf(screenRect.height));
     			responseWriter.writeCharacters(EOL);
+    			responseWriter.writeStartElement("line-height");
+    			responseWriter.writeCharacters(String.valueOf(line_height));
     			responseWriter.writeEndElement();
     			responseWriter.writeCharacters(EOL);
-    			responseWriter.writeStartElement("gaze-responses");
+    			responseWriter.writeStartElement("font-height");
+    			responseWriter.writeCharacters(String.valueOf(font_height));
+    			responseWriter.writeEndElement();
+    			responseWriter.writeCharacters(EOL);
+    			responseWriter.writeEndElement();
+    			responseWriter.writeCharacters(EOL);
+    			responseWriter.writeStartElement("gazes");
     			responseWriter.writeCharacters(EOL);
             } catch (Exception e) {
     			throw new RuntimeException("Log files could not be created.");
@@ -156,8 +175,8 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 	        				responseWriter.writeAttribute("type", response.getType());
 	        				responseWriter.writeAttribute("x", String.valueOf(screenX));
 	        				responseWriter.writeAttribute("y", String.valueOf(screenY));
-	        				responseWriter.writeAttribute("left-valid", String.valueOf(response.getGaze().getLeftValidity()));
-	        				responseWriter.writeAttribute("right-valid", String.valueOf(response.getGaze().getRightValidity()));
+	        				responseWriter.writeAttribute("left-validation", String.valueOf(response.getGaze().getLeftValidity()));
+	        				responseWriter.writeAttribute("right-validation", String.valueOf(response.getGaze().getRightValidity()));
 	        				responseWriter.writeAttribute("timestamp", String.valueOf(response.getGaze().getTimeStamp().getTime()));
 	        				
 	        				for(Iterator<Entry<String,String>> entries = response.getProperties().entrySet().iterator();
@@ -176,6 +195,8 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
             
             
             try {
+				responseWriter.writeEndElement();
+				responseWriter.writeCharacters(EOL);
 				responseWriter.writeEndElement();
 				responseWriter.writeCharacters(EOL);
 				responseWriter.writeEndDocument();
@@ -207,7 +228,6 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 		// add listener for determining part visibility
 		getSite().getWorkbenchWindow().getPartService().addPartListener(this);
 		
-		
 		// set up UI
 		Button calibrateButton = new Button(parent, SWT.PUSH);
 		calibrateButton.setText("Calibrate");
@@ -218,7 +238,10 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 					try {
 						tracker.calibrate();
 					} catch (CalibrationException e1) {
-						throw new RuntimeException(e1.getMessage());
+						MessageBox error_box = new MessageBox(rootShell, SWT.ICON_ERROR);
+						error_box.setMessage("Failed to calibrate. Reason: " +
+							e1.getMessage());
+						error_box.open();
 					}
 				}
 			}
@@ -353,6 +376,12 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 					IGazeHandler handler = GazeHandlerFactory.createHandler(control, partRef);
 					if(handler != null){
 						control.setData(KEY_HANDLER, handler);
+					}
+					if (control instanceof StyledText)
+					{
+						StyledText styled_text = (StyledText) control;
+						this.line_height = styled_text.getLineHeight();
+						this.font_height = styled_text.getFont().getFontData()[0].getHeight();
 					}
 				}
 				else if(setHandler){
