@@ -238,16 +238,13 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 					try {
 						tracker.calibrate();
 					} catch (CalibrationException e1) {
-						MessageBox error_box = new MessageBox(rootShell, SWT.ICON_ERROR);
-						error_box.setMessage("Failed to calibrate. Reason: " +
-							e1.getMessage());
-						error_box.open();
+						displayError("Failed to calibrate. Reason: " + e1.getMessage());
 					}
 				}
 			}
 		});
 		
-		Button startButton = new Button(parent, SWT.PUSH);
+		final Button startButton = new Button(parent, SWT.PUSH);
 		startButton.setText("Start Tracking");
 		startButton.addSelectionListener(new SelectionAdapter(){
 			@Override
@@ -256,7 +253,7 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 			}
 		});
 		
-		Button stopButton = new Button(parent, SWT.PUSH);
+		final Button stopButton = new Button(parent, SWT.PUSH);
 		stopButton.setText("Stop Tracking");
 		stopButton.addSelectionListener(new SelectionAdapter(){
 			@Override
@@ -273,6 +270,47 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 				public void widgetSelected(SelectionEvent e)
 				{
 					tracker.displayCrosshair(display_crosshair.getSelection());
+				}
+			});
+
+		final Button test_tracking = new Button(parent, SWT.CHECK);
+		test_tracking.setText("Test Tracking");
+		test_tracking.addSelectionListener(new SelectionAdapter()
+			{
+				@Override
+				public void widgetSelected(SelectionEvent e)
+				{
+					if (display_crosshair.getSelection())
+					{
+						if (trackingInProgress)
+							stopTracking();
+						startButton.setEnabled(false);
+						stopButton.setEnabled(false);
+						try
+						{
+							tracker.startTracking();
+						}
+						catch (IOException ex)
+						{
+							displayError("Failed to start tracking. Reason: " +
+								ex.getMessage());
+						}
+					}
+					else
+					{
+						try
+						{
+							tracker.stopTracking();
+						}
+						catch (IOException ex)
+						{
+							displayError("Failed to start tracking. Reason: " +
+								ex.getMessage());
+						}
+						tracker.clear();
+						startButton.setEnabled(true);
+						stopButton.setEnabled(true);
+					}
 				}
 			});
 		
@@ -463,7 +501,7 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 			try {
 				tracker.startTracking();
 			} catch (IOException e) {
-				throw new RuntimeException("Could not start tracking.");
+				displayError("Could not start tracking. Reason: " + e.getMessage());
 			}
 			
 			responseHandlerThread.start();
@@ -483,9 +521,16 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 			try {
 				tracker.stopTracking();
 			} catch (IOException e) {
-				throw new RuntimeException("Could not stop tracking.");
+				displayError("Could not stop tracking. Reason: " + e.getMessage());
 			}
 			
 		}
+	}
+
+	private void displayError(String message)
+	{
+		MessageBox error_box = new MessageBox(rootShell, SWT.ICON_ERROR);
+		error_box.setMessage(message);
+		error_box.open();
 	}
 }
