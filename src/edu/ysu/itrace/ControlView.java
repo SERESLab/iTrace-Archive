@@ -265,6 +265,16 @@ public class ControlView extends ViewPart implements IPartListener2, ShellListen
 			}
 		});
 		
+		final Button display_crosshair = new Button(parent, SWT.CHECK);
+		display_crosshair.setText("Display Crosshair");
+		display_crosshair.addSelectionListener(new SelectionAdapter()
+			{
+				@Override
+				public void widgetSelected(SelectionEvent e)
+				{
+					tracker.displayCrosshair(display_crosshair.getSelection());
+				}
+			});
 		
 		selectTracker(0); // TODO allow user to select the right tracker
 	}

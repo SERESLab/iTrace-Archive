@@ -20,9 +20,11 @@ import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JWindow;
 
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.swt.graphics.Point;
 import org.osgi.framework.Bundle;
 
 import edu.ysu.itrace.exceptions.CalibrationException;
@@ -64,20 +66,8 @@ public class TobiiTracker implements IEyeTracker
 			BufferedImage calibration_point = null;
 			try
 			{
-				Bundle bundle = Platform.getBundle("edu.ysu.itrace");
-				//Eclipse
-				if (bundle != null)
-				{
-					URL file_url = bundle.getEntry("res/calibration_point.png");
-					calibration_point =
-						ImageIO.read(new File(FileLocator.resolve(file_url).toURI()));
-				}
-				//No eclipse
-				else
-				{
-					calibration_point =
-						ImageIO.read(new File("res/calibration_point.png"));
-				}
+				calibration_point =
+					TobiiTracker.getBufferedImage("calibration_point.png");
 			}
 			catch (IOException | URISyntaxException e)
 			{
@@ -159,7 +149,36 @@ public class TobiiTracker implements IEyeTracker
 
 	private BackgroundThread bg_thread = null;
 	private volatile ByteBuffer native_data = null;
-	private LinkedBlockingQueue<Gaze> gaze_points = new LinkedBlockingQueue<Gaze>();
+	private LinkedBlockingQueue<Gaze> gaze_points =
+		new LinkedBlockingQueue<Gaze>();
+	private boolean display_crosshair = false;
+	private JWindow debug_display_icon = new JWindow()
+		{
+			private Point centre = null;
+
+			{
+				try
+				{
+					BufferedImage crosshair =
+						TobiiTracker.getBufferedImage("crosshair.png");
+					add(new JLabel(new ImageIcon(crosshair)));
+					centre = new Point((int) (crosshair.getWidth() / 2),
+						(int) (crosshair.getHeight() / 2));
+					pack();
+					setAlwaysOnTop(true);
+					setVisible(display_crosshair);
+				}
+				catch (IOException | URISyntaxException e)
+				{
+					System.out.println("Failed to load crosshair icon.");
+				}
+			}
+
+			public void setLocation(int x, int y)
+			{
+				super.setLocation(x - centre.x, y - centre.y);
+			}
+		};
 
 	static { System.loadLibrary("TobiiTracker"); }
 
@@ -186,7 +205,8 @@ public class TobiiTracker implements IEyeTracker
 			System.out.println("Connected successfully to eyetracker.");
 
 			Dimension window_bounds = Toolkit.getDefaultToolkit().getScreenSize();
-			System.out.println("Screen size: (" + window_bounds.width + ", " + window_bounds.height + ")");
+			System.out.println("Screen size: (" + window_bounds.width + ", " +
+				window_bounds.height + ")");
 			try
 			{
 				Thread.sleep(3000);
@@ -197,13 +217,26 @@ public class TobiiTracker implements IEyeTracker
 			tobii_tracker.calibrate();
 
 			tobii_tracker.startTracking();
+			tobii_tracker.displayCrosshair(true);
 			long start = (new Date()).getTime();
+			while ((new Date()).getTime() < start + 5000);
+			tobii_tracker.stopTracking();
+			tobii_tracker.displayCrosshair(false);
+			tobii_tracker.clear();
+
+			tobii_tracker.startTracking();
+			start = (new Date()).getTime();
 			while ((new Date()).getTime() < start + 25000)
 			{
 				Gaze gaze = tobii_tracker.getGaze();
-				System.out.println("Gaze at " + gaze.getTimeStamp() + ": (" +
-					(int) (gaze.getX() * window_bounds.width) + ", " + (int) (gaze.getY() * window_bounds.height) + ") with validity (Left: " +
-					gaze.getLeftValidity() + ", Right: " + gaze.getRightValidity() + ")");
+				if (gaze != null)
+				{
+					System.out.println("Gaze at " + gaze.getTimeStamp() + ": (" +
+						(int) (gaze.getX() * window_bounds.width) + ", " +
+						(int) (gaze.getY() * window_bounds.height) +
+						") with validity (Left: " + gaze.getLeftValidity() + ", Right: " +
+						gaze.getRightValidity() + ")");
+				}
 			}
 			tobii_tracker.stopTracking();
 
@@ -226,10 +259,18 @@ public class TobiiTracker implements IEyeTracker
 		System.out.println("Done!");
 	}
 
+	public void clear()
+	{
+		gaze_points = new LinkedBlockingQueue<Gaze>();
+	}
+
 	public void calibrate() throws CalibrationException
 	{
+		debug_display_icon.setVisible(false);
 		Calibrator calibration = new Calibrator(this);
 		calibration.calibrate();
+		if (display_crosshair)
+			debug_display_icon.setVisible(true);
 	}
 
 	public Gaze getGaze()
@@ -257,14 +298,18 @@ public class TobiiTracker implements IEyeTracker
 		double gaze_left_validity = 1.0 - ((double) left_validity / 4.0);
 		double gaze_right_validity = 1.0 - ((double) right_validity / 4.0);
 
+		if (display_crosshair)
+		{
+			Dimension screen_size = Toolkit.getDefaultToolkit().getScreenSize();
+			int screen_x = (int) (screen_size.width * x);
+			int screen_y = (int) (screen_size.height * y);
+			debug_display_icon.setLocation(screen_x, screen_y);
+		}
+
 		try
 		{
 			Gaze gaze = new Gaze(x, y, gaze_left_validity, gaze_right_validity,
 				new Date(timestamp / 1000));
-			/*Dimension window_bounds = Toolkit.getDefaultToolkit().getScreenSize();
-			System.out.println("Gaze at " + gaze.getTimeStamp() + ": (" + gaze.getX() + ", " + gaze.getY() + "), (" +
-					(int) (gaze.getX() * window_bounds.width) + ", " + (int) (gaze.getY() * window_bounds.height) + ") with validity (Left: " +
-					gaze.getLeftValidity() + ", Right: " + gaze.getRightValidity() + ")");*/
 			gaze_points.put(gaze);
 		}
 		catch (InterruptedException e)
@@ -277,4 +322,29 @@ public class TobiiTracker implements IEyeTracker
 	public native void close();
 	public native void startTracking() throws RuntimeException, IOException;
 	public native void stopTracking() throws RuntimeException, IOException;
+
+	public void displayCrosshair(boolean enabled)
+	{
+		display_crosshair = enabled;
+		debug_display_icon.setVisible(enabled);
+	}
+
+	private static BufferedImage getBufferedImage(String resource_name)
+		throws IOException, URISyntaxException
+	{
+		BufferedImage result = null;
+		Bundle bundle = Platform.getBundle("edu.ysu.itrace");
+		//Eclipse
+		if (bundle != null)
+		{
+			URL file_url = bundle.getEntry("res/" + resource_name);
+			result = ImageIO.read(new File(FileLocator.resolve(file_url).toURI()));
+		}
+		//No eclipse
+		else
+		{
+			result = ImageIO.read(new File("res/" + resource_name));
+		}
+		return result;
+	}
 }

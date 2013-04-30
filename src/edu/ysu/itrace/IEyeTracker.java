@@ -9,6 +9,10 @@ public interface IEyeTracker {
 	*/
 	public void close();
 	/**
+	Clears all queued gaze data. 
+	*/
+	public void clear();
+	/**
 	Opens eye tracker calibration and exits after calibration completes.
 	@throws CalibrationException if the eye tracker fails to calibrate or if
 		there is a failure setting up the calibration environment.
@@ -29,4 +33,10 @@ public interface IEyeTracker {
 	Gets next stored gaze data, or null if no more exists.
 	*/
 	public Gaze getGaze();
+	/**
+	Toggles whether crosshair should be displayed. Crosshair follows the current
+	gaze on screen.
+	@param enabled If true, display crosshair, else do not display crosshair.
+	*/
+	public void displayCrosshair(boolean enabled);
 }

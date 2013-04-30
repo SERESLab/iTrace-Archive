@@ -16,6 +16,11 @@ public class MirametrixTracker implements IEyeTracker {
 	}
 
 	@Override
+	public void clear() {
+		// TODO Auto-generated method stub
+	}
+
+	@Override
 	public void startTracking() {
 		// TODO Auto-generated method stub
 	}
@@ -27,6 +32,12 @@ public class MirametrixTracker implements IEyeTracker {
 
 	@Override
 	public void calibrate() throws CalibrationException {
+		// TODO Auto-generated method stub
+	}
+
+	@Override
+	public void displayCrosshair(boolean enabled)
+	{
 		// TODO Auto-generated method stub
 	}
 
