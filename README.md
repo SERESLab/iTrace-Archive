@@ -24,3 +24,36 @@ HOW TO RUN
 1) Build and install plugin binaries or click "Run" from the Eclipse workspace and choose "Eclipse Application".
 2) Open the "itrace" perspective. If it is not visible, click the "Open Perspective" icon next to the "Java" perspective icon (by default in the top right corner) and choose "itrace" from the list.
 3) Open the itrace controller view on the bottom panel.
+
+STYLE GUIDE FOR DEVELOPERS
+==========
+Try to use [Java code conventions](http://www.oracle.com/technetwork/java/javase/documentation/codeconvtoc-136057.html).
+Below is an example from Eclipse.
+
+    /**
+     * A sample source file for the code formatter preview
+     */
+
+    package mypackage;
+
+    import java.util.LinkedList;
+
+    public class MyIntStack {
+        private final LinkedList fStack;
+
+        public MyIntStack() {
+            fStack = new LinkedList();
+        }
+
+        public int pop() {
+            return ((Integer) fStack.removeFirst()).intValue();
+        }
+
+        public void push(int elem) {
+            fStack.addFirst(new Integer(elem));
+        }
+
+        public boolean isEmpty() {
+            return fStack.isEmpty();
+        }
+    }
