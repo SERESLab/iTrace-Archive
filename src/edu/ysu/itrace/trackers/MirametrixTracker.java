@@ -1,5 +1,6 @@
-package edu.ysu.itrace;
+package edu.ysu.itrace.trackers;
 
+import edu.ysu.itrace.*;
 import edu.ysu.itrace.exceptions.CalibrationException;
 
 public class MirametrixTracker implements IEyeTracker {

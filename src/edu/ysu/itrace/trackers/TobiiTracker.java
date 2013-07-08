@@ -1,4 +1,4 @@
-package edu.ysu.itrace;
+package edu.ysu.itrace.trackers;
 
 import java.awt.Dimension;
 import java.awt.DisplayMode;
@@ -27,6 +27,7 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.swt.graphics.Point;
 import org.osgi.framework.Bundle;
 
+import edu.ysu.itrace.*;
 import edu.ysu.itrace.exceptions.CalibrationException;
 import edu.ysu.itrace.exceptions.EyeTrackerConnectException;
 
