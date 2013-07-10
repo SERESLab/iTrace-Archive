@@ -1,5 +1,6 @@
 package edu.ysu.itrace;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Random;
@@ -17,7 +18,7 @@ public class EyeTrackerFactory {
     }
 
     public static IEyeTracker getConcreteEyeTracker(int i) throws
-            EyeTrackerConnectException, CalibrationException {
+            EyeTrackerConnectException, IOException {
         return new TobiiTracker();
 
         /*return new IEyeTracker(){

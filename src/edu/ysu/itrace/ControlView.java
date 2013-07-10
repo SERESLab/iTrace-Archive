@@ -512,7 +512,7 @@ public class ControlView extends ViewPart implements IPartListener2,
     private void selectTracker(int index) {
         try {
             tracker = EyeTrackerFactory.getConcreteEyeTracker(index);
-        } catch (EyeTrackerConnectException | CalibrationException e) {
+        } catch (EyeTrackerConnectException | IOException e) {
             throw new RuntimeException("Could not connect to eye tracker.");
         }
     }

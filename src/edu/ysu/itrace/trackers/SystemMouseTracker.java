@@ -22,11 +22,32 @@ public class SystemMouseTracker extends Thread implements IEyeTracker {
         STOPPED
     }
 
+    private class SystemMouseCalibrator extends Calibrator {
+        public SystemMouseCalibrator() throws IOException {
+            super();
+        }
+
+        protected void startCalibration() throws Exception {
+            //Do nothing.
+        }
+
+        protected void stopCalibration() throws Exception {
+            //Do nothing.
+        }
+
+        protected void useCalibrationPoint(double x, double y)
+                throws Exception {
+            //Do nothing.
+        }
+    }
+
     private volatile RunState running = RunState.STOPPED;
     private LinkedBlockingQueue<Gaze> gazePoints
             = new LinkedBlockingQueue<Gaze>();
+    private SystemMouseCalibrator calibrator;
 
-    public SystemMouseTracker() {
+    public SystemMouseTracker() throws IOException {
+        calibrator = new SystemMouseCalibrator();
     }
 
     public void close() {
@@ -42,7 +63,7 @@ public class SystemMouseTracker extends Thread implements IEyeTracker {
     }
 
     public void calibrate() throws CalibrationException {
-        //Already calibrated!
+        calibrator.calibrate();
     }
 
     public void startTracking() throws IOException {
@@ -69,7 +90,7 @@ public class SystemMouseTracker extends Thread implements IEyeTracker {
     }
 
     public void displayCrosshair(boolean enabled) {
-        //Cursor itself should function as crosshair.
+        calibrator.displayCrosshair(enabled);
     }
 
     //Executed on separate thread to get mouse "gaze" data.
