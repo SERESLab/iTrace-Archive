@@ -49,14 +49,21 @@ public abstract class Calibrator extends JFrame {
         }
     }
 
-    private final int CALIBRATION_POINTS = 9;
+    private final int CALIBRATION_WIDTH = 3;
+    private final int CALIBRATION_HEIGHT = 3;
+    private final int CALIBRATION_POINTS
+            = CALIBRATION_WIDTH * CALIBRATION_HEIGHT;
+    private final int X_SPACING = 2;
+    private final int Y_SPACING = 2;
     private JLabel[] calibrationPoints = new JLabel[CALIBRATION_POINTS];
     private final int MILISECONDS_BETWEEN_POINTS = 2000;
     private JWindow crosshairWindow = new CrosshairWindow();
 
     public Calibrator() throws IOException {
         //Create calibration points
-        JPanel grid = new JPanel(new GridLayout(3, 3));
+        JPanel grid = new JPanel(new GridLayout(
+                CALIBRATION_HEIGHT + ((CALIBRATION_HEIGHT - 1) * Y_SPACING),
+                CALIBRATION_WIDTH + ((CALIBRATION_WIDTH - 1) * X_SPACING)));
         BufferedImage calibrationPoint = null;
         try {
             calibrationPoint =
@@ -64,11 +71,31 @@ public abstract class Calibrator extends JFrame {
         } catch (IOException | URISyntaxException e) {
             throw new IOException("Could not load calibration_point.png.");
         }
-        for (int i = 0; i < CALIBRATION_POINTS; ++i) {
-            calibrationPoints[i] = new JLabel(
-                    new ImageIcon(calibrationPoint));
-            calibrationPoints[i].setVisible(false);
-            grid.add(calibrationPoints[i]);
+
+        //Place calibration rows.
+        for (int i = 1; i <= CALIBRATION_HEIGHT; ++i) {
+            //Place calibration points as columns on row.
+            for (int j = 1; j <= CALIBRATION_WIDTH; ++j) {
+                int index = (i - 1) * CALIBRATION_WIDTH + (j - 1);
+                calibrationPoints[index] = new JLabel(
+                        new ImageIcon(calibrationPoint));
+                calibrationPoints[index].setVisible(false);
+                grid.add(calibrationPoints[index]);
+
+                //Unless last column, place empty columns for spacing.
+                if (j != CALIBRATION_WIDTH) {
+                    for (int k = 0; k < X_SPACING; ++k)
+                        grid.add(new JLabel(""));
+                }
+            }
+            //Unless last row, place empty rows for spacing.
+            if (i != CALIBRATION_HEIGHT) {
+                for (int j = 0; j < Y_SPACING; ++j) {
+                    for (int k = 0; k < CALIBRATION_WIDTH
+                            + ((CALIBRATION_WIDTH - 1) * X_SPACING); ++k)
+                        grid.add(new JLabel(""));
+                }
+            }
         }
         getContentPane().add(grid);
 
@@ -133,7 +160,7 @@ public abstract class Calibrator extends JFrame {
         Bundle bundle = Platform.getBundle("edu.ysu.itrace");
         //Eclipse
         if (bundle != null) {
-            URL fileUrl = bundle.getEntry("res/" + resource_name);
+            URL fileUrl = bundle.getEntry("res/" + resourceName);
             result = ImageIO.read(
                     new File(FileLocator.resolve(fileUrl).toURI()));
         //No eclipse
