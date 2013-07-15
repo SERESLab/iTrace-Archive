@@ -18,7 +18,7 @@ extern "C" {
  * Method:    jniBeginTobiiMainloop
  * Signature: ()Z
  */
-JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_TobiiTracker_00024BackgroundThread_jniBeginTobiiMainloop
+JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_trackers_TobiiTracker_00024BackgroundThread_jniBeginTobiiMainloop
   (JNIEnv *, jobject);
 
 #ifdef __cplusplus

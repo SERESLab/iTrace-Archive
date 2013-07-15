@@ -12,7 +12,7 @@ extern "C" {
  * Method:    jniAddPoint
  * Signature: (DD)V
  */
-JNIEXPORT void JNICALL Java_edu_ysu_itrace_TobiiTracker_00024Calibrator_jniAddPoint
+JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_TobiiTracker_00024Calibrator_jniAddPoint
   (JNIEnv *, jobject, jdouble, jdouble);
 
 /*
@@ -20,7 +20,7 @@ JNIEXPORT void JNICALL Java_edu_ysu_itrace_TobiiTracker_00024Calibrator_jniAddPo
  * Method:    jniStartCalibration
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_edu_ysu_itrace_TobiiTracker_00024Calibrator_jniStartCalibration
+JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_TobiiTracker_00024Calibrator_jniStartCalibration
   (JNIEnv *, jobject);
 
 /*
@@ -28,7 +28,7 @@ JNIEXPORT void JNICALL Java_edu_ysu_itrace_TobiiTracker_00024Calibrator_jniStart
  * Method:    jniStopCalibration
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_edu_ysu_itrace_TobiiTracker_00024Calibrator_jniStopCalibration
+JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_TobiiTracker_00024Calibrator_jniStopCalibration
   (JNIEnv *, jobject);
 
 #ifdef __cplusplus

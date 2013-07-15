@@ -5,9 +5,9 @@
 #include <tobii/sdk/cpp/discovery/factory-info.hpp>
 #include <tobii/sdk/cpp/tracking/eyetracker-factory.hpp>
 #include <tobii/sdk/cpp/tracking/gaze-data-item.hpp>
-#include "edu_ysu_itrace_TobiiTracker.h"
-#include "edu_ysu_itrace_TobiiTracker_BackgroundThread.h"
-#include "edu_ysu_itrace_TobiiTracker_Calibrator.h"
+#include "edu_ysu_itrace_trackers_TobiiTracker.h"
+#include "edu_ysu_itrace_trackers_TobiiTracker_BackgroundThread.h"
+#include "edu_ysu_itrace_trackers_TobiiTracker_Calibrator.h"
 
 using namespace tobii::sdk::cpp;
 
@@ -58,7 +58,7 @@ TobiiNativeData* getTobiiNativeData(JNIEnv* env, jobject obj)
 }
 
 JNIEXPORT jboolean JNICALL
-	Java_edu_ysu_itrace_TobiiTracker_00024BackgroundThread_jniBeginTobiiMainloop
+	Java_edu_ysu_itrace_trackers_TobiiTracker_00024BackgroundThread_jniBeginTobiiMainloop
 	(JNIEnv* env, jobject obj)
 {
 	//Initialise Tobii SDK if not yet initialised, else an error condition has
@@ -73,7 +73,7 @@ JNIEXPORT jboolean JNICALL
 
 	//Get native data ByteBuffer field in TobiiTracker object.
 	jfieldID jfid_parent = getFieldID(env, obj, "parent",
-		"Ledu/ysu/itrace/TobiiTracker;");
+		"Ledu/ysu/itrace/trackers/TobiiTracker;");
 	if (jfid_parent == NULL)
 		return JNI_FALSE;
 	jobject parent_tobii_tracker = env->GetObjectField(obj, jfid_parent);
@@ -108,8 +108,8 @@ void handleBrowserEvent(discovery::eyetracker_browser::event_type type,
 }
 
 JNIEXPORT jboolean JNICALL
-	Java_edu_ysu_itrace_TobiiTracker_jniConnectTobiiTracker(JNIEnv* env,
-	jobject obj, jint timeout_seconds)
+	Java_edu_ysu_itrace_trackers_TobiiTracker_jniConnectTobiiTracker(
+	JNIEnv* env, jobject obj, jint timeout_seconds)
 {
 	//Get native data from object.
 	TobiiNativeData* native_data = getTobiiNativeData(env, obj);
@@ -142,7 +142,7 @@ JNIEXPORT jboolean JNICALL
 	return JNI_TRUE;
 }
 
-JNIEXPORT void JNICALL Java_edu_ysu_itrace_TobiiTracker_close
+JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_TobiiTracker_close
 	(JNIEnv* env, jobject obj)
 {
 	//Get native data from object.
@@ -181,7 +181,7 @@ void handleGazeData(tracking::gaze_data_item::pointer gaze_data)
 		gaze_data->left_validity, gaze_data->right_validity);
 }
 
-JNIEXPORT void JNICALL Java_edu_ysu_itrace_TobiiTracker_startTracking
+JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_TobiiTracker_startTracking
 	(JNIEnv* env, jobject obj)
 {
 	//Do not continue if already tracking
@@ -214,7 +214,7 @@ JNIEXPORT void JNICALL Java_edu_ysu_itrace_TobiiTracker_startTracking
 	}
 }
 
-JNIEXPORT void JNICALL Java_edu_ysu_itrace_TobiiTracker_stopTracking
+JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_TobiiTracker_stopTracking
 	(JNIEnv* env, jobject obj)
 {
 	try
@@ -230,12 +230,12 @@ JNIEXPORT void JNICALL Java_edu_ysu_itrace_TobiiTracker_stopTracking
 }
 
 JNIEXPORT void
-	JNICALL Java_edu_ysu_itrace_TobiiTracker_00024Calibrator_jniAddPoint
+	JNICALL Java_edu_ysu_itrace_trackers_TobiiTracker_00024Calibrator_jniAddPoint
 	(JNIEnv* env, jobject obj, jdouble x, jdouble y)
 {
 	//Get native data from parent TobiiTracker
 	jfieldID jfid_parent = getFieldID(env, obj, "parent",
-		"Ledu/ysu/itrace/TobiiTracker;");
+		"Ledu/ysu/itrace/trackers/TobiiTracker;");
 	if (jfid_parent == NULL)
 	{
 		throwJException(env, "java/lang/RuntimeException",
@@ -259,12 +259,12 @@ JNIEXPORT void
 }
 
 JNIEXPORT void JNICALL
-	Java_edu_ysu_itrace_TobiiTracker_00024Calibrator_jniStartCalibration
+	Java_edu_ysu_itrace_trackers_TobiiTracker_00024Calibrator_jniStartCalibration
 	(JNIEnv* env, jobject obj)
 {
 	//Get native data from parent TobiiTracker
 	jfieldID jfid_parent = getFieldID(env, obj, "parent",
-		"Ledu/ysu/itrace/TobiiTracker;");
+		"Ledu/ysu/itrace/trackers/TobiiTracker;");
 	if (jfid_parent == NULL)
 	{
 		throwJException(env, "java/lang/RuntimeException",
@@ -288,12 +288,12 @@ JNIEXPORT void JNICALL
 }
 
 JNIEXPORT void JNICALL
-	Java_edu_ysu_itrace_TobiiTracker_00024Calibrator_jniStopCalibration
+	Java_edu_ysu_itrace_trackers_TobiiTracker_00024Calibrator_jniStopCalibration
 	(JNIEnv* env, jobject obj)
 {
 	//Get native data from parent TobiiTracker
 	jfieldID jfid_parent = getFieldID(env, obj, "parent",
-		"Ledu/ysu/itrace/TobiiTracker;");
+		"Ledu/ysu/itrace/trackers/TobiiTracker;");
 	if (jfid_parent == NULL)
 	{
 		throwJException(env, "java/lang/RuntimeException",

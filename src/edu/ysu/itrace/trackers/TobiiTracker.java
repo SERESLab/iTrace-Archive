@@ -27,9 +27,12 @@ public class TobiiTracker implements IEyeTracker {
         private native boolean jniBeginTobiiMainloop();
     }
 
-    private class TobiiCalibrator extends Calibrator {
-        public TobiiCalibrator() throws IOException {
+    private static class Calibrator extends edu.ysu.itrace.Calibrator {
+        private TobiiTracker parent = null;
+
+        public Calibrator(TobiiTracker tracker) throws IOException {
             super();
+            parent = tracker;
         }
 
         protected void startCalibration() throws Exception {
@@ -57,13 +60,13 @@ public class TobiiTracker implements IEyeTracker {
     private volatile ByteBuffer native_data = null;
     private LinkedBlockingQueue<Gaze> gaze_points =
             new LinkedBlockingQueue<Gaze>();
-    private TobiiCalibrator calibrator;
+    private Calibrator calibrator;
 
     static { System.loadLibrary("TobiiTracker"); }
 
     public TobiiTracker() throws EyeTrackerConnectException,
                                  IOException {
-        calibrator = new TobiiCalibrator();
+        calibrator = new Calibrator(this);
         //Initialise the background thread which functions as the main loop in
         //the Tobii SDK.
         bg_thread = new BackgroundThread(this);
@@ -163,7 +166,7 @@ public class TobiiTracker implements IEyeTracker {
         Dimension screen_size = Toolkit.getDefaultToolkit().getScreenSize();
         int screen_x = (int) (screen_size.width * x);
         int screen_y = (int) (screen_size.height * y);
-        calibrator.setLocation(screen_x, screen_y);
+        calibrator.moveCrosshair(screen_x, screen_y);
 
         try {
             Gaze gaze = new Gaze(x, y, gaze_left_validity, gaze_right_validity,
