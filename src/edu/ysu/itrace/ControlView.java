@@ -22,6 +22,8 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.ShellEvent;
@@ -34,6 +36,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IPartListener2;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchPartReference;
@@ -67,6 +70,7 @@ public class ControlView extends ViewPart implements IPartListener2,
             = new LinkedBlockingQueue<IGazeResponse>();
 
     private int line_height, font_height;
+    private String gazeFilename = "";
 
     /*
      * Gets gazes from the eye tracker, calls gaze handlers, and adds responses
@@ -131,8 +135,8 @@ public class ControlView extends ViewPart implements IPartListener2,
             Dimension screenRect = Toolkit.getDefaultToolkit().getScreenSize();
 
             try {
-                outFile = new FileWriter(workspaceLocation + "/gaze-responses-"
-                          + (new Date()).getTime() + ".xml");
+                outFile = new FileWriter(workspaceLocation + "/" +
+                                         gazeFilename);
                 responseWriter = outFactory.createXMLStreamWriter(outFile);
                 responseWriter.writeStartDocument("utf-8");
                 responseWriter.writeCharacters(EOL);
@@ -333,6 +337,15 @@ public class ControlView extends ViewPart implements IPartListener2,
                     }
                 }
             });
+
+        final Text gazeFilename = new Text(parent, SWT.LEFT);
+        gazeFilename.setText("gaze-responses-" + (new Date()).getTime() +
+                             ".xml");
+        gazeFilename.addModifyListener(new ModifyListener() {
+            public void modifyText(ModifyEvent e) {
+                ControlView.this.gazeFilename = gazeFilename.getText();
+            }
+        });
 
         selectTracker(0); // TODO allow user to select the right tracker
     }
