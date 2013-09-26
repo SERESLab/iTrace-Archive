@@ -65,6 +65,10 @@ public class ControlView extends ViewPart implements IPartListener2,
     private GazeRepository gazeRepository;
     private Shell rootShell;
 
+    private GazeTransport gazeTransport;
+    private LinkedBlockingQueue<Gaze> standardTrackingQueue;
+    private LinkedBlockingQueue<Gaze> crosshairQueue;
+
     private volatile boolean trackingInProgress;
     private LinkedBlockingQueue<IGazeResponse> gazeResponses
             = new LinkedBlockingQueue<IGazeResponse>();
@@ -84,11 +88,14 @@ public class ControlView extends ViewPart implements IPartListener2,
 
         @Override
         public IStatus runInUIThread(IProgressMonitor monitor) {
+            if (standardTrackingQueue == null)
+                return Status.OK_STATUS;
+
             int loops = 0;
             Gaze g = null;
             do
             {
-                g = tracker.getGaze();
+                g = standardTrackingQueue.poll();
                 if (g != null) {
                     Dimension screenRect = Toolkit.getDefaultToolkit()
                                            .getScreenSize();
@@ -294,6 +301,17 @@ public class ControlView extends ViewPart implements IPartListener2,
                 public void widgetSelected(SelectionEvent e)
                 {
                     tracker.displayCrosshair(display_crosshair.getSelection());
+                    //Create a client for the crosshair so that it will continue
+                    //to run when tracking is disabled. Remove when done.
+                    if (display_crosshair.getSelection()) {
+                        if (crosshairQueue == null)
+                            crosshairQueue = gazeTransport.createClient();
+                    } else {
+                        if (crosshairQueue != null) {
+                            gazeTransport.removeClient(crosshairQueue);
+                            crosshairQueue = null;
+                        }
+                    }
                 }
             });
 
@@ -352,6 +370,9 @@ public class ControlView extends ViewPart implements IPartListener2,
 
     @Override
     public void dispose(){
+        if (gazeTransport != null)
+            gazeTransport.quit();
+
         stopTracking();
         if(tracker != null){
             tracker.close();
@@ -525,6 +546,8 @@ public class ControlView extends ViewPart implements IPartListener2,
     private void selectTracker(int index) {
         try {
             tracker = EyeTrackerFactory.getConcreteEyeTracker(index);
+            gazeTransport = new GazeTransport(tracker);
+            gazeTransport.start();
         } catch (EyeTrackerConnectException | IOException e) {
             throw new RuntimeException("Could not connect to eye tracker.");
         }
@@ -535,37 +558,28 @@ public class ControlView extends ViewPart implements IPartListener2,
             return;
         }
 
-        trackingInProgress = true;
+        if (tracker != null) {
+            standardTrackingQueue = gazeTransport.createClient();
 
-        if(tracker != null) {
-            try {
-                tracker.startTracking();
-            } catch (IOException e) {
-                displayError("Could not start tracking. Reason: "
-                             + e.getMessage());
+            if (standardTrackingQueue != null) {
+                //FIXME: Seems to crash.
+                //responseHandlerThread.start();
+                gazeHandlerJob.schedule(POLL_GAZES_MS);
+                trackingInProgress = true;
             }
-
-            responseHandlerThread.start();
-            gazeHandlerJob.schedule(POLL_GAZES_MS);
         }
     }
 
     private void stopTracking(){
-        if(!trackingInProgress){
+        if (!trackingInProgress){
             return;
         }
 
-        trackingInProgress = false;
-
-        if(tracker != null) {
-
-            try {
-                tracker.stopTracking();
-            } catch (IOException e) {
-                displayError("Could not stop tracking. Reason: "
-                + e.getMessage());
+        if (tracker != null) {
+            if (gazeTransport.removeClient(standardTrackingQueue)) {
+                trackingInProgress = false;
+                standardTrackingQueue = null;
             }
-
         }
     }
 
