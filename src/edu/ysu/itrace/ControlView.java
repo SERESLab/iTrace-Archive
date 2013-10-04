@@ -293,6 +293,15 @@ public class ControlView extends ViewPart implements IPartListener2,
             }
         });
 
+        final Button displayStatus = new Button(parent, SWT.PUSH);
+        displayStatus.setText("Display Status");
+        displayStatus.addSelectionListener(new SelectionAdapter(){
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                (new EyeStatusView(rootShell, gazeTransport)).open();
+            }
+        });
+
         final Button display_crosshair = new Button(parent, SWT.CHECK);
         display_crosshair.setText("Display Crosshair");
         display_crosshair.addSelectionListener(new SelectionAdapter()
