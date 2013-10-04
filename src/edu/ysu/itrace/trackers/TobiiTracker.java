@@ -150,15 +150,27 @@ public class TobiiTracker implements IEyeTracker {
         double x = (left_x + right_x) / 2;
         double y = (left_y + right_y) / 2;
 
-        //Clamp values to [0.0, 1.0].
-        if (x >= 1.0)
-            x = 1.0;
-        else if (x <= 0.0)
-            x = 0.0;
-        if (y >= 1.0)
-            y = 1.0;
-        else if (y <= 0.0)
-            y = 0.0;
+        //Clamp x values to [0.0, 1.0].
+        if (left_x >= 1.0)
+            left_x = 1.0;
+        else if (left_x <= 0.0)
+            left_x = 0.0;
+
+        if (right_x >= 1.0)
+            right_x = 1.0;
+        else if (right_x <= 0.0)
+            right_x = 0.0;
+
+        //Clamp y values to [0.0, 1.0]
+        if (left_y >= 1.0)
+            left_y = 1.0;
+        else if (left_y <= 0.0)
+            left_y = 0.0;
+
+        if (right_y >= 1.0)
+            right_y = 1.0;
+        else if (right_y <= 0.0)
+            right_y = 0.0;
 
         double gaze_left_validity = 1.0 - ((double) left_validity / 4.0);
         double gaze_right_validity = 1.0 - ((double) right_validity / 4.0);
@@ -169,8 +181,9 @@ public class TobiiTracker implements IEyeTracker {
         calibrator.moveCrosshair(screen_x, screen_y);
 
         try {
-            Gaze gaze = new Gaze(x, y, gaze_left_validity, gaze_right_validity,
-                    new Date(timestamp / 1000));
+            Gaze gaze = new Gaze(left_x, right_x, left_y, right_y,
+                                 gaze_left_validity, gaze_right_validity,
+                                 new Date(timestamp / 1000));
             gaze_points.put(gaze);
         } catch (InterruptedException e) {
             //Ignore this point.

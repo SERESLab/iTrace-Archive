@@ -100,10 +100,10 @@ public class SystemMouseTracker extends Thread implements IEyeTracker {
         {
             Point cursorPosition = MouseInfo.getPointerInfo().getLocation();
             Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-            Gaze gaze = new Gaze(
-                    (double) cursorPosition.x / (double) screenSize.width,
-                    (double) cursorPosition.y / (double) screenSize.height,
-                    1.0, 1.0, new Date());
+            double x = (double) cursorPosition.x / (double) screenSize.width;
+            double y = (double) cursorPosition.y / (double) screenSize.height;
+            Gaze gaze = new Gaze(x - 0.05, x + 0.05, y, y, 1.0, 1.0,
+                                 new Date());
             calibrator.moveCrosshair(cursorPosition.x, cursorPosition.y);
             gazePoints.add(gaze);
             try {

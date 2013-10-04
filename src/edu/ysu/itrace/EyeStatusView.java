@@ -51,25 +51,49 @@ public class EyeStatusView extends Window {
         final Composite composite = parent;
         composite.setLayout(new FillLayout());
 
-        //FIXME: Flickers.
         canvas = new Canvas(composite, SWT.DOUBLE_BUFFERED);
         canvas.addPaintListener(new PaintListener() {
+            private Gaze current = null;
+
             public void paintControl(PaintEvent event) {
-                Gaze current = gazeQueue.poll();
+                Gaze newGaze = gazeQueue.poll();
+                if (newGaze != null)
+                    current = newGaze;
+
                 if (current != null) {
-                  Point windowSize = composite.getShell().getSize();
-                  Display display = composite.getShell().getDisplay();
+                    Point windowSize = composite.getShell().getSize();
+                    Display display = composite.getShell().getDisplay();
 
-                  //TODO: Background changes with validity.
-                  event.gc.setBackground(new Color(display, 255, 0, 0));
+                    //Left colour based on validity.
+                    int leftValidity = (int) (current.getLeftValidity() * 255);
+                    event.gc.setBackground(new Color(display,
+                            255 - leftValidity, leftValidity, 0));
 
-                  //TODO: Left and right.
-                  event.gc.fillOval((int) (current.getX() * windowSize.x),
-                                    (int) (current.getY() * windowSize.y),
-                                    EYE_CIRCLE_SIZE, EYE_CIRCLE_SIZE);
-                  event.gc.drawOval((int) (current.getX() * windowSize.x),
-                                    (int) (current.getY() * windowSize.y),
-                                    EYE_CIRCLE_SIZE, EYE_CIRCLE_SIZE);
+                    //Left.
+                    event.gc.fillOval(
+                            (int) (current.getLeftX() * windowSize.x),
+                            (int) (current.getLeftY() * windowSize.y),
+                            EYE_CIRCLE_SIZE, EYE_CIRCLE_SIZE);
+                    event.gc.drawOval(
+                            (int) (current.getLeftX() * windowSize.x),
+                            (int) (current.getLeftY() * windowSize.y),
+                            EYE_CIRCLE_SIZE, EYE_CIRCLE_SIZE);
+
+                    //Right colour based on validity.
+                    int rightValidity =
+                            (int) (current.getRightValidity() * 255);
+                    event.gc.setBackground(new Color(display,
+                            255 - rightValidity, rightValidity, 0));
+
+                    //Right.
+                    event.gc.fillOval(
+                            (int) (current.getRightX() * windowSize.x),
+                            (int) (current.getRightY() * windowSize.y),
+                            EYE_CIRCLE_SIZE, EYE_CIRCLE_SIZE);
+                    event.gc.drawOval(
+                            (int) (current.getRightX() * windowSize.x),
+                            (int) (current.getRightY() * windowSize.y),
+                            EYE_CIRCLE_SIZE, EYE_CIRCLE_SIZE);
                 }
             }
         });
