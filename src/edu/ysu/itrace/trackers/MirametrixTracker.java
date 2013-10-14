@@ -42,4 +42,11 @@ public class MirametrixTracker implements IEyeTracker {
         // TODO Auto-generated method stub
     }
 
+    @Override
+    public void setXDrift(int drift) {
+    }
+
+    @Override
+    public void setYDrift(int drift) {
+    }
 }

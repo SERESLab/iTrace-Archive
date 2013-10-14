@@ -6,6 +6,8 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
+import org.eclipse.swt.events.ShellEvent;
+import org.eclipse.swt.events.ShellListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
@@ -39,15 +41,44 @@ public class EyeStatusView extends Window {
 
     private final int EYE_CIRCLE_SIZE = 20;
     private Canvas canvas;
+    private GazeTransport transport;
     private LinkedBlockingQueue<Gaze> gazeQueue = null;
 
     public EyeStatusView(Shell parentShell, GazeTransport transport) {
         super(parentShell);
-        gazeQueue = transport.createClient();
-        //TODO: Close client when done.
+        this.transport = transport;
     }
 
     public Control createContents(Composite parent) {
+        getShell().addShellListener(new ShellListener() {
+            public void shellActivated(ShellEvent e) {
+                gazeQueue = transport.createClient();
+            }
+
+            public void shellClosed(ShellEvent e) {
+                disable();
+            }
+
+            public void shellDeactivated(ShellEvent e) {
+                disable();
+            }
+
+            public void shellDeiconified(ShellEvent e) {
+                //Nothing.
+            }
+
+            public void shellIconified(ShellEvent e) {
+                //Nothing.
+            }
+
+            private void disable() {
+                if (gazeQueue != null) {
+                    transport.removeClient(gazeQueue);
+                    gazeQueue = null;
+                }
+            }
+        });
+
         final Composite composite = parent;
         composite.setLayout(new FillLayout());
 
@@ -56,7 +87,9 @@ public class EyeStatusView extends Window {
             private Gaze current = null;
 
             public void paintControl(PaintEvent event) {
-                Gaze newGaze = gazeQueue.poll();
+                Gaze newGaze = null;
+                if (gazeQueue != null)
+                    newGaze = gazeQueue.poll();
                 if (newGaze != null)
                     current = newGaze;
 

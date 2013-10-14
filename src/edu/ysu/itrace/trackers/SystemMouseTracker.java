@@ -15,11 +15,66 @@ import java.util.Date;
  * Tracker which follows the mouse cursor. Useful for testing when no eye
  * tracker is present.
  */
-public class SystemMouseTracker extends Thread implements IEyeTracker {
-    private enum RunState {
-        RUNNING,
-        STOPPING,
-        STOPPED
+public class SystemMouseTracker implements IEyeTracker {
+    private static class TrackerThread extends Thread {
+        private enum RunState {
+            RUNNING,
+            STOPPING,
+            STOPPED
+        }
+
+        private SystemMouseTracker parent = null;
+        private volatile RunState running = RunState.STOPPED;
+
+        public TrackerThread(SystemMouseTracker parent) {
+            this.parent = parent;
+        }
+
+        public void startTracking() {
+            start();
+        }
+
+        public void stopTracking() {
+            //Already stopped.
+            if (running != RunState.RUNNING)
+                return;
+
+            running = RunState.STOPPING;
+            while (running != RunState.STOPPED) {
+                try {
+                    Thread.sleep(25);
+                } catch (InterruptedException e) {
+                    //Just try again.
+                }
+            }
+        }
+
+        //Executed on separate thread to get mouse "gaze" data.
+        public void run() {
+            running = RunState.RUNNING;
+            while (running == RunState.RUNNING)
+            {
+                Point cursorPosition = MouseInfo.getPointerInfo().
+                                       getLocation();
+                Dimension screenSize = Toolkit.getDefaultToolkit().
+                                       getScreenSize();
+                double x = (double) cursorPosition.x /
+                           (double) screenSize.width;
+                double y = (double) cursorPosition.y /
+                           (double) screenSize.height;
+                Gaze gaze = new Gaze(x - 0.05, x + 0.05, y, y, 1.0, 1.0,
+                                     new Date());
+                parent.calibrator.moveCrosshair(cursorPosition.x,
+                                                cursorPosition.y);
+                parent.gazePoints.add(gaze);
+                try {
+                    Thread.sleep(25);
+                } catch (InterruptedException e) {
+                    //Just try again.
+                }
+            }
+            running = RunState.STOPPED;
+        }
     }
 
     private class SystemMouseCalibrator extends Calibrator {
@@ -41,10 +96,10 @@ public class SystemMouseTracker extends Thread implements IEyeTracker {
         }
     }
 
-    private volatile RunState running = RunState.STOPPED;
     private LinkedBlockingQueue<Gaze> gazePoints
             = new LinkedBlockingQueue<Gaze>();
     private SystemMouseCalibrator calibrator;
+    private TrackerThread trackerThread = null;
 
     public SystemMouseTracker() throws IOException {
         calibrator = new SystemMouseCalibrator();
@@ -67,22 +122,19 @@ public class SystemMouseTracker extends Thread implements IEyeTracker {
     }
 
     public void startTracking() throws IOException {
-        start();
+        if (trackerThread != null)
+            return;
+
+        trackerThread = new TrackerThread(this);
+        trackerThread.startTracking();
     }
 
     public void stopTracking() throws IOException {
-        //Already stopped.
-        if (running != RunState.RUNNING)
+        if (trackerThread == null)
             return;
 
-        running = RunState.STOPPING;
-        while (running != RunState.STOPPED) {
-            try {
-                Thread.sleep(25);
-            } catch (InterruptedException e) {
-                //Just try again.
-            }
-        }
+        trackerThread.stopTracking();
+        trackerThread = null;
     }
 
     public Gaze getGaze() {
@@ -93,25 +145,9 @@ public class SystemMouseTracker extends Thread implements IEyeTracker {
         calibrator.displayCrosshair(enabled);
     }
 
-    //Executed on separate thread to get mouse "gaze" data.
-    public void run() {
-        running = RunState.RUNNING;
-        while (running == RunState.RUNNING)
-        {
-            Point cursorPosition = MouseInfo.getPointerInfo().getLocation();
-            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-            double x = (double) cursorPosition.x / (double) screenSize.width;
-            double y = (double) cursorPosition.y / (double) screenSize.height;
-            Gaze gaze = new Gaze(x - 0.05, x + 0.05, y, y, 1.0, 1.0,
-                                 new Date());
-            calibrator.moveCrosshair(cursorPosition.x, cursorPosition.y);
-            gazePoints.add(gaze);
-            try {
-                Thread.sleep(25);
-            } catch (InterruptedException e) {
-                //Just try again.
-            }
-        }
-        running = RunState.STOPPED;
+    public void setXDrift(int drift) {
+    }
+
+    public void setYDrift(int drift) {
     }
 }

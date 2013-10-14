@@ -39,4 +39,7 @@ public interface IEyeTracker {
     @param enabled If true, display crosshair, else do not display crosshair.
     */
     public void displayCrosshair(boolean enabled);
+    
+    public void setXDrift(int drift);
+    public void setYDrift(int drift);
 }

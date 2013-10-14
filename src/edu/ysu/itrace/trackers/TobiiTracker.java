@@ -60,7 +60,10 @@ public class TobiiTracker implements IEyeTracker {
     private volatile ByteBuffer native_data = null;
     private LinkedBlockingQueue<Gaze> gaze_points =
             new LinkedBlockingQueue<Gaze>();
+    private LinkedBlockingQueue<Gaze> recentGazes =
+            new LinkedBlockingQueue<Gaze>();
     private Calibrator calibrator;
+    private double xDrift = 0, yDrift = 0;
 
     static { System.loadLibrary("TobiiTracker"); }
 
@@ -143,9 +146,23 @@ public class TobiiTracker implements IEyeTracker {
         return gaze_points.poll();
     }
 
+    public void setXDrift(int drift) {
+        xDrift = ((double) drift) / 100;
+    }
+
+    public void setYDrift(int drift) {
+        yDrift = ((double) drift) / 100;
+    }
+
     public void newGazePoint(long timestamp, double left_x, double left_y,
             double right_x, double right_y, int left_validity,
             int right_validity) {
+        //Drift
+        left_x += xDrift;
+        right_x += xDrift;
+        left_y += yDrift;
+        right_y += yDrift;
+
         //Average left and right eyes for each value.
         double x = (left_x + right_x) / 2;
         double y = (left_y + right_y) / 2;
@@ -175,19 +192,46 @@ public class TobiiTracker implements IEyeTracker {
         double gaze_left_validity = 1.0 - ((double) left_validity / 4.0);
         double gaze_right_validity = 1.0 - ((double) right_validity / 4.0);
 
-        Dimension screen_size = Toolkit.getDefaultToolkit().getScreenSize();
-        int screen_x = (int) (screen_size.width * x);
-        int screen_y = (int) (screen_size.height * y);
-        calibrator.moveCrosshair(screen_x, screen_y);
-
+        double left_x_mod = left_x,
+               right_x_mod = right_x,
+               left_y_mod = left_y,
+               right_y_mod = right_y;
         try {
             Gaze gaze = new Gaze(left_x, right_x, left_y, right_y,
                                  gaze_left_validity, gaze_right_validity,
                                  new Date(timestamp / 1000));
-            gaze_points.put(gaze);
+            if (recentGazes.size() >= 15)
+                recentGazes.remove();
+            recentGazes.add(gaze);
+
+            for (Object curObj : recentGazes.toArray()) {
+                Gaze curGaze = (Gaze) curObj;
+                left_x_mod += curGaze.getLeftX();
+                right_x_mod += curGaze.getRightX();
+                left_y_mod += curGaze.getLeftY();
+                right_y_mod += curGaze.getRightY();
+            }
+            left_x_mod /= recentGazes.size() + 1;
+            right_x_mod /= recentGazes.size() + 1;
+            left_y_mod /= recentGazes.size() + 1;
+            right_y_mod /= recentGazes.size() + 1;
+
+            Gaze modifiedGaze = new Gaze(left_x_mod, right_x_mod, left_y_mod,
+                                         right_y_mod, gaze_left_validity,
+                                         gaze_right_validity,
+                                         new Date(timestamp / 1000));
+
+            gaze_points.put(modifiedGaze);
         } catch (InterruptedException e) {
             //Ignore this point.
         }
+
+        Dimension screen_size = Toolkit.getDefaultToolkit().getScreenSize();
+        int screen_x =
+                (int) (screen_size.width * ((left_x_mod + right_x_mod) / 2));
+        int screen_y =
+                (int) (screen_size.height * ((left_y_mod + right_y_mod) / 2));
+        calibrator.moveCrosshair(screen_x, screen_y);
     }
 
     private native boolean jniConnectTobiiTracker(int timeout_seconds);

@@ -131,7 +131,7 @@ public class ControlView extends ViewPart implements IPartListener2,
     /*
      * Outputs all gaze responses to an XML file separate from the UI thread.
      */
-    private Thread responseHandlerThread = new Thread() {
+    private class ResponseHandlerThread extends Thread {
         @Override
         public void run(){
             XMLStreamWriter responseWriter;
@@ -141,6 +141,7 @@ public class ControlView extends ViewPart implements IPartListener2,
                     .getLocation().toString();
             Dimension screenRect = Toolkit.getDefaultToolkit().getScreenSize();
 
+            System.out.println("Putting files: " + workspaceLocation + "/" + gazeFilename);
             try {
                 outFile = new FileWriter(workspaceLocation + "/" +
                                          gazeFilename);
@@ -170,7 +171,8 @@ public class ControlView extends ViewPart implements IPartListener2,
                 responseWriter.writeStartElement("gazes");
                 responseWriter.writeCharacters(EOL);
             } catch (Exception e) {
-                throw new RuntimeException("Log files could not be created.");
+                throw new RuntimeException("Log files could not be created." +
+                                           e.getMessage());
             }
 
 
@@ -241,7 +243,9 @@ public class ControlView extends ViewPart implements IPartListener2,
                 // ignore write errors
             }
         }
-    };
+    }
+
+    private ResponseHandlerThread responseHandlerThread = null;
 
 
 
@@ -324,55 +328,28 @@ public class ControlView extends ViewPart implements IPartListener2,
                 }
             });
 
-        final Button test_tracking = new Button(parent, SWT.CHECK);
-        test_tracking.setText("Test Tracking");
-        test_tracking.addSelectionListener(new SelectionAdapter()
-            {
-                @Override
-                public void widgetSelected(SelectionEvent e)
-                {
-                    if (display_crosshair.getSelection())
-                    {
-                        if (trackingInProgress)
-                            stopTracking();
-                        startButton.setEnabled(false);
-                        stopButton.setEnabled(false);
-                        try
-                        {
-                            tracker.startTracking();
-                        }
-                        catch (IOException ex)
-                        {
-                            displayError("Failed to start tracking. Reason: " +
-                                ex.getMessage());
-                        }
-                    }
-                    else
-                    {
-                        try
-                        {
-                            tracker.stopTracking();
-                        }
-                        catch (IOException ex)
-                        {
-                            displayError("Failed to start tracking. Reason: " +
-                                ex.getMessage());
-                        }
-                        tracker.clear();
-                        startButton.setEnabled(true);
-                        stopButton.setEnabled(true);
-                    }
-                }
-            });
+        final Text xDrift = new Text(parent, SWT.LEFT);
+        xDrift.addModifyListener(new ModifyListener() {
+            public void modifyText(ModifyEvent e) {
+                tracker.setXDrift(Integer.parseInt(xDrift.getText()));
+            }
+        });
+
+        final Text yDrift = new Text(parent, SWT.LEFT);
+        yDrift.addModifyListener(new ModifyListener() {
+            public void modifyText(ModifyEvent e) {
+                tracker.setYDrift(Integer.parseInt(yDrift.getText()));
+            }
+        });
 
         final Text gazeFilename = new Text(parent, SWT.LEFT);
-        gazeFilename.setText("gaze-responses-" + (new Date()).getTime() +
-                             ".xml");
         gazeFilename.addModifyListener(new ModifyListener() {
             public void modifyText(ModifyEvent e) {
                 ControlView.this.gazeFilename = gazeFilename.getText();
             }
         });
+        gazeFilename.setText("gaze-responses-" + (new Date()).getTime() +
+                             ".xml");
 
         selectTracker(0); // TODO allow user to select the right tracker
     }
@@ -570,9 +547,10 @@ public class ControlView extends ViewPart implements IPartListener2,
         if (tracker != null) {
             standardTrackingQueue = gazeTransport.createClient();
 
-            if (standardTrackingQueue != null) {
-                //FIXME: Seems to crash.
-                //responseHandlerThread.start();
+            if (standardTrackingQueue != null &&
+                    responseHandlerThread == null) {
+                responseHandlerThread = new ResponseHandlerThread();
+                responseHandlerThread.start();
                 gazeHandlerJob.schedule(POLL_GAZES_MS);
                 trackingInProgress = true;
             }
@@ -588,6 +566,7 @@ public class ControlView extends ViewPart implements IPartListener2,
             if (gazeTransport.removeClient(standardTrackingQueue)) {
                 trackingInProgress = false;
                 standardTrackingQueue = null;
+                responseHandlerThread = null;
             }
         }
     }

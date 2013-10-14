@@ -65,6 +65,7 @@ public class GazeTransport extends Thread {
         if (clients.size() == 0) {
             trackerRunning = true;
             try {
+                eyeTracker.clear();
                 eyeTracker.startTracking();
             } catch (IOException e) {
                 return null;
