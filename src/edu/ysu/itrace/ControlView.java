@@ -2,6 +2,7 @@ package edu.ysu.itrace;
 
 import java.awt.Dimension;
 import java.awt.Toolkit;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -541,6 +542,20 @@ public class ControlView extends ViewPart implements IPartListener2,
 
     private void startTracking(){
         if(trackingInProgress){
+            return;
+        }
+
+        //Check that file does not already exist. If it does, do not begin
+        //tracking.
+        String workspaceLocation = ResourcesPlugin.getWorkspace().getRoot().
+                                   getLocation().toString();
+        File fileAtPath = new File(workspaceLocation + "/" + gazeFilename);
+        if (fileAtPath.exists()) {
+            MessageBox messageBox = new MessageBox(rootShell);
+            messageBox.setMessage("You cannot overwrite this file. If you " +
+                                  "wish to continue, delete the file " +
+                                  "manually.");
+            messageBox.open();
             return;
         }
 
