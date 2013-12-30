@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram program="umlet" version="12.1">
+  <zoom_level>7</zoom_level>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>308</x>
+      <y>210</y>
+      <w>70</w>
+      <h>21</h>
+    </coordinates>
+    <panel_attributes>Activator</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>231</x>
+      <y>280</y>
+      <w>231</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;Boundary&gt;&gt;
+ControlView
+--
+-tracker: IEyeTracker
+-gazeRepository: GazeRepository
+--
++createPartControl(parent: Composite)</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>462</x>
+      <y>399</y>
+      <w>294</w>
+      <h>133</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;Thread&gt;&gt;
+GazeTransport
+--
+-eyeTracker: IEyeTracker
+-trackerRunning: boolean
+-clientGazes: Vector&lt;LinkedBlockingQueue&lt;Gaze&gt;&gt;
+--
++GazeTransport(tracker: IEyeTracker)
++createClient(): LinkedBlockingQueue&lt;Gaze&gt;
++removeClient(client: LinkedBlockingQueue&lt;Gaze&gt;)
++addGaze(gaze: Gaze)
++clearGazes()
++getLatestGaze(): Gaze</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>280</x>
+      <y>623</y>
+      <w>196</w>
+      <h>84</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;Interface, Thread&gt;&gt;
+IEyeTracker
+--
+--
++calibrate()
++close()
++startTracking()
++stopTracking()</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>364</x>
+      <y>511</y>
+      <w>160</w>
+      <h>125</h>
+    </coordinates>
+    <panel_attributes/>
+    <additional_attributes>21;112;147;21</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>238</x>
+      <y>441</y>
+      <w>196</w>
+      <h>35</h>
+    </coordinates>
+    <panel_attributes>EyeTrackerFactoryDialog
+--
+--
++openAndGetTracker(): IEyeTracker</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>294</x>
+      <y>455</y>
+      <w>34</w>
+      <h>181</h>
+    </coordinates>
+    <panel_attributes/>
+    <additional_attributes>21;168;21;21</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>315</x>
+      <y>329</y>
+      <w>34</w>
+      <h>125</h>
+    </coordinates>
+    <panel_attributes/>
+    <additional_attributes>21;112;21;21</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>679</x>
+      <y>189</y>
+      <w>189</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;Thread&gt;&gt;
+GazeProcessor
+--
+-xmlWriter: XMLStreamWriter
+-outFile: FileWriter
+--
++export(outFileName: string)</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>693</x>
+      <y>238</y>
+      <w>34</w>
+      <h>174</h>
+    </coordinates>
+    <panel_attributes/>
+    <additional_attributes>21;161;21;21</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>441</x>
+      <y>273</y>
+      <w>76</w>
+      <h>55</h>
+    </coordinates>
+    <panel_attributes/>
+    <additional_attributes>21;21;63;42</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>539</x>
+      <y>623</y>
+      <w>189</w>
+      <h>84</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;Abstract&gt;&gt;
+Calibrator
+--
+--
++calibrate()
+/#startCalibration()/
+/#stopCalibration()/
+/#useCalibrationPoint(x: int, y: int)/</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>504</x>
+      <y>280</y>
+      <w>168</w>
+      <h>63</h>
+    </coordinates>
+    <panel_attributes>Crosshair
+--
+-centre: Point
+--
++setLocation(x: int, y: int)
++setVisible(visible: boolean)</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>455</x>
+      <y>616</y>
+      <w>97</w>
+      <h>34</h>
+    </coordinates>
+    <panel_attributes/>
+    <additional_attributes>21;21;84;21</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>441</x>
+      <y>182</y>
+      <w>251</w>
+      <h>125</h>
+    </coordinates>
+    <panel_attributes/>
+    <additional_attributes>21;112;238;21</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>560</x>
+      <y>322</y>
+      <w>34</w>
+      <h>90</h>
+    </coordinates>
+    <panel_attributes/>
+    <additional_attributes>21;77;21;21</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>14</x>
+      <y>189</y>
+      <w>161</w>
+      <h>231</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;Entity&gt;&gt;
+Gaze
+--
+x: int
+left_x: int
+right_x: int
+y: int
+left_y: int
+right_y: int
+left_validity: float
+right_validity: float
+timestamp: Date
+--
++getX(): int
++getLeftX(): int
++getRightX(): int
++getY(): int
++getLeftY(): int
++getRightY(): int
++getLeftValidity(): double
++getRightValidity(): double
++getTimeStamp(): Date</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>154</x>
+      <y>266</y>
+      <w>90</w>
+      <h>34</h>
+    </coordinates>
+    <panel_attributes/>
+    <additional_attributes>21;21;77;21</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>840</x>
+      <y>413</y>
+      <w>196</w>
+      <h>105</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;Entity&gt;&gt;
+Link
+--
+-fullyQualifiedName: String
+-confirmed: boolean
+--
++Link(fullyQualifiedName: String)
++getFullyQualifiedName(): String
++setConfirmed(confirmed: boolean)
++isConfirmed()</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>378</x>
+      <y>126</y>
+      <w>168</w>
+      <h>35</h>
+    </coordinates>
+    <panel_attributes>LinkFinderFactory
+--
+--
++createLinkFinder(): ILinkFinder</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>448</x>
+      <y>140</y>
+      <w>244</w>
+      <h>69</h>
+    </coordinates>
+    <panel_attributes/>
+    <additional_attributes>231;56;21;21</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>637</x>
+      <y>49</y>
+      <w>301</w>
+      <h>63</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;Interface&gt;&gt;
+ILinkFinder
+--
+--
+process(gazes: LinkedBlockingQueue&lt;Gaze&gt;): Set&lt;Link&gt;
+getProcessFrequency: ProcessFrequency</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>462</x>
+      <y>42</y>
+      <w>188</w>
+      <h>97</h>
+    </coordinates>
+    <panel_attributes/>
+    <additional_attributes>175;21;21;84</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>763</x>
+      <y>91</y>
+      <w>34</w>
+      <h>111</h>
+    </coordinates>
+    <panel_attributes/>
+    <additional_attributes>21;21;21;98</additional_attributes>
+  </element>
+</diagram>

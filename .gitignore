@@ -171,3 +171,6 @@ jni/CMakeCache.txt
 jni/CMakeFiles/*
 jni/Makefile
 cmake_install.cmake
+
+#Generated Docs
+docs/*html
