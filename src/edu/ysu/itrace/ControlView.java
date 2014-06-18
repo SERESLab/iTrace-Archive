@@ -51,6 +51,7 @@ import edu.ysu.itrace.exceptions.EyeTrackerConnectException;
 import edu.ysu.itrace.gaze.GazeHandlerFactory;
 import edu.ysu.itrace.gaze.IGazeHandler;
 import edu.ysu.itrace.gaze.IGazeResponse;
+import edu.ysu.itrace.solvers.XMLGazeExportSolver;
 
 /**
  * ViewPart for managing and controlling the plugin.
@@ -60,7 +61,6 @@ public class ControlView extends ViewPart implements IPartListener2,
                                                      ShellListener {
     private static final int POLL_GAZES_MS = 5;
     private static final String KEY_HANDLER = "gazeHandler";
-    private static final String EOL = System.getProperty("line.separator");
 
     private IEyeTracker tracker;
     private GazeRepository gazeRepository;
@@ -135,48 +135,9 @@ public class ControlView extends ViewPart implements IPartListener2,
     private class ResponseHandlerThread extends Thread {
         @Override
         public void run(){
-            XMLStreamWriter responseWriter;
-            FileWriter outFile;
-            XMLOutputFactory outFactory = XMLOutputFactory.newInstance();
-            String workspaceLocation = ResourcesPlugin.getWorkspace().getRoot()
-                    .getLocation().toString();
-            Dimension screenRect = Toolkit.getDefaultToolkit().getScreenSize();
-
-            System.out.println("Putting files: " + workspaceLocation + "/" + gazeFilename);
-            try {
-                outFile = new FileWriter(workspaceLocation + "/" +
-                                         gazeFilename);
-                responseWriter = outFactory.createXMLStreamWriter(outFile);
-                responseWriter.writeStartDocument("utf-8");
-                responseWriter.writeCharacters(EOL);
-                responseWriter.writeStartElement("itrace-records");
-                responseWriter.writeCharacters(EOL);
-                responseWriter.writeStartElement("environment");
-                responseWriter.writeCharacters(EOL);
-                responseWriter.writeEmptyElement("screen-size");
-                responseWriter.writeAttribute("width",
-                        String.valueOf(screenRect.width));
-                responseWriter.writeAttribute("height",
-                        String.valueOf(screenRect.height));
-                responseWriter.writeCharacters(EOL);
-                responseWriter.writeStartElement("line-height");
-                responseWriter.writeCharacters(String.valueOf(line_height));
-                responseWriter.writeEndElement();
-                responseWriter.writeCharacters(EOL);
-                responseWriter.writeStartElement("font-height");
-                responseWriter.writeCharacters(String.valueOf(font_height));
-                responseWriter.writeEndElement();
-                responseWriter.writeCharacters(EOL);
-                responseWriter.writeEndElement();
-                responseWriter.writeCharacters(EOL);
-                responseWriter.writeStartElement("gazes");
-                responseWriter.writeCharacters(EOL);
-            } catch (Exception e) {
-                throw new RuntimeException("Log files could not be created." +
-                                           e.getMessage());
-            }
-
-
+            XMLGazeExportSolver xmlSolver = new XMLGazeExportSolver(
+                    gazeFilename, line_height, font_height);
+            xmlSolver.init();
 
             while(true){
                 if(!trackingInProgress && gazeResponses.size() <= 0){
@@ -185,64 +146,11 @@ public class ControlView extends ViewPart implements IPartListener2,
 
                 IGazeResponse response = gazeResponses.poll();
 
-                //TODO: Move this code somewhere else.
                 if(response != null){
-                    try {
-                        if(response.getProperties().size() > 0){
-                            int screenX = (int) (screenRect.width * response
-                                          .getGaze().getX());
-                            int screenY = (int) (screenRect.height * response
-                                          .getGaze().getY());
-
-                            responseWriter.writeEmptyElement("response");
-                            responseWriter.writeAttribute("file",
-                                    response.getName());
-                            responseWriter.writeAttribute("type",
-                                    response.getType());
-                            responseWriter.writeAttribute("x",
-                                    String.valueOf(screenX));
-                            responseWriter.writeAttribute("y",
-                                    String.valueOf(screenY));
-                            responseWriter.writeAttribute("left-validation",
-                                    String.valueOf(response.getGaze()
-                                    .getLeftValidity()));
-                            responseWriter.writeAttribute("right-validation",
-                                    String.valueOf(response.getGaze()
-                                    .getRightValidity()));
-                            responseWriter.writeAttribute("timestamp",
-                                    String.valueOf(response.getGaze()
-                                    .getTimeStamp().getTime()));
-
-                            for(Iterator<Entry<String,String>> entries
-                                = response.getProperties().entrySet()
-                                .iterator();
-                                    entries.hasNext(); ){
-                                Entry<String,String> pair = entries.next();
-                                responseWriter.writeAttribute(pair.getKey(),
-                                                              pair.getValue());
-                            }
-                            responseWriter.writeCharacters(EOL);
-                        }
-                    } catch (XMLStreamException e) {
-                        // ignore write errors
-                    }
+                    xmlSolver.process(response);
                 }
             }
-
-            try {
-                responseWriter.writeEndElement();
-                responseWriter.writeCharacters(EOL);
-                responseWriter.writeEndElement();
-                responseWriter.writeCharacters(EOL);
-                responseWriter.writeEndDocument();
-                responseWriter.writeCharacters(EOL);
-                responseWriter.flush();
-                responseWriter.close();
-                outFile.close();
-                System.out.println("Gaze responses saved.");
-            } catch (XMLStreamException | IOException e) {
-                // ignore write errors
-            }
+            xmlSolver.dispose();
         }
     }
 
