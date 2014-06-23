@@ -59,7 +59,6 @@ import edu.ysu.itrace.gaze.IGazeResponse;
 public class ControlView extends ViewPart implements IPartListener2,
                                                      ShellListener {
     private static final int POLL_GAZES_MS = 5;
-    private static final String KEY_HANDLER = "gazeHandler";
     private static final String EOL = System.getProperty("line.separator");
 
     private IEyeTracker tracker;
@@ -392,12 +391,13 @@ public class ControlView extends ViewPart implements IPartListener2,
 
     @Override
     public void partVisible(IWorkbenchPartReference partRef) {
-        setHandlers(partRef, false);
+        fetchMetadataFromStyledText(partRef);
+        HandlerBindManager.bind(partRef);
     }
 
     @Override
     public void partHidden(IWorkbenchPartReference partRef) {
-        setHandlers(partRef, true);
+        HandlerBindManager.unbind(partRef);
     }
 
     @Override
@@ -425,64 +425,38 @@ public class ControlView extends ViewPart implements IPartListener2,
         gazeHandlerJob.cancel();
     }
 
-    /*
-     * Adds gaze handlers to the child controls of the specified workbench
-     * part reference. If remove is true, the handlers are removed instead.
+    /**
+     * Find a styled text control within a part and extract metadata about it.
+     * @param partRef Highest-level part reference possible.
      */
-    private void setHandlers(IWorkbenchPartReference partRef, boolean remove){
+    private void fetchMetadataFromStyledText(IWorkbenchPartReference partRef) {
+        Shell workbenchShell = partRef.getPage().getWorkbenchWindow().
+                               getShell();
+        for (Control control : workbenchShell.getChildren())
+            fetchMetadataFromStyledText(control);
+    }
 
-        IWorkbenchPart part = partRef.getPart(false);
-        if(part == null){
-            return;
+    /**
+     * Recursive helper method for fetchMetadataFromStyledText(
+     * IWorkbenchPartReference).
+     * @param control Control under which to recursively search for styled text.
+     */
+    private void fetchMetadataFromStyledText(Control control) {
+        if (control instanceof StyledText) {
+            StyledText styled_text = (StyledText) control;
+            this.line_height = styled_text.getLineHeight();
+            this.font_height = styled_text.getFont()
+                               .getFontData()[0].getHeight();
         }
 
-        IWorkbenchPartSite site = part.getSite();
-        if (site instanceof PartSite){
-
-            Control partControl = ((PartSite)site).getPane().getControl();
-            Queue<Control> controlsQueue = new LinkedList<Control>();
-            controlsQueue.add(partControl);
-
-            while(!controlsQueue.isEmpty()){
-
-                Control control = controlsQueue.remove();
-                boolean setHandler = false;
-
-                if (control instanceof Composite) {
-                    Composite composite = (Composite) control;
-                    Control[] children = composite.getChildren();
-                    if (children.length > 0 && children[0] != null) {
-                        for (Control child : children) {
-                            controlsQueue.add(child);
-                        }
-                    } else {
-                        setHandler = true;
-                    }
-                } else {
-                    setHandler = true;
-                }
-
-                if(setHandler && !remove){
-                    IGazeHandler handler = GazeHandlerFactory.createHandler(
-                            control, partRef);
-                    if(handler != null){
-                        control.setData(KEY_HANDLER, handler);
-                    }
-                    if (control instanceof StyledText)
-                    {
-                        StyledText styled_text = (StyledText) control;
-                        this.line_height = styled_text.getLineHeight();
-                        this.font_height = styled_text.getFont()
-                                           .getFontData()[0].getHeight();
-                    }
-                }
-                else if(setHandler){
-                    control.setData(KEY_HANDLER, null);
-                }
+        if (control instanceof Composite) {
+            Composite composite = (Composite) control;
+            for (Control curControl : composite.getChildren()) {
+                if (control != null)
+                    fetchMetadataFromStyledText(curControl);
             }
         }
     }
-
 
     /*
      * Finds the control under the specified screen coordinates and calls
@@ -512,7 +486,7 @@ public class ControlView extends ViewPart implements IPartListener2,
                     }
 
                     IGazeHandler handler
-                            = (IGazeHandler)child.getData(KEY_HANDLER);
+                            = (IGazeHandler)child.getData(HandlerBindManager.KEY_HANDLER);
                     if(handler != null){
                         return handler.handleGaze(screenX - childScreenBounds.x,
                                 screenY - childScreenBounds.y, gaze);
