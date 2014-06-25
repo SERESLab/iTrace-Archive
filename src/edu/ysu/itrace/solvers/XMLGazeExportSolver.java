@@ -4,8 +4,10 @@ import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.Map.Entry;
+import java.text.SimpleDateFormat;
 
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -19,40 +21,58 @@ import edu.ysu.itrace.solvers.ISolver;
 /**
  * Solver that simply dumps gaze data to disk in XML format. 
  */
-public class XMLGazeExportSolver implements ISolver {
+public class XMLGazeExportSolver implements IFileExportSolver {
     private static final String EOL = System.getProperty("line.separator");
     private XMLOutputFactory outFactory = XMLOutputFactory.newInstance();
     private XMLStreamWriter responseWriter;
     private FileWriter outFile;
-    private String gazeFilename;
-    private String workspaceLocation;
+    private String filenamePattern;
     private Dimension screenRect;
-    private int line_height;
-    private int font_height;
+    private int lineHeight;
+    private int fontHeight;
 
-    public XMLGazeExportSolver(String gazeFilename, int line_height, int font_height) {
-        this.gazeFilename = gazeFilename;
-        this.line_height = line_height;
-        this.font_height = font_height;
-        workspaceLocation = ResourcesPlugin.getWorkspace().getRoot()
-                .getLocation().toString();
-        screenRect = Toolkit.getDefaultToolkit().getScreenSize();
+    @Override
+    public String getFilenamePattern() {
+        return filenamePattern;
+    }
+
+    @Override
+    public void setFilenamePattern(String filenamePattern) {
+        this.filenamePattern = filenamePattern;
+    }
+
+    public int getLineHeight() {
+        return lineHeight;
+    }
+
+    public void setLineHeight(int lineHeight) {
+        this.lineHeight = lineHeight;
+    }
+
+    public int getFontHeight() {
+        return fontHeight;
+    }
+
+    public void setFontHeight(int fontHeight) {
+        this.fontHeight = fontHeight;
     }
 
     @Override
     public void init() {
+        screenRect = Toolkit.getDefaultToolkit().getScreenSize();
+        String currentFilename;
         try {
-            outFile = new FileWriter(workspaceLocation + "/" +
-                    gazeFilename);
+            currentFilename = getFilename();
+            outFile = new FileWriter(currentFilename);
             responseWriter = outFactory.createXMLStreamWriter(outFile);
         } catch (IOException | XMLStreamException e) {
             throw new RuntimeException("Log files could not be created." +
                     e.getMessage());
         }
-        System.out.println("Putting files: " + workspaceLocation + "/" + gazeFilename);
+        System.out.println("Putting files: " + currentFilename);
 
         try {
-            responseWriter.writeStartDocument("utf-8");
+            responseWriter.writeStartDocument("utf-8", "1.0");
             responseWriter.writeCharacters(EOL);
             responseWriter.writeStartElement("itrace-records");
             responseWriter.writeCharacters(EOL);
@@ -65,11 +85,11 @@ public class XMLGazeExportSolver implements ISolver {
                     String.valueOf(screenRect.height));
             responseWriter.writeCharacters(EOL);
             responseWriter.writeStartElement("line-height");
-            responseWriter.writeCharacters(String.valueOf(line_height));
+            responseWriter.writeCharacters(String.valueOf(lineHeight));
             responseWriter.writeEndElement();
             responseWriter.writeCharacters(EOL);
             responseWriter.writeStartElement("font-height");
-            responseWriter.writeCharacters(String.valueOf(font_height));
+            responseWriter.writeCharacters(String.valueOf(fontHeight));
             responseWriter.writeEndElement();
             responseWriter.writeCharacters(EOL);
             responseWriter.writeEndElement();
@@ -142,5 +162,13 @@ public class XMLGazeExportSolver implements ISolver {
             throw new RuntimeException("Log file footer could not be written." +
                     e.getMessage());
         }
+    }
+
+    @Override
+    public String getFilename() {
+        String workspaceLocation = ResourcesPlugin.getWorkspace().getRoot()
+                .getLocation().toString();
+        SimpleDateFormat formatter = new SimpleDateFormat(filenamePattern);
+        return workspaceLocation + "/" + formatter.format(new Date());
     }
 }

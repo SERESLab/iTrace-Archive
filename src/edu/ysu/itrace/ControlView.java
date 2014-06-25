@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map.Entry;
 import java.util.Queue;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.xml.stream.XMLOutputFactory;
@@ -51,6 +52,7 @@ import edu.ysu.itrace.exceptions.EyeTrackerConnectException;
 import edu.ysu.itrace.gaze.GazeHandlerFactory;
 import edu.ysu.itrace.gaze.IGazeHandler;
 import edu.ysu.itrace.gaze.IGazeResponse;
+import edu.ysu.itrace.solvers.ISolver;
 import edu.ysu.itrace.solvers.XMLGazeExportSolver;
 
 /**
@@ -75,7 +77,10 @@ public class ControlView extends ViewPart implements IPartListener2,
             = new LinkedBlockingQueue<IGazeResponse>();
 
     private int line_height, font_height;
-    private String gazeFilename = "";
+
+    private CopyOnWriteArrayList<ISolver> solvers
+            =new CopyOnWriteArrayList<ISolver>();
+    private XMLGazeExportSolver xmlSolver = new XMLGazeExportSolver();
 
     /*
      * Gets gazes from the eye tracker, calls gaze handlers, and adds responses
@@ -135,9 +140,9 @@ public class ControlView extends ViewPart implements IPartListener2,
     private class ResponseHandlerThread extends Thread {
         @Override
         public void run(){
-            XMLGazeExportSolver xmlSolver = new XMLGazeExportSolver(
-                    gazeFilename, line_height, font_height);
-            xmlSolver.init();
+            for (ISolver solver : solvers) {
+                solver.init();
+            }
 
             while(true){
                 if(!trackingInProgress && gazeResponses.size() <= 0){
@@ -147,10 +152,14 @@ public class ControlView extends ViewPart implements IPartListener2,
                 IGazeResponse response = gazeResponses.poll();
 
                 if(response != null){
-                    xmlSolver.process(response);
+                    for (ISolver solver : solvers) {
+                        solver.process(response);
+                    }
                 }
             }
-            xmlSolver.dispose();
+            for (ISolver solver : solvers) {
+                solver.dispose();
+            }
         }
     }
 
@@ -254,11 +263,10 @@ public class ControlView extends ViewPart implements IPartListener2,
         final Text gazeFilename = new Text(parent, SWT.LEFT);
         gazeFilename.addModifyListener(new ModifyListener() {
             public void modifyText(ModifyEvent e) {
-                ControlView.this.gazeFilename = gazeFilename.getText();
+                xmlSolver.setFilenamePattern(gazeFilename.getText());
             }
         });
-        gazeFilename.setText("gaze-responses-" + (new Date()).getTime() +
-                             ".xml");
+        gazeFilename.setText("'gaze-responses-'yyyyMMdd'T'HHmmss','SSSSZ'.xml'");
 
         selectTracker(0); // TODO allow user to select the right tracker
     }
@@ -455,9 +463,8 @@ public class ControlView extends ViewPart implements IPartListener2,
 
         //Check that file does not already exist. If it does, do not begin
         //tracking.
-        String workspaceLocation = ResourcesPlugin.getWorkspace().getRoot().
-                                   getLocation().toString();
-        File fileAtPath = new File(workspaceLocation + "/" + gazeFilename);
+        // If someone messes with the clock, this might not work...
+        File fileAtPath = new File(xmlSolver.getFilename());
         if (fileAtPath.exists()) {
             MessageBox messageBox = new MessageBox(rootShell);
             messageBox.setMessage("You cannot overwrite this file. If you " +
@@ -466,6 +473,11 @@ public class ControlView extends ViewPart implements IPartListener2,
             messageBox.open();
             return;
         }
+
+        //TODO: move these guys under control of UI
+        xmlSolver.setFontHeight(font_height);
+        xmlSolver.setLineHeight(line_height);
+        solvers.addIfAbsent(xmlSolver);
 
         if (tracker != null) {
             standardTrackingQueue = gazeTransport.createClient();
