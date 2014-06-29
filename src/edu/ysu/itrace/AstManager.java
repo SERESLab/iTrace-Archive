@@ -5,6 +5,9 @@ import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.Stack;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
@@ -13,6 +16,9 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.events.KeyEvent;
+import org.eclipse.swt.events.KeyListener;
+import org.eclipse.ui.progress.UIJob;
 
 public class AstManager {
     public enum SCEType {
@@ -35,12 +41,30 @@ public class AstManager {
         public String fullyQualifiedName;
     }
 
+    private class ReloadAstJob extends UIJob {
+        private AstManager astManager;
+
+        public ReloadAstJob(String name, AstManager astManager) {
+            super(name);
+            this.astManager = astManager;
+        }
+
+        @Override
+        public IStatus runInUIThread(IProgressMonitor monitor) {
+            astManager.reload();
+            return Status.OK_STATUS;
+        }
+    }
+
+    final private int AFTER_KEYPRESS_RELOAD_THRESHOLD_MILLIS = 1000;
+
     private StyledText styledText;
-    private LinkedList<SourceCodeEntity> sourceCodeEntities =
-            new LinkedList<SourceCodeEntity>();
+    private ReloadAstJob reloadAstJob;
+    private LinkedList<SourceCodeEntity> sourceCodeEntities;
 
     public AstManager(StyledText styledText) {
         this.styledText = styledText;
+        hookupAutoReload();
         reload();
     }
 
@@ -82,6 +106,9 @@ public class AstManager {
     }
 
     public void reload() {
+        //Reset source code entities list.
+        sourceCodeEntities = new LinkedList<SourceCodeEntity>();
+
         ASTParser parser = ASTParser.newParser(AST.JLS4);
         parser.setKind(ASTParser.K_COMPILATION_UNIT);
         parser.setSource(styledText.getText().toCharArray());
@@ -130,5 +157,25 @@ public class AstManager {
         sce.startCol = compileUnit.getColumnNumber(node.getStartPosition());
         sce.endCol = compileUnit.getColumnNumber(node.getStartPosition() +
                                                  node.getLength());
+    }
+
+    private void hookupAutoReload() {
+        final AstManager astManager = this;
+        KeyListener keyListener = new KeyListener() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                //Do nothing.
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                if (reloadAstJob != null)
+                    reloadAstJob.cancel();
+
+                reloadAstJob = new ReloadAstJob("reloadAstJob", astManager);
+                reloadAstJob.schedule(AFTER_KEYPRESS_RELOAD_THRESHOLD_MILLIS);
+            }
+        };
+        styledText.addKeyListener(keyListener);
     }
 }
