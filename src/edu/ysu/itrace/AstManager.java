@@ -20,7 +20,13 @@ import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.ui.progress.UIJob;
 
+/**
+ * Keeps updated information about the source code viewed in one StyledText.
+ */
 public class AstManager {
+    /**
+     * Types of source code entities.
+     */
     public enum SCEType {
         TYPE,
         METHOD,
@@ -28,6 +34,9 @@ public class AstManager {
         COMMENT,
     }
 
+    /**
+     * Information extracted about a source code entity.
+     */
     public class SourceCodeEntity {
         public SCEType type;
         public String name;
@@ -36,11 +45,19 @@ public class AstManager {
         public int startCol, endCol;
     }
 
+    /**
+     * Response object for getSCE(). Contains source code entity and the fully
+     * qualified name of the entity.
+     */
     public class SCEQueryResponse {
         public SourceCodeEntity sce;
         public String fullyQualifiedName;
     }
 
+    /**
+     * Task ran on UI thread to reload the AST. Like any UIJob, it can be
+     * scheduled to occur later and can be canceled.
+     */
     private class ReloadAstJob extends UIJob {
         private AstManager astManager;
 
@@ -62,12 +79,24 @@ public class AstManager {
     private ReloadAstJob reloadAstJob;
     private LinkedList<SourceCodeEntity> sourceCodeEntities;
 
+    /**
+     * Constructor. Loads the AST and sets up the StyledText to automatically
+     * reload after certain events.
+     * @param styledText StyledText to which this AST pertains.
+     */
     public AstManager(StyledText styledText) {
         this.styledText = styledText;
         hookupAutoReload();
         reload();
     }
 
+    /**
+     * Gets the source code entity found at a location in source.
+     * @param lineNumber 1-based line number.
+     * @param colNumber 0-based column number.
+     * @return Response containing source code entity and its fully qualified
+     *     name.
+     */
     public SCEQueryResponse getSCE(int lineNumber, int colNumber) {
         SourceCodeEntity responseSce = null;
         Stack<SourceCodeEntity> sceFullyQualified =
@@ -105,6 +134,9 @@ public class AstManager {
         }
     }
 
+    /**
+     * Reloads the AST from the current contents of the StyledText.
+     */
     public void reload() {
         //Reset source code entities list.
         sourceCodeEntities = new LinkedList<SourceCodeEntity>();
@@ -148,8 +180,14 @@ public class AstManager {
             });
     }
 
+    /**
+     * Get line/column start/end information about an ASTNode.
+     * @param compileUnit Compilation unit to which the ASTNode belongs.
+     * @param node The ASTNode.
+     * @param sce The SourceCodeEntity in which to store the result.
+     */
     private static void determineSCEPosition(CompilationUnit compileUnit,
-            ASTNode node,SourceCodeEntity sce) {
+            ASTNode node, SourceCodeEntity sce) {
         sce.totalLength = node.getLength();
         sce.startLine = compileUnit.getLineNumber(node.getStartPosition());
         sce.endLine = compileUnit.getLineNumber(node.getStartPosition() +
@@ -159,8 +197,14 @@ public class AstManager {
                                                  node.getLength());
     }
 
+    /**
+     * Called by constructor. Hooks up the StyledText with listeners to reload
+     * the AST when it is likely to have changed.
+     */
     private void hookupAutoReload() {
         final AstManager astManager = this;
+
+        //Listen for key activity, then reload when inactivity follows.
         KeyListener keyListener = new KeyListener() {
             @Override
             public void keyPressed(KeyEvent e) {
