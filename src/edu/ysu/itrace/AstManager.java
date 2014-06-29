@@ -3,6 +3,7 @@ package edu.ysu.itrace;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
+import java.util.Stack;
 
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -23,10 +24,15 @@ public class AstManager {
 
     public class SourceCodeEntity {
         public SCEType type;
-        public String fullyQualifiedName;
+        public String name;
         public int totalLength;
         public int startLine, endLine;
         public int startCol, endCol;
+    }
+
+    public class SCEQueryResponse {
+        public SourceCodeEntity sce;
+        public String fullyQualifiedName;
     }
 
     private StyledText styledText;
@@ -38,7 +44,11 @@ public class AstManager {
         reload();
     }
 
-    public SourceCodeEntity getSCE(int lineNumber, int colNumber) {
+    public SCEQueryResponse getSCE(int lineNumber, int colNumber) {
+        SourceCodeEntity responseSce = null;
+        Stack<SourceCodeEntity> sceFullyQualified =
+                new Stack<SourceCodeEntity>();
+
         for (SourceCodeEntity sce : sourceCodeEntities) {
             boolean found = true;
             if (lineNumber < sce.startLine || lineNumber > sce.endLine)
@@ -47,10 +57,28 @@ public class AstManager {
                 found = false;
             if (lineNumber == sce.endLine && colNumber > sce.endCol)
                 found = false;
-            if (found)
-                return sce;
+            if (found) {
+                sceFullyQualified.push(sce);
+                //The first encountered SCE is the most specific SCE and will be
+                //returned in the response.
+                if (responseSce == null)
+                    responseSce = sce;
+            }
         }
-        return null;
+
+        if (responseSce != null) {
+            String fqName = "";
+            while (!sceFullyQualified.empty())
+                fqName += sceFullyQualified.pop().name + ".";
+            fqName = fqName.substring(0, fqName.length() - 1);
+
+            SCEQueryResponse result = new SCEQueryResponse();
+            result.sce = responseSce;
+            result.fullyQualifiedName = fqName;
+            return result;
+        } else {
+            return null;
+        }
     }
 
     public void reload() {
@@ -65,7 +93,7 @@ public class AstManager {
             public boolean visit(TypeDeclaration node) {
                 SourceCodeEntity sce = new SourceCodeEntity();
                 sce.type = SCEType.TYPE;
-                sce.fullyQualifiedName = node.getName().getFullyQualifiedName();
+                sce.name = node.getName().getFullyQualifiedName();
                 determineSCEPosition(compileUnit, node, sce);
                 sourceCodeEntities.add(sce);
                 return true;
@@ -74,7 +102,7 @@ public class AstManager {
             public boolean visit(MethodDeclaration node) {
                 SourceCodeEntity sce = new SourceCodeEntity();
                 sce.type = SCEType.METHOD;
-                sce.fullyQualifiedName = node.getName().getFullyQualifiedName();
+                sce.name = node.getName().getFullyQualifiedName();
                 determineSCEPosition(compileUnit, node, sce);
                 sourceCodeEntities.add(sce);
                 return true;
