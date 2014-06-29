@@ -57,6 +57,10 @@ public class HandlerBindManager {
             }
         }
 
+        //If key handler already set, the rest of this function is irrelevant.
+        if (control.getData(KEY_HANDLER) != null)
+            return;
+
         IGazeHandler handler = GazeHandlerFactory.
                                createHandler(control, partRef);
         if (handler != null && !unbind)

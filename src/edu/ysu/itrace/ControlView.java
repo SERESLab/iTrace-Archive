@@ -60,6 +60,7 @@ public class ControlView extends ViewPart implements IPartListener2,
                                                      ShellListener {
     private static final int POLL_GAZES_MS = 5;
     private static final String EOL = System.getProperty("line.separator");
+    public static final String KEY_AST = "itraceAST";
 
     private IEyeTracker tracker;
     private GazeRepository gazeRepository;
@@ -391,7 +392,7 @@ public class ControlView extends ViewPart implements IPartListener2,
 
     @Override
     public void partVisible(IWorkbenchPartReference partRef) {
-        fetchMetadataFromStyledText(partRef);
+        setupStyledText(partRef);
         HandlerBindManager.bind(partRef);
     }
 
@@ -426,34 +427,36 @@ public class ControlView extends ViewPart implements IPartListener2,
     }
 
     /**
-     * Find a styled text control within a part and extract metadata about it.
+     * Find a styled text control within a part, set it up to be used by iTrace,
+     * and extract meta-data from it.
      * @param partRef Highest-level part reference possible.
      */
-    private void fetchMetadataFromStyledText(IWorkbenchPartReference partRef) {
+    private void setupStyledText(IWorkbenchPartReference partRef) {
         Shell workbenchShell = partRef.getPage().getWorkbenchWindow().
                                getShell();
         for (Control control : workbenchShell.getChildren())
-            fetchMetadataFromStyledText(control);
+            setupStyledText(control);
     }
 
     /**
-     * Recursive helper method for fetchMetadataFromStyledText(
-     * IWorkbenchPartReference).
+     * Recursive helper method for setupStyledText(IWorkbenchPartReference).
      * @param control Control under which to recursively search for styled text.
      */
-    private void fetchMetadataFromStyledText(Control control) {
+    private void setupStyledText(Control control) {
         if (control instanceof StyledText) {
-            StyledText styled_text = (StyledText) control;
-            this.line_height = styled_text.getLineHeight();
-            this.font_height = styled_text.getFont()
+            StyledText styledText = (StyledText) control;
+            this.line_height = styledText.getLineHeight();
+            this.font_height = styledText.getFont()
                                .getFontData()[0].getHeight();
+            if (styledText.getData(KEY_AST) == null)
+                styledText.setData(KEY_AST, new AstManager(styledText));
         }
 
         if (control instanceof Composite) {
             Composite composite = (Composite) control;
             for (Control curControl : composite.getChildren()) {
                 if (control != null)
-                    fetchMetadataFromStyledText(curControl);
+                    setupStyledText(curControl);
             }
         }
     }
@@ -485,8 +488,8 @@ public class ControlView extends ViewPart implements IPartListener2,
                         }
                     }
 
-                    IGazeHandler handler
-                            = (IGazeHandler)child.getData(HandlerBindManager.KEY_HANDLER);
+                    IGazeHandler handler = (IGazeHandler) child.getData(
+                            HandlerBindManager.KEY_HANDLER);
                     if(handler != null){
                         return handler.handleGaze(screenX - childScreenBounds.x,
                                 screenY - childScreenBounds.y, gaze);
