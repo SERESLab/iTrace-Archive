@@ -7,6 +7,7 @@ REQUIREMENTS
 ============
 * Eclipse IDE
 * Java development kit (JDK)
+  * Graphical Editing Framework GEF SDK
 * C++ compiler: g++ on UNIX or Microsoft Visual Studio on Microsoft Windows
 * Java native interface (JNI) headers
 
