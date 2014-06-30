@@ -8,6 +8,7 @@ REQUIREMENTS
 * Eclipse IDE
 * Java development kit (JDK)
   * Graphical Editing Framework GEF SDK
+* Apache IvyDE Eclipse Plugin (https://ant.apache.org/ivy/ivyde/)
 * C++ compiler: g++ on UNIX or Microsoft Visual Studio on Microsoft Windows
 * Java native interface (JNI) headers
 
@@ -22,9 +23,10 @@ HOW TO BUILD: WINDOWS
 
 HOW TO RUN
 ==========
-1) Build and install plugin binaries or click "Run" from the Eclipse workspace and choose "Eclipse Application".
-2) Open the "itrace" perspective. If it is not visible, click the "Open Perspective" icon next to the "Java" perspective icon (by default in the top right corner) and choose "itrace" from the list.
-3) Open the itrace controller view on the bottom panel.
+1) Install all requirements and resolve Ivy dependencies (secondary click project, then click Ivy -> Resolve, then refresh the project).
+2) Build and install plugin binaries or click "Run" from the Eclipse workspace and choose "Eclipse Application".
+3) Open the "itrace" perspective. If it is not visible, click the "Open Perspective" icon next to the "Java" perspective icon (by default in the top right corner) and choose "itrace" from the list.
+4) Open the itrace controller view on the bottom panel.
 
 STYLE GUIDE FOR DEVELOPERS
 ==========
