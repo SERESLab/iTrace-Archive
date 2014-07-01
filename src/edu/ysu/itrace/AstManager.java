@@ -12,9 +12,11 @@ import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.Comment;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
@@ -166,8 +168,28 @@ public class AstManager {
                 sourceCodeEntities.add(sce);
                 return true;
             }
+
+            public boolean visit(VariableDeclarationFragment node) {
+                SourceCodeEntity sce = new SourceCodeEntity();
+                sce.type = SCEType.VARIABLE;
+                sce.name = node.getName().getFullyQualifiedName();
+                determineSCEPosition(compileUnit, node, sce);
+                sourceCodeEntities.add(sce);
+                return true;
+            }
         };
         compileUnit.accept(visitor);
+        //Get comments separately.
+        for (Object comment_obj : compileUnit.getCommentList()) {
+            if (comment_obj instanceof Comment) {
+                Comment comment = (Comment) comment_obj;
+                SourceCodeEntity sce = new SourceCodeEntity();
+                sce.type = SCEType.COMMENT;
+                sce.name = comment.toString();
+                determineSCEPosition(compileUnit, comment, sce);
+                sourceCodeEntities.add(sce);
+            }
+        }
         //Smaller entities take higher priority. If a method appears in a class,
         //for example, a query for the method should return the method instead
         //of the class.
