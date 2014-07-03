@@ -16,7 +16,6 @@ import javax.xml.stream.XMLStreamWriter;
 import org.eclipse.core.resources.ResourcesPlugin;
 
 import edu.ysu.itrace.gaze.IGazeResponse;
-import edu.ysu.itrace.solvers.ISolver;
 
 /**
  * Solver that simply dumps gaze data to disk in XML format. 
@@ -66,10 +65,10 @@ public class XMLGazeExportSolver implements IFileExportSolver {
             outFile = new FileWriter(currentFilename);
             responseWriter = outFactory.createXMLStreamWriter(outFile);
         } catch (IOException | XMLStreamException e) {
-            throw new RuntimeException("Log files could not be created." +
+            throw new RuntimeException("Log files could not be created: " +
                     e.getMessage());
         }
-        System.out.println("Putting files: " + currentFilename);
+        System.out.println("Putting files at " + currentFilename);
 
         try {
             responseWriter.writeStartDocument("utf-8", "1.0");
@@ -97,7 +96,7 @@ public class XMLGazeExportSolver implements IFileExportSolver {
             responseWriter.writeStartElement("gazes");
             responseWriter.writeCharacters(EOL);
         } catch (Exception e) {
-            throw new RuntimeException("Log file header could not be written." +
+            throw new RuntimeException("Log file header could not be written: " +
                                        e.getMessage());
         }
     }
@@ -159,7 +158,7 @@ public class XMLGazeExportSolver implements IFileExportSolver {
             outFile.close();
             System.out.println("Gaze responses saved.");
         } catch (XMLStreamException | IOException e) {
-            throw new RuntimeException("Log file footer could not be written." +
+            throw new RuntimeException("Log file footer could not be written: " +
                     e.getMessage());
         }
     }

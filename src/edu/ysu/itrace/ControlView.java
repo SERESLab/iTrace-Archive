@@ -3,22 +3,13 @@ package edu.ysu.itrace;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamWriter;
-
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -35,25 +26,20 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IPartListener2;
-import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchPartReference;
-import org.eclipse.ui.IWorkbenchPartSite;
-import org.eclipse.ui.internal.PartSite;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
 
 import edu.ysu.itrace.exceptions.CalibrationException;
 import edu.ysu.itrace.exceptions.EyeTrackerConnectException;
-import edu.ysu.itrace.gaze.GazeHandlerFactory;
 import edu.ysu.itrace.gaze.IGazeHandler;
 import edu.ysu.itrace.gaze.IGazeResponse;
 import edu.ysu.itrace.solvers.ISolver;
-import edu.ysu.itrace.solvers.XMLGazeExportSolver;
+import edu.ysu.itrace.solvers.JSONGazeExportSolver;
 
 /**
  * ViewPart for managing and controlling the plugin.
@@ -65,7 +51,6 @@ public class ControlView extends ViewPart implements IPartListener2,
     public static final String KEY_AST = "itraceAST";
 
     private IEyeTracker tracker;
-    private GazeRepository gazeRepository;
     private Shell rootShell;
 
     private GazeTransport gazeTransport;
@@ -80,7 +65,7 @@ public class ControlView extends ViewPart implements IPartListener2,
 
     private CopyOnWriteArrayList<ISolver> solvers
             =new CopyOnWriteArrayList<ISolver>();
-    private XMLGazeExportSolver xmlSolver = new XMLGazeExportSolver();
+    private JSONGazeExportSolver jsonSolver = new JSONGazeExportSolver();
 
     /*
      * Gets gazes from the eye tracker, calls gaze handlers, and adds responses
@@ -132,11 +117,6 @@ public class ControlView extends ViewPart implements IPartListener2,
         }
     };
 
-
-
-    /*
-     * Outputs all gaze responses to an XML file separate from the UI thread.
-     */
     private class ResponseHandlerThread extends Thread {
         @Override
         public void run(){
@@ -263,10 +243,10 @@ public class ControlView extends ViewPart implements IPartListener2,
         final Text gazeFilename = new Text(parent, SWT.LEFT);
         gazeFilename.addModifyListener(new ModifyListener() {
             public void modifyText(ModifyEvent e) {
-                xmlSolver.setFilenamePattern(gazeFilename.getText());
+                jsonSolver.setFilenamePattern(gazeFilename.getText());
             }
         });
-        gazeFilename.setText("'gaze-responses-'yyyyMMdd'T'HHmmss','SSSSZ'.xml'");
+        gazeFilename.setText("'gaze-responses-'yyyyMMdd'T'HHmmss','SSSSZ'.json'");
 
         selectTracker(0); // TODO allow user to select the right tracker
     }
@@ -441,7 +421,7 @@ public class ControlView extends ViewPart implements IPartListener2,
         //Check that file does not already exist. If it does, do not begin
         //tracking.
         // If someone messes with the clock, this might not work...
-        File fileAtPath = new File(xmlSolver.getFilename());
+        File fileAtPath = new File(jsonSolver.getFilename());
         if (fileAtPath.exists()) {
             MessageBox messageBox = new MessageBox(rootShell);
             messageBox.setMessage("You cannot overwrite this file. If you " +
@@ -451,10 +431,10 @@ public class ControlView extends ViewPart implements IPartListener2,
             return;
         }
 
-        //TODO: move these guys under control of UI
-        xmlSolver.setFontHeight(font_height);
-        xmlSolver.setLineHeight(line_height);
-        solvers.addIfAbsent(xmlSolver);
+        //TODO: move these guys under control of GUI configurator
+        jsonSolver.setFontHeight(font_height);
+        jsonSolver.setLineHeight(line_height);
+        solvers.addIfAbsent(jsonSolver);
 
         if (tracker != null) {
             standardTrackingQueue = gazeTransport.createClient();

@@ -26,5 +26,6 @@
     </info>
     <dependencies>
         <dependency org="org.functionaljava" name="functionaljava" rev="4.1"/>
+        <dependency org="com.google.code.gson" name="gson" rev="2.2.4"/>
     </dependencies>
 </ivy-module>
