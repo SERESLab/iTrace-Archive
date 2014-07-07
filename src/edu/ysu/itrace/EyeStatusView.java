@@ -52,7 +52,8 @@ public class EyeStatusView extends Window {
     public Control createContents(Composite parent) {
         getShell().addShellListener(new ShellListener() {
             public void shellActivated(ShellEvent e) {
-                gazeQueue = transport.createClient();
+                //TODO: Handle none case.
+                gazeQueue = transport.createClient().some();
             }
 
             public void shellClosed(ShellEvent e) {

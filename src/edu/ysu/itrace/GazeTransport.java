@@ -4,6 +4,10 @@ import java.io.IOException;
 import java.util.Vector;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import fj.data.Option;
+import static fj.data.Option.none;
+import static fj.data.Option.some;
+
 /**
  * Sets up client queues to retrieve gazes from eye tracker and transports gaze
  * data from the tracker to the queues. Automatically toggles tracking on and
@@ -59,22 +63,22 @@ public class GazeTransport extends Thread {
     /**
      * Creates a new client queue and enables tracking if not yet enabled.
      *
-     * @return Client queue or null if fails to start tracking.
+     * @return Client queue or none if fails to start tracking.
      */
-    public LinkedBlockingQueue<Gaze> createClient() {
+    public Option<LinkedBlockingQueue<Gaze>> createClient() {
         if (clients.size() == 0) {
             trackerRunning = true;
             try {
                 eyeTracker.clear();
                 eyeTracker.startTracking();
             } catch (IOException e) {
-                return null;
+                return none();
             }
         }
 
         LinkedBlockingQueue<Gaze> client = new LinkedBlockingQueue<Gaze>();
         clients.add(client);
-        return client;
+        return some(client);
     }
 
     /**

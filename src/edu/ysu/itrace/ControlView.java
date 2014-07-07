@@ -41,6 +41,10 @@ import edu.ysu.itrace.gaze.IGazeResponse;
 import edu.ysu.itrace.solvers.ISolver;
 import edu.ysu.itrace.solvers.JSONGazeExportSolver;
 
+import fj.data.Option;
+import static fj.data.Option.some;
+import static fj.data.Option.none;
+
 /**
  * ViewPart for managing and controlling the plugin.
  */
@@ -49,13 +53,16 @@ public class ControlView extends ViewPart implements IPartListener2,
                                                      ShellListener {
     private static final int POLL_GAZES_MS = 5;
     public static final String KEY_AST = "itraceAST";
+    public static final String FATAL_ERROR_MSG
+            = "A fatal error occurred. Restart the plugin and try again. If "
+            + "the problem persists, submit a bug report.";
 
-    private IEyeTracker tracker;
+    private Option<IEyeTracker> tracker = none();
     private Shell rootShell;
 
-    private GazeTransport gazeTransport;
-    private LinkedBlockingQueue<Gaze> standardTrackingQueue;
-    private LinkedBlockingQueue<Gaze> crosshairQueue;
+    private Option<GazeTransport> gazeTransport = none();
+    private Option<LinkedBlockingQueue<Gaze>> standardTrackingQueue = none();
+    private Option<LinkedBlockingQueue<Gaze>> crosshairQueue = none();
 
     private volatile boolean trackingInProgress;
     private LinkedBlockingQueue<IGazeResponse> gazeResponses
@@ -79,14 +86,15 @@ public class ControlView extends ViewPart implements IPartListener2,
 
         @Override
         public IStatus runInUIThread(IProgressMonitor monitor) {
-            if (standardTrackingQueue == null)
+            if (standardTrackingQueue.isNone())
                 return Status.OK_STATUS;
 
             int loops = 0;
             Gaze g = null;
             do
             {
-                g = standardTrackingQueue.poll();
+                //Method returns above if standardTrackingQueue is none.
+                g = standardTrackingQueue.some().poll();
                 if (g != null) {
                     Dimension screenRect = Toolkit.getDefaultToolkit()
                                            .getScreenSize();
@@ -145,9 +153,6 @@ public class ControlView extends ViewPart implements IPartListener2,
 
     private ResponseHandlerThread responseHandlerThread = null;
 
-
-
-
     @Override
     public void createPartControl(Composite parent) {
         // find root shell
@@ -160,19 +165,26 @@ public class ControlView extends ViewPart implements IPartListener2,
         // add listener for determining part visibility
         getSite().getWorkbenchWindow().getPartService().addPartListener(this);
 
+        final String DONT_DO_THAT_MSG = "You can't do that until you've " +
+                "selected a tracker in preferences.";
+
         // set up UI
         Button calibrateButton = new Button(parent, SWT.PUSH);
         calibrateButton.setText("Calibrate");
         calibrateButton.addSelectionListener(new SelectionAdapter(){
             @Override
             public void widgetSelected(SelectionEvent e) {
-                if(tracker != null){
+                requestTracker();
+                if(tracker.isSome()){
                     try {
-                        tracker.calibrate();
+                        tracker.some().calibrate();
                     } catch (CalibrationException e1) {
                         displayError("Failed to calibrate. Reason: "
                                      + e1.getMessage());
                     }
+                } else {
+                    //If tracker is none, requestTracker() would have already
+                    //raised an error.
                 }
             }
         });
@@ -200,9 +212,12 @@ public class ControlView extends ViewPart implements IPartListener2,
         displayStatus.addSelectionListener(new SelectionAdapter(){
             @Override
             public void widgetSelected(SelectionEvent e) {
-                (new EyeStatusView(rootShell, gazeTransport)).open();
+                //(new EyeStatusView(rootShell, gazeTransport)).open();
             }
         });
+
+        final String DONT_CHANGE_THAT_MSG = "Don't change this value until " +
+                "you've selected a tracker in preferences.";
 
         final Button display_crosshair = new Button(parent, SWT.CHECK);
         display_crosshair.setText("Display Crosshair");
@@ -211,17 +226,24 @@ public class ControlView extends ViewPart implements IPartListener2,
                 @Override
                 public void widgetSelected(SelectionEvent e)
                 {
-                    tracker.displayCrosshair(display_crosshair.getSelection());
-                    //Create a client for the crosshair so that it will continue
-                    //to run when tracking is disabled. Remove when done.
-                    if (display_crosshair.getSelection()) {
-                        if (crosshairQueue == null)
-                            crosshairQueue = gazeTransport.createClient();
-                    } else {
-                        if (crosshairQueue != null) {
-                            gazeTransport.removeClient(crosshairQueue);
-                            crosshairQueue = null;
+                    if (tracker.isSome()) {
+                        tracker.some().displayCrosshair(display_crosshair
+                               .getSelection());
+                        //Create a client for the crosshair so that it will
+                        //continue to run when tracking is disabled. Remove when
+                        //done.
+                        if (display_crosshair.getSelection()) {
+                            if (crosshairQueue.isSome())
+                                crosshairQueue = gazeTransport.some().createClient();
+                        } else {
+                            if (crosshairQueue != null) {
+                                gazeTransport.some().removeClient(
+                                        crosshairQueue.some());
+                                crosshairQueue = null;
+                            }
                         }
+                    } else {
+                        displayError(DONT_CHANGE_THAT_MSG);
                     }
                 }
             });
@@ -229,14 +251,22 @@ public class ControlView extends ViewPart implements IPartListener2,
         final Text xDrift = new Text(parent, SWT.LEFT);
         xDrift.addModifyListener(new ModifyListener() {
             public void modifyText(ModifyEvent e) {
-                tracker.setXDrift(Integer.parseInt(xDrift.getText()));
+                if (tracker.isSome())
+                    tracker.some().setXDrift(
+                            Integer.parseInt(xDrift.getText()));
+                else
+                    displayError(DONT_CHANGE_THAT_MSG);
             }
         });
 
         final Text yDrift = new Text(parent, SWT.LEFT);
         yDrift.addModifyListener(new ModifyListener() {
             public void modifyText(ModifyEvent e) {
-                tracker.setYDrift(Integer.parseInt(yDrift.getText()));
+                if (tracker.isSome())
+                    tracker.some().setYDrift(
+                            Integer.parseInt(yDrift.getText()));
+                else
+                    displayError(DONT_CHANGE_THAT_MSG);
             }
         });
 
@@ -247,21 +277,22 @@ public class ControlView extends ViewPart implements IPartListener2,
             }
         });
         gazeFilename.setText("'gaze-responses-'yyyyMMdd'T'HHmmss','SSSSZ'.json'");
-
-        selectTracker(0); // TODO allow user to select the right tracker
     }
 
     @Override
     public void dispose(){
-        if (gazeTransport != null)
-            gazeTransport.quit();
+        if (gazeTransport.isSome())
+            gazeTransport.some().quit();
+        //Else there's nothing to quit.
+
 
         stopTracking();
-        if(tracker != null){
-            tracker.close();
-        }
+        if(tracker != null)
+            tracker.some().close();
+        //Else there's nothing to close.
+
         getSite().getWorkbenchWindow().getPartService()
-                .removePartListener(this);
+                 .removePartListener(this);
         super.dispose();
     }
 
@@ -397,20 +428,41 @@ public class ControlView extends ViewPart implements IPartListener2,
         return null;
     }
 
-    private void selectTracker(int index) {
+    private boolean requestTracker() {
+        if (tracker.isSome()) {
+            //Already have a tracker. Don't need another.
+            return true;
+        }
+
         try {
-            tracker = EyeTrackerFactory.getConcreteEyeTracker().toNull();
-            gazeTransport = new GazeTransport(tracker);
-            gazeTransport.start();
+            tracker = EyeTrackerFactory.getConcreteEyeTracker();
+            if (tracker.isSome()) {
+                gazeTransport = some(new GazeTransport(tracker.some()));
+                gazeTransport.some().start();
+                return true;
+            } else {
+                displayError("Either an eye tracker was not selected or an " +
+                             "invalid eye tracker was selected.");
+                return false;
+            }
         } catch (EyeTrackerConnectException e) {
-            throw new RuntimeException("Could not connect to eye tracker.");
+            displayError("Could not connect to eye tracker.");
+            return false;
         } catch (IOException e) {
-            throw new RuntimeException("Could not connect to eye tracker.");
+            displayError("Could not connect to eye tracker.");
+            return false;
         }
     }
 
     private void startTracking(){
         if(trackingInProgress){
+            displayError("Tracking is already in progress.");
+            return;
+        }
+
+        if (!requestTracker()) {
+            //Error handling occurs in requestTracker(). Just return and pretend
+            //nothing happened.
             return;
         }
 
@@ -432,30 +484,45 @@ public class ControlView extends ViewPart implements IPartListener2,
         jsonSolver.setLineHeight(line_height);
         solvers.addIfAbsent(jsonSolver);
 
-        if (tracker != null) {
-            standardTrackingQueue = gazeTransport.createClient();
+        if (gazeTransport.isSome()) {
+            standardTrackingQueue = gazeTransport.some().createClient();
 
-            if (standardTrackingQueue != null &&
+            if (standardTrackingQueue.isSome() &&
                     responseHandlerThread == null) {
                 responseHandlerThread = new ResponseHandlerThread();
                 responseHandlerThread.start();
                 gazeHandlerJob.schedule(POLL_GAZES_MS);
                 trackingInProgress = true;
+            } else {
+                displayError(FATAL_ERROR_MSG);
             }
+        } else {
+            //If tracking is in progress, the gaze transport should be some.
+            displayError(FATAL_ERROR_MSG);
         }
     }
 
     private void stopTracking(){
         if (!trackingInProgress){
+            displayError("Tracking is not in progress.");
             return;
         }
 
-        if (tracker != null) {
-            if (gazeTransport.removeClient(standardTrackingQueue)) {
-                trackingInProgress = false;
-                standardTrackingQueue = null;
-                responseHandlerThread = null;
+        if (tracker.isSome()) {
+            if (gazeTransport.isSome()) {
+                if (gazeTransport.some()
+                        .removeClient(standardTrackingQueue.some())) {
+                    trackingInProgress = false;
+                    standardTrackingQueue = none();
+                    responseHandlerThread = null;
+                }
+            } else {
+                //If gaze transport is null, it shouldn't be tracking.
+                displayError(FATAL_ERROR_MSG);
             }
+        } else {
+            //If there is no tracker, tracking should not be occurring anyways.
+            displayError(FATAL_ERROR_MSG);
         }
     }
 
