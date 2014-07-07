@@ -5,6 +5,7 @@ This Eclipse plugin interfaces with an eye-tracking device to utilize fixation i
 
 REQUIREMENTS
 ============
+* Project must be checked out as "iTrace" in your workspace.
 * Eclipse IDE
 * Java development kit (JDK)
   * Graphical Editing Framework GEF SDK
