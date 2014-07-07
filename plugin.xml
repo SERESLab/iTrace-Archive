@@ -35,5 +35,19 @@
             name="UML Model Viewer">
       </editor>
    </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="edu.ysu.itrace.preferences.PreferenceInitializer">
+      </initializer>
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            class="edu.ysu.itrace.preferences.PluginPreferences"
+            id="edu.ysu.itrace.preferences.PluginPreferences"
+            name="iTrace">
+      </page>
+   </extension>
 
 </plugin>

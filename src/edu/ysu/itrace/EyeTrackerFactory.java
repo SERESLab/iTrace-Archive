@@ -1,49 +1,72 @@
 package edu.ysu.itrace;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Random;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import edu.ysu.itrace.trackers.*;
-import edu.ysu.itrace.exceptions.CalibrationException;
 import edu.ysu.itrace.exceptions.EyeTrackerConnectException;
 
-public class EyeTrackerFactory {
+import fj.data.Option;
+import static fj.data.Option.none;
+import static fj.data.Option.some;
 
-    public static ArrayList<IEyeTracker> getAvailableEyeTrackers() {
-        //TODO read a config file and use reflection to
-        //  build each of the trackers in the arraylist
-        return null;
+/**
+ * Constructs IEyeTracker instances.
+ */
+public class EyeTrackerFactory {
+    private static Option<TrackerType> trackerTypeToBuild = none();
+
+    public enum TrackerType {
+        SYSTEM_MOUSE_TRACKER,
+        TOBII_TRACKER,
     }
 
-    public static IEyeTracker getConcreteEyeTracker(int i) throws
+    /**
+     * Get the classes of each available eye tracker interface.
+     * @return Map of tracker types and their pretty printed names. Interation
+     *     order is predictable.
+     */
+    public static Map<TrackerType, String> getAvailableEyeTrackers() {
+        Map<TrackerType, String> result
+            = new LinkedHashMap<TrackerType, String>();
+        result.put(TrackerType.SYSTEM_MOUSE_TRACKER, "System Mouse Tracker");
+        result.put(TrackerType.TOBII_TRACKER, "Tobii Tracker");
+        return result;
+    }
+
+    /**
+     * Set the type of eye tracker which will be used for future calls to
+     * {@link #getConcreteEyeTracker() getConcreteEyeTracker()}.
+     * @param type Type value of eye tracker.
+     */
+    public static void setTrackerType(TrackerType type) {
+        trackerTypeToBuild = some(type);
+    }
+
+    /**
+     * Builds an interface and connects to an eye tracker specified by
+     * {@link #setTrackerType(TrackerType) setTrackerType()}.
+     * @return Some IEyeTracker if successful, none if no tracker type or an
+     *     invalid tracker type has been set.
+     * @throws EyeTrackerConnectException if the IEyeTracker fails to connect
+     *     to the tracker device.
+     * @throws IOException if any I/O errors occur while constructing the
+     *     IEyeTracker.
+     */
+    public static Option<IEyeTracker> getConcreteEyeTracker() throws
             EyeTrackerConnectException, IOException {
-        return new TobiiTracker();
-
-        /*return new IEyeTracker(){
-
-            @Override
-            public Gaze getGaze() {
-                Random r = new Random();
-                return new Gaze(r.nextDouble(), r.nextDouble(), new Date());
+        if (trackerTypeToBuild.isSome()) {
+            switch (trackerTypeToBuild.some()) {
+            case SYSTEM_MOUSE_TRACKER:
+                return some((IEyeTracker) new SystemMouseTracker());
+            case TOBII_TRACKER:
+                return some((IEyeTracker) new TobiiTracker());
+            default:
+                return none();
             }
-
-            @Override
-            public void close() {
-                // TODO Auto-generated method stub
-            }
-
-            @Override
-            public void startTracking() {
-                // TODO Auto-generated method stub
-            }
-
-            @Override
-            public void stopTracking() {
-                // TODO Auto-generated method stub
-            }};
-        //return getAvailableEyeTrackers().get(i);
-         */
+        } else {
+            return none();
+        }
     }
 }

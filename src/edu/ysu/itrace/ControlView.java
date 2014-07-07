@@ -397,18 +397,14 @@ public class ControlView extends ViewPart implements IPartListener2,
         return null;
     }
 
-
-    private void listTrackers(){
-        ArrayList<IEyeTracker> trackers
-            = EyeTrackerFactory.getAvailableEyeTrackers();
-    }
-
     private void selectTracker(int index) {
         try {
-            tracker = EyeTrackerFactory.getConcreteEyeTracker(index);
+            tracker = EyeTrackerFactory.getConcreteEyeTracker().toNull();
             gazeTransport = new GazeTransport(tracker);
             gazeTransport.start();
-        } catch (EyeTrackerConnectException | IOException e) {
+        } catch (EyeTrackerConnectException e) {
+            throw new RuntimeException("Could not connect to eye tracker.");
+        } catch (IOException e) {
             throw new RuntimeException("Could not connect to eye tracker.");
         }
     }

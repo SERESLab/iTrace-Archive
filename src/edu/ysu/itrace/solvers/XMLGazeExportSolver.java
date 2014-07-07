@@ -64,7 +64,10 @@ public class XMLGazeExportSolver implements IFileExportSolver {
             currentFilename = getFilename();
             outFile = new FileWriter(currentFilename);
             responseWriter = outFactory.createXMLStreamWriter(outFile);
-        } catch (IOException | XMLStreamException e) {
+        } catch (IOException e) {
+            throw new RuntimeException("Log files could not be created: " +
+                    e.getMessage());
+        } catch (XMLStreamException e) {
             throw new RuntimeException("Log files could not be created: " +
                     e.getMessage());
         }
@@ -157,7 +160,10 @@ public class XMLGazeExportSolver implements IFileExportSolver {
             responseWriter.close();
             outFile.close();
             System.out.println("Gaze responses saved.");
-        } catch (XMLStreamException | IOException e) {
+        } catch (XMLStreamException e) {
+            throw new RuntimeException("Log file footer could not be written: " +
+                    e.getMessage());
+        } catch (IOException e) {
             throw new RuntimeException("Log file footer could not be written: " +
                     e.getMessage());
         }

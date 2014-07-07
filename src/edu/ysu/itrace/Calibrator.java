@@ -39,7 +39,9 @@ public abstract class Calibrator extends JFrame {
                         (int) (crosshair.getHeight() / 2));
                 pack();
                 setAlwaysOnTop(true);
-            } catch (IOException | URISyntaxException e) {
+            } catch (IOException e) {
+                System.out.println("Failed to load crosshair icon.");
+            } catch (URISyntaxException e) {
                 System.out.println("Failed to load crosshair icon.");
             }
         }
@@ -68,7 +70,9 @@ public abstract class Calibrator extends JFrame {
         try {
             calibrationPoint =
                 Calibrator.getBufferedImage("calibration_point.png");
-        } catch (IOException | URISyntaxException e) {
+        } catch (IOException e) {
+            throw new IOException("Could not load calibration_point.png.");
+        } catch (URISyntaxException e) {
             throw new IOException("Could not load calibration_point.png.");
         }
 
