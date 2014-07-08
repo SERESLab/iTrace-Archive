@@ -150,8 +150,12 @@ public class JSONGazeExportSolver implements IFileExportSolver {
         String workspaceLocation =
                 ResourcesPlugin.getWorkspace().getRoot().getLocation()
                         .toString();
-        SimpleDateFormat formatter = new SimpleDateFormat(filenamePattern);
-        return workspaceLocation + "/" + formatter.format(new Date());
+        try {
+            SimpleDateFormat formatter = new SimpleDateFormat(filenamePattern);
+            return workspaceLocation + "/" + formatter.format(new Date());
+        } catch (IllegalArgumentException e) {
+            return workspaceLocation + "/" + filenamePattern;
+        }
     }
 
     @Override
