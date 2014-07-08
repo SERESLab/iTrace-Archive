@@ -1,7 +1,10 @@
 package edu.ysu.itrace;
 
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
+
+import edu.ysu.itrace.preferences.PluginPreferences;
 
 /**
  * The activator class controls the plug-in life cycle
@@ -27,6 +30,9 @@ public class Activator extends AbstractUIPlugin {
     public void start(BundleContext context) throws Exception {
         super.start(context);
         plugin = this;
+        IPreferenceStore prefStore = getDefault().getPreferenceStore();
+        EyeTrackerFactory.setTrackerType(EyeTrackerFactory.TrackerType.valueOf(
+                prefStore.getString(PluginPreferences.EYE_TRACKER_TYPE)));
     }
 
     /*
