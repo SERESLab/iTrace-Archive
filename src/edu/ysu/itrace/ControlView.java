@@ -232,7 +232,11 @@ public class ControlView extends ViewPart implements IPartListener2,
         displayStatus.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                // (new EyeStatusView(rootShell, gazeTransport)).open();
+                if (gazeTransport.isSome()) {
+                    (new EyeStatusView(rootShell, gazeTransport.some())).open();
+                } else {
+                    displayError("You must initialise a tracker first.");
+                }
             }
         });
 
@@ -259,14 +263,17 @@ public class ControlView extends ViewPart implements IPartListener2,
                             crosshairQueue =
                                     gazeTransport.some().createClient();
                     } else {
-                        if (crosshairQueue != null) {
+                        if (crosshairQueue.isSome()) {
                             gazeTransport.some().removeClient(
                                     crosshairQueue.some());
-                            crosshairQueue = null;
+                            crosshairQueue = none();
                         }
                     }
                 } else {
-                    displayError(DONT_CHANGE_THAT_MSG);
+                    if (display_crosshair.getSelection()) {
+                        displayError(DONT_CHANGE_THAT_MSG);
+                        display_crosshair.setSelection(false);
+                    }
                 }
             }
         });
@@ -281,10 +288,14 @@ public class ControlView extends ViewPart implements IPartListener2,
         final Spinner xDrift = new Spinner(driftComposite, SWT.NONE);
         xDrift.addModifyListener(new ModifyListener() {
             public void modifyText(ModifyEvent e) {
-                if (tracker.isSome())
+                if (tracker.isSome()) {
                     tracker.some().setXDrift(xDrift.getSelection());
-                else
-                    displayError(DONT_CHANGE_THAT_MSG);
+                } else {
+                    if (xDrift.getSelection() != 0) {
+                        displayError(DONT_CHANGE_THAT_MSG);
+                        xDrift.setSelection(0);
+                    }
+                }
             }
         });
         xDrift.setMinimum(-100);
@@ -297,10 +308,14 @@ public class ControlView extends ViewPart implements IPartListener2,
         final Spinner yDrift = new Spinner(driftComposite, SWT.NONE);
         yDrift.addModifyListener(new ModifyListener() {
             public void modifyText(ModifyEvent e) {
-                if (tracker.isSome())
+                if (tracker.isSome()) {
                     tracker.some().setYDrift(yDrift.getSelection());
-                else
-                    displayError(DONT_CHANGE_THAT_MSG);
+                } else {
+                    if (yDrift.getSelection() != 0) {
+                        displayError(DONT_CHANGE_THAT_MSG);
+                        yDrift.setSelection(0);
+                    }
+                }
             }
         });
         yDrift.setMinimum(-100);
