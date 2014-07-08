@@ -14,6 +14,7 @@ import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Comment;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.EnumDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
@@ -34,6 +35,7 @@ public class AstManager {
         METHOD,
         VARIABLE,
         COMMENT,
+        ENUM,
     }
 
     /**
@@ -172,6 +174,15 @@ public class AstManager {
             public boolean visit(VariableDeclarationFragment node) {
                 SourceCodeEntity sce = new SourceCodeEntity();
                 sce.type = SCEType.VARIABLE;
+                sce.name = node.getName().getFullyQualifiedName();
+                determineSCEPosition(compileUnit, node, sce);
+                sourceCodeEntities.add(sce);
+                return true;
+            }
+
+            public boolean visit(EnumDeclaration node) {
+                SourceCodeEntity sce = new SourceCodeEntity();
+                sce.type = SCEType.ENUM;
                 sce.name = node.getName().getFullyQualifiedName();
                 determineSCEPosition(compileUnit, node, sce);
                 sourceCodeEntities.add(sce);
