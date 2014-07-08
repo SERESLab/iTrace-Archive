@@ -72,6 +72,9 @@ public class ControlView extends ViewPart implements IPartListener2,
     private LinkedBlockingQueue<IGazeResponse> gazeResponses =
             new LinkedBlockingQueue<IGazeResponse>();
 
+    private Spinner xDrift;
+    private Spinner yDrift;
+
     private int line_height, font_height;
 
     private JSONGazeExportSolver jsonSolver;
@@ -252,6 +255,9 @@ public class ControlView extends ViewPart implements IPartListener2,
         display_crosshair.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
+                if (tracker.isNone())
+                    requestTracker();
+
                 if (tracker.isSome()) {
                     tracker.some().displayCrosshair(
                             display_crosshair.getSelection());
@@ -259,7 +265,7 @@ public class ControlView extends ViewPart implements IPartListener2,
                     // continue to run when tracking is disabled. Remove when
                     // done.
                     if (display_crosshair.getSelection()) {
-                        if (crosshairQueue.isSome())
+                        if (gazeTransport.isSome())
                             crosshairQueue =
                                     gazeTransport.some().createClient();
                     } else {
@@ -301,6 +307,7 @@ public class ControlView extends ViewPart implements IPartListener2,
         xDrift.setMinimum(-100);
         xDrift.setMaximum(100);
         xDrift.setSelection(0);
+        this.xDrift = xDrift;
 
         final Label yDriftLabel = new Label(driftComposite, SWT.NONE);
         yDriftLabel.setText("y Drift");
@@ -321,6 +328,7 @@ public class ControlView extends ViewPart implements IPartListener2,
         yDrift.setMinimum(-100);
         yDrift.setMaximum(100);
         yDrift.setSelection(0);
+        this.yDrift = yDrift;
 
         final Composite solversComposite = new Composite(parent, SWT.NONE);
         solversComposite.setLayout(new GridLayout(2, false));
@@ -517,7 +525,7 @@ public class ControlView extends ViewPart implements IPartListener2,
                     IGazeHandler handler =
                             (IGazeHandler) child
                                     .getData(HandlerBindManager.KEY_HANDLER);
-                    if (handler != null) {
+                    if (child.isVisible() && handler != null) {
                         return handler.handleGaze(
                                 screenX - childScreenBounds.x, screenY
                                         - childScreenBounds.y, gaze);
@@ -538,6 +546,9 @@ public class ControlView extends ViewPart implements IPartListener2,
         try {
             tracker = EyeTrackerFactory.getConcreteEyeTracker();
             if (tracker.isSome()) {
+                tracker.some().setXDrift(xDrift.getSelection());
+                tracker.some().setYDrift(yDrift.getSelection());
+
                 gazeTransport = some(new GazeTransport(tracker.some()));
                 gazeTransport.some().start();
                 return true;
