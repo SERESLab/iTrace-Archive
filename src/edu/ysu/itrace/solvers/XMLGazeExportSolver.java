@@ -2,6 +2,7 @@ package edu.ysu.itrace.solvers;
 
 import java.awt.Dimension;
 import java.awt.Toolkit;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Date;
@@ -14,21 +15,30 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.jface.dialogs.InputDialog;
+import org.eclipse.jface.window.Window;
+import org.eclipse.swt.widgets.Shell;
 
 import edu.ysu.itrace.gaze.IGazeResponse;
 
 /**
- * Solver that simply dumps gaze data to disk in XML format. 
+ * Solver that simply dumps gaze data to disk in XML format.
  */
 public class XMLGazeExportSolver implements IFileExportSolver {
     private static final String EOL = System.getProperty("line.separator");
     private XMLOutputFactory outFactory = XMLOutputFactory.newInstance();
     private XMLStreamWriter responseWriter;
-    private FileWriter outFile;
-    private String filenamePattern;
+    private File outFile;
+    private String filenamePattern =
+            "'gaze-responses-'yyyyMMdd'T'HHmmss','SSSSZ'.xml'";
     private Dimension screenRect;
     private int lineHeight;
     private int fontHeight;
+    private Shell parent;
+
+    public XMLGazeExportSolver(Shell parent) {
+        this.parent = parent;
+    }
 
     @Override
     public String getFilenamePattern() {
@@ -59,19 +69,29 @@ public class XMLGazeExportSolver implements IFileExportSolver {
     @Override
     public void init() {
         screenRect = Toolkit.getDefaultToolkit().getScreenSize();
-        String currentFilename;
         try {
-            currentFilename = getFilename();
-            outFile = new FileWriter(currentFilename);
-            responseWriter = outFactory.createXMLStreamWriter(outFile);
+            outFile = new File(getFilename());
+
+            // Check that file does not already exist. If it does, do not begin
+            // tracking.
+            if (outFile.exists()) {
+                System.out.println(friendlyName());
+                System.out.println("You cannot overwrite this file. If you "
+                        + "wish to continue, delete the file " + "manually.");
+
+                return;
+            }
+
+            responseWriter =
+                    outFactory.createXMLStreamWriter(new FileWriter(outFile));
         } catch (IOException e) {
-            throw new RuntimeException("Log files could not be created: " +
-                    e.getMessage());
+            throw new RuntimeException("Log files could not be created: "
+                    + e.getMessage());
         } catch (XMLStreamException e) {
-            throw new RuntimeException("Log files could not be created: " +
-                    e.getMessage());
+            throw new RuntimeException("Log files could not be created: "
+                    + e.getMessage());
         }
-        System.out.println("Putting files at " + currentFilename);
+        System.out.println("Putting files at " + outFile.getAbsolutePath());
 
         try {
             responseWriter.writeStartDocument("utf-8", "1.0");
@@ -99,46 +119,40 @@ public class XMLGazeExportSolver implements IFileExportSolver {
             responseWriter.writeStartElement("gazes");
             responseWriter.writeCharacters(EOL);
         } catch (Exception e) {
-            throw new RuntimeException("Log file header could not be written: " +
-                                       e.getMessage());
+            throw new RuntimeException("Log file header could not be written: "
+                    + e.getMessage());
         }
     }
 
     @Override
     public void process(IGazeResponse response) {
         try {
-            if(response.getProperties().size() > 0){
-                int screenX = (int) (screenRect.width * response
-                              .getGaze().getX());
-                int screenY = (int) (screenRect.height * response
-                              .getGaze().getY());
+            if (response.getProperties().size() > 0) {
+                int screenX =
+                        (int) (screenRect.width * response.getGaze().getX());
+                int screenY =
+                        (int) (screenRect.height * response.getGaze().getY());
 
                 responseWriter.writeEmptyElement("response");
-                responseWriter.writeAttribute("file",
-                        response.getName());
-                responseWriter.writeAttribute("type",
-                        response.getType());
-                responseWriter.writeAttribute("x",
-                        String.valueOf(screenX));
-                responseWriter.writeAttribute("y",
-                        String.valueOf(screenY));
+                responseWriter.writeAttribute("file", response.getName());
+                responseWriter.writeAttribute("type", response.getType());
+                responseWriter.writeAttribute("x", String.valueOf(screenX));
+                responseWriter.writeAttribute("y", String.valueOf(screenY));
                 responseWriter.writeAttribute("left-validation",
-                        String.valueOf(response.getGaze()
-                        .getLeftValidity()));
+                        String.valueOf(response.getGaze().getLeftValidity()));
                 responseWriter.writeAttribute("right-validation",
-                        String.valueOf(response.getGaze()
-                        .getRightValidity()));
-                responseWriter.writeAttribute("timestamp",
-                        String.valueOf(response.getGaze()
-                        .getTimeStamp().getTime()));
+                        String.valueOf(response.getGaze().getRightValidity()));
+                responseWriter.writeAttribute(
+                        "timestamp",
+                        String.valueOf(response.getGaze().getTimeStamp()
+                                .getTime()));
 
-                for(Iterator<Entry<String,String>> entries
-                    = response.getProperties().entrySet()
-                    .iterator();
-                        entries.hasNext(); ){
-                    Entry<String,String> pair = entries.next();
+                for (Iterator<Entry<String, String>> entries =
+                        response.getProperties().entrySet().iterator(); entries
+                        .hasNext();) {
+                    Entry<String, String> pair = entries.next();
                     responseWriter.writeAttribute(pair.getKey(),
-                                                  pair.getValue());
+                            pair.getValue());
                 }
                 responseWriter.writeCharacters(EOL);
             }
@@ -158,22 +172,34 @@ public class XMLGazeExportSolver implements IFileExportSolver {
             responseWriter.writeCharacters(EOL);
             responseWriter.flush();
             responseWriter.close();
-            outFile.close();
             System.out.println("Gaze responses saved.");
         } catch (XMLStreamException e) {
-            throw new RuntimeException("Log file footer could not be written: " +
-                    e.getMessage());
-        } catch (IOException e) {
-            throw new RuntimeException("Log file footer could not be written: " +
-                    e.getMessage());
+            throw new RuntimeException("Log file footer could not be written: "
+                    + e.getMessage());
         }
     }
 
     @Override
     public String getFilename() {
-        String workspaceLocation = ResourcesPlugin.getWorkspace().getRoot()
-                .getLocation().toString();
+        String workspaceLocation =
+                ResourcesPlugin.getWorkspace().getRoot().getLocation()
+                        .toString();
         SimpleDateFormat formatter = new SimpleDateFormat(filenamePattern);
         return workspaceLocation + "/" + formatter.format(new Date());
+    }
+
+    @Override
+    public String friendlyName() {
+        return "XML Gaze Export";
+    }
+
+    @Override
+    public void config() {
+        final InputDialog configDialog =
+                new InputDialog(parent, friendlyName() + " Configuration",
+                        "Export Filename Pattern", getFilenamePattern(), null);
+        if (configDialog.open() == Window.OK) {
+            setFilenamePattern(configDialog.getValue());
+        }
     }
 }

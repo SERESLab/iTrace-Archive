@@ -2,6 +2,7 @@ package edu.ysu.itrace.solvers;
 
 import java.awt.Dimension;
 import java.awt.Toolkit;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Date;
@@ -10,6 +11,9 @@ import java.util.Map.Entry;
 import java.text.SimpleDateFormat;
 
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.jface.dialogs.InputDialog;
+import org.eclipse.jface.window.Window;
+import org.eclipse.swt.widgets.Shell;
 
 import com.google.gson.stream.JsonWriter;
 
@@ -20,11 +24,17 @@ import edu.ysu.itrace.gaze.IGazeResponse;
  */
 public class JSONGazeExportSolver implements IFileExportSolver {
     private JsonWriter responseWriter;
-    private FileWriter outFile;
-    private String filenamePattern;
+    private File outFile;
+    private String filenamePattern =
+            "'gaze-responses-'yyyyMMdd'T'HHmmss','SSSSZ'.json'";
     private Dimension screenRect;
     private int lineHeight;
     private int fontHeight;
+    private Shell parent;
+
+    public JSONGazeExportSolver(Shell parent) {
+        this.parent = parent;
+    }
 
     @Override
     public String getFilenamePattern() {
@@ -55,73 +65,64 @@ public class JSONGazeExportSolver implements IFileExportSolver {
     @Override
     public void init() {
         screenRect = Toolkit.getDefaultToolkit().getScreenSize();
-        String currentFilename;
         try {
-            currentFilename = getFilename();
-            outFile = new FileWriter(currentFilename);
-            responseWriter = new JsonWriter(outFile);
+            outFile = new File(getFilename());
+
+            // Check that file does not already exist. If it does, do not begin
+            // tracking.
+            if (outFile.exists()) {
+                System.out.println(friendlyName());
+                System.out.println("You cannot overwrite this file. If you "
+                        + "wish to continue, delete the file " + "manually.");
+
+                return;
+            }
+
+            responseWriter = new JsonWriter(new FileWriter(outFile));
             responseWriter.setIndent("  ");
         } catch (IOException e) {
-            throw new RuntimeException("Log files could not be created: " +
-                    e.getMessage());
+            throw new RuntimeException("Log files could not be created: "
+                    + e.getMessage());
         }
-        System.out.println("Putting files at " + currentFilename);
+        System.out.println("Putting files at " + outFile.getAbsolutePath());
 
         try {
-            responseWriter.beginObject()
-                              .name("environment")
-                              .beginObject()
-                                  .name("screen-size")
-                                  .beginObject()
-                                      .name("width")
-                                      .value(screenRect.width)
-                                      .name("height")
-                                      .value(screenRect.height)
-                                  .endObject()
-                                  .name("line-height")
-                                  .value(lineHeight)
-                                  .name("font-height")
-                                  .value(fontHeight)
-                              .endObject()
-                              .name("gazes")
-                              .beginArray();
+            responseWriter.beginObject().name("environment").beginObject()
+                    .name("screen-size").beginObject().name("width")
+                    .value(screenRect.width).name("height")
+                    .value(screenRect.height).endObject().name("line-height")
+                    .value(lineHeight).name("font-height").value(fontHeight)
+                    .endObject().name("gazes").beginArray();
         } catch (IOException e) {
-            throw new RuntimeException("Log file header could not be written: " +
-                                       e.getMessage());
+            throw new RuntimeException("Log file header could not be written: "
+                    + e.getMessage());
         }
     }
 
     @Override
     public void process(IGazeResponse response) {
         try {
-            if(response.getProperties().size() > 0){
-                int screenX = (int) (screenRect.width * response
-                              .getGaze().getX());
-                int screenY = (int) (screenRect.height * response
-                              .getGaze().getY());
+            if (response.getProperties().size() > 0) {
+                int screenX =
+                        (int) (screenRect.width * response.getGaze().getX());
+                int screenY =
+                        (int) (screenRect.height * response.getGaze().getY());
 
-                responseWriter.beginObject()
-                                  .name("file")
-                                  .value(response.getName())
-                                  .name("type")
-                                  .value(response.getType())
-                                  .name("x")
-                                  .value(screenX)
-                                  .name("y")
-                                  .value(screenY)
-                                  .name("left-validation")
-                                  .value(response.getGaze().getLeftValidity())
-                                  .name("right-validation")
-                                  .value(response.getGaze().getRightValidity())
-                                  .name("timestamp")
-                                  .value(response.getGaze().getTimeStamp().getTime());
+                responseWriter.beginObject().name("file")
+                        .value(response.getName()).name("type")
+                        .value(response.getType()).name("x").value(screenX)
+                        .name("y").value(screenY).name("left-validation")
+                        .value(response.getGaze().getLeftValidity())
+                        .name("right-validation")
+                        .value(response.getGaze().getRightValidity())
+                        .name("timestamp")
+                        .value(response.getGaze().getTimeStamp().getTime());
 
-                for(Iterator<Entry<String,String>> entries
-                    = response.getProperties().entrySet().iterator();
-                        entries.hasNext(); ){
-                    Entry<String,String> pair = entries.next();
-                    responseWriter.name(pair.getKey())
-                                  .value(pair.getValue());
+                for (Iterator<Entry<String, String>> entries =
+                        response.getProperties().entrySet().iterator(); entries
+                        .hasNext();) {
+                    Entry<String, String> pair = entries.next();
+                    responseWriter.name(pair.getKey()).value(pair.getValue());
                 }
 
                 responseWriter.endObject();
@@ -134,22 +135,37 @@ public class JSONGazeExportSolver implements IFileExportSolver {
     @Override
     public void dispose() {
         try {
-            responseWriter.endArray()
-                          .endObject();
+            responseWriter.endArray().endObject();
             responseWriter.flush();
             responseWriter.close();
             System.out.println("Gaze responses saved.");
         } catch (IOException e) {
-            throw new RuntimeException("Log file footer could not be written: " +
-                    e.getMessage());
+            throw new RuntimeException("Log file footer could not be written: "
+                    + e.getMessage());
         }
     }
 
     @Override
     public String getFilename() {
-        String workspaceLocation = ResourcesPlugin.getWorkspace().getRoot()
-                .getLocation().toString();
+        String workspaceLocation =
+                ResourcesPlugin.getWorkspace().getRoot().getLocation()
+                        .toString();
         SimpleDateFormat formatter = new SimpleDateFormat(filenamePattern);
         return workspaceLocation + "/" + formatter.format(new Date());
+    }
+
+    @Override
+    public String friendlyName() {
+        return "JSON Gaze Export";
+    }
+
+    @Override
+    public void config() {
+        final InputDialog configDialog =
+                new InputDialog(parent, friendlyName() + " Configuration",
+                        "Export Filename Pattern", getFilenamePattern(), null);
+        if (configDialog.open() == Window.OK) {
+            setFilenamePattern(configDialog.getValue());
+        }
     }
 }
