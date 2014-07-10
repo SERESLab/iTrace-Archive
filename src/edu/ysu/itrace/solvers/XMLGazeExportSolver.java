@@ -143,9 +143,15 @@ public class XMLGazeExportSolver implements IFileExportSolver {
                 responseWriter.writeAttribute("right-validation",
                         String.valueOf(response.getGaze().getRightValidity()));
                 responseWriter.writeAttribute(
-                        "timestamp",
-                        String.valueOf(response.getGaze().getTimeStamp()
+                        "tracker-time",
+                        String.valueOf(response.getGaze().getTrackerTime()
                                 .getTime()));
+                responseWriter.writeAttribute(
+                        "system-time",
+                        String.valueOf(response.getGaze().getSystemTime()));
+                responseWriter.writeAttribute(
+                        "nano-time",
+                        String.valueOf(response.getGaze().getNanoTime()));
 
                 for (Iterator<Entry<String, String>> entries =
                         response.getProperties().entrySet().iterator(); entries

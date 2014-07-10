@@ -2,8 +2,6 @@ package edu.ysu.itrace;
 
 import java.util.Date;
 
-import edu.ysu.itrace.gaze.IGazeResponse;
-
 public class Gaze {
     //Between 0.0 and 1.0
     private double x, left_x, right_x;
@@ -12,7 +10,9 @@ public class Gaze {
     private double left_validity;
     private double right_validity;
 
-    private Date timeStamp;
+    private Date trackerTime;
+    private long systemTime = System.currentTimeMillis();
+    private long nanoTime = System.nanoTime();
 
     public Gaze(double left_x, double right_x, double left_y, double right_y,
                 double left_validity, double right_validity, Date timestamp) {
@@ -25,7 +25,7 @@ public class Gaze {
         this.x = (left_x + right_x) / 2;
         this.y = (left_y + right_y) / 2;
 
-        this.timeStamp = timestamp;
+        this.trackerTime = timestamp;
         this.left_validity = left_validity;
         this.right_validity = right_validity;
     }
@@ -62,7 +62,15 @@ public class Gaze {
         return right_validity;
     }
 
-    public Date getTimeStamp() {
-        return timeStamp;
+    public Date getTrackerTime() {
+        return trackerTime;
+    }
+
+    public long getSystemTime() {
+        return systemTime;
+    }
+
+    public long getNanoTime() {
+        return nanoTime;
     }
 }

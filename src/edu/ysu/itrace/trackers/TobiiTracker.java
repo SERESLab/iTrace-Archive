@@ -112,7 +112,7 @@ public class TobiiTracker implements IEyeTracker {
             while ((new Date()).getTime() < start + 25000) {
                 Gaze gaze = tobii_tracker.getGaze();
                 if (gaze != null) {
-                    System.out.println("Gaze at " + gaze.getTimeStamp() + ": ("
+                    System.out.println("Gaze at " + gaze.getTrackerTime() + ": ("
                             + (int) (gaze.getX() * window_bounds.width) + ", "
                             + (int) (gaze.getY() * window_bounds.height)
                             + ") with validity (Left: " + gaze.getLeftValidity()

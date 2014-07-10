@@ -87,12 +87,23 @@ public class JSONGazeExportSolver implements IFileExportSolver {
         System.out.println("Putting files at " + outFile.getAbsolutePath());
 
         try {
-            responseWriter.beginObject().name("environment").beginObject()
-                    .name("screen-size").beginObject().name("width")
-                    .value(screenRect.width).name("height")
-                    .value(screenRect.height).endObject().name("line-height")
-                    .value(lineHeight).name("font-height").value(fontHeight)
-                    .endObject().name("gazes").beginArray();
+            responseWriter.beginObject()
+                              .name("environment")
+                              .beginObject()
+                                  .name("screen_size")
+                                  .beginObject()
+                                      .name("width")
+                                      .value(screenRect.width)
+                                      .name("height")
+                                      .value(screenRect.height)
+                                  .endObject()
+                                  .name("line_height")
+                                  .value(lineHeight)
+                                  .name("font_height")
+                                  .value(fontHeight)
+                              .endObject()
+                              .name("gazes")
+                              .beginArray();
         } catch (IOException e) {
             throw new RuntimeException("Log file header could not be written: "
                     + e.getMessage());
@@ -108,21 +119,32 @@ public class JSONGazeExportSolver implements IFileExportSolver {
                 int screenY =
                         (int) (screenRect.height * response.getGaze().getY());
 
-                responseWriter.beginObject().name("file")
-                        .value(response.getName()).name("type")
-                        .value(response.getType()).name("x").value(screenX)
-                        .name("y").value(screenY).name("left-validation")
-                        .value(response.getGaze().getLeftValidity())
-                        .name("right-validation")
-                        .value(response.getGaze().getRightValidity())
-                        .name("timestamp")
-                        .value(response.getGaze().getTimeStamp().getTime());
+                responseWriter.beginObject()
+                                .name("file")
+                                .value(response.getName())
+                                .name("type")
+                                .value(response.getType())
+                                .name("x")
+                                .value(screenX)
+                                .name("y")
+                                .value(screenY)
+                                .name("left_validation")
+                                .value(response.getGaze().getLeftValidity())
+                                .name("right_validation")
+                                .value(response.getGaze().getRightValidity())
+                                .name("tracker_time")
+                                .value(response.getGaze().getTrackerTime().getTime())
+                                .name("system_time")
+                                .value(response.getGaze().getSystemTime())
+                                .name("nano_time")
+                                .value(response.getGaze().getNanoTime());
 
                 for (Iterator<Entry<String, String>> entries =
                         response.getProperties().entrySet().iterator(); entries
                         .hasNext();) {
                     Entry<String, String> pair = entries.next();
-                    responseWriter.name(pair.getKey()).value(pair.getValue());
+                    responseWriter.name(pair.getKey())
+                                  .value(pair.getValue());
                 }
 
                 responseWriter.endObject();

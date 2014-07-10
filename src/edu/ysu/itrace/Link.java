@@ -27,8 +27,8 @@ public class Link {
 
     private void calculateTimespan(Gaze startGaze, Gaze endGaze) {
         // get time in milliseconds between gazes
-        long difference = endGaze.getTimeStamp().getTime()
-                          - startGaze.getTimeStamp().getTime();
+        long difference = endGaze.getTrackerTime().getTime()
+                          - startGaze.getTrackerTime().getTime();
 
         if (timespan != 0){
             // average the current timespan and the new one together
