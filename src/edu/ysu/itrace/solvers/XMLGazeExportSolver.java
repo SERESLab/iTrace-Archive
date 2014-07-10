@@ -3,7 +3,7 @@ package edu.ysu.itrace.solvers;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Date;
 import java.util.Iterator;
@@ -83,7 +83,7 @@ public class XMLGazeExportSolver implements IFileExportSolver {
             }
 
             responseWriter =
-                    outFactory.createXMLStreamWriter(new FileWriter(outFile));
+                    outFactory.createXMLStreamWriter(new FileOutputStream(outFile), "UTF-8");
         } catch (IOException e) {
             throw new RuntimeException("Log files could not be created: "
                     + e.getMessage());
