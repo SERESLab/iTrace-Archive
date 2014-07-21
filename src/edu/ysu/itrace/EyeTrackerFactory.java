@@ -20,11 +20,12 @@ public class EyeTrackerFactory {
         SYSTEM_MOUSE_TRACKER,
         TOBII_TRACKER,
         EYETRIBE,
+        EYE_X,
     }
 
     /**
      * Get the classes of each available eye tracker interface.
-     * @return Map of tracker types and their pretty printed names. Interation
+     * @return Map of tracker types and their pretty printed names. Iteration
      *     order is predictable.
      */
     public static Map<TrackerType, String> getAvailableEyeTrackers() {
@@ -33,6 +34,7 @@ public class EyeTrackerFactory {
         result.put(TrackerType.SYSTEM_MOUSE_TRACKER, "System Mouse Tracker");
         result.put(TrackerType.TOBII_TRACKER, "Tobii Tracker");
         result.put(TrackerType.EYETRIBE, "Eyetribe");
+        result.put(TrackerType.EYE_X, "EyeX");
         return result;
     }
 
@@ -65,6 +67,8 @@ public class EyeTrackerFactory {
                 return some((IEyeTracker) new TobiiTracker());
             case EYETRIBE:
             	return some((IEyeTracker) new EyetribeTracker());
+            case EYE_X:
+            	return some((IEyeTracker) new EyeXTracker());
             default:
                 return none();
             }
