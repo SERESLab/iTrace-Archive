@@ -9,10 +9,18 @@ extern "C" {
 #endif
 /*
  * Class:     edu_ysu_itrace_trackers_EyeXTracker
- * Method:    connectEyeTracker
+ * Method:    disconnectEyeTracker
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_connectEyeTracker
+JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_disconnectEyeTracker
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     edu_ysu_itrace_trackers_EyeXTracker
+ * Method:    connectEyeTracker
+ * Signature: ()Z
+ */
+JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_connectEyeTracker
   (JNIEnv *, jobject);
 
 #ifdef __cplusplus
