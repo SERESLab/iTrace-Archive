@@ -14,7 +14,6 @@ lib/
 local.properties
 .settings/
 .loadpath
-*.dll
 # External tool builders
 .externalToolBuilders/
 
@@ -175,3 +174,4 @@ cmake_install.cmake
 
 #Generated Docs
 docs/*html
+*.class
