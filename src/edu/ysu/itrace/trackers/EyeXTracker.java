@@ -10,7 +10,8 @@ public class EyeXTracker {
     private double yDrift = 0;
 	
     static {
-    	System.loadLibrary("edu_ysu_itrace_trackers_EyeXTracker");
+    	System.loadLibrary("jni/Tobii.EyeX.Client");	
+        System.loadLibrary("jni/edu_ysu_itrace_trackers_EyeXTracker");
     }
     
     public static void main(String... args) {
