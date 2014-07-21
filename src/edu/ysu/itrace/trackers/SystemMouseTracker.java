@@ -90,10 +90,17 @@ public class SystemMouseTracker implements IEyeTracker {
             //Do nothing.
         }
 
-        protected void useCalibrationPoint(double x, double y)
+        protected void useCalibrationPoint(double x, double y, double absoluteX, double absoluteY)
                 throws Exception {
             //Do nothing.
         }
+
+		@Override
+		protected void usedCalibrationPoint(double x, double y, double absoluteX, double absoluteY)
+				throws Exception {
+			// Do nothing.
+			
+		}
     }
 
     private LinkedBlockingQueue<Gaze> gazePoints

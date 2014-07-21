@@ -47,13 +47,13 @@ public abstract class Calibrator extends JFrame {
         }
 
         public void setLocation(int x, int y) {
-            super.setLocation(x - centre.x, y - centre.y);
+        	super.setLocation(x - centre.x, y - centre.y);
         }
     }
 
-    private final int CALIBRATION_WIDTH = 3;
-    private final int CALIBRATION_HEIGHT = 3;
-    private final int CALIBRATION_POINTS
+    private static final int CALIBRATION_WIDTH = 3;
+    private static final int CALIBRATION_HEIGHT = 3;
+    public static final int CALIBRATION_POINTS
             = CALIBRATION_WIDTH * CALIBRATION_HEIGHT;
     private final int X_SPACING = 2;
     private final int Y_SPACING = 2;
@@ -119,7 +119,20 @@ public abstract class Calibrator extends JFrame {
         try {
             startCalibration();
             for (int i = 0; i < CALIBRATION_POINTS; ++i) {
-                displayCalibrationPoint(i);
+            	
+            	displayCalibrationPoint(i);
+            	Dimension windowBounds = Toolkit.getDefaultToolkit()
+                        .getScreenSize();
+            	double x = (calibrationPoints[i].getLocationOnScreen().x
+      + (0.5 * calibrationPoints[i].getWidth()))
+      / windowBounds.width;
+double y = (calibrationPoints[i].getLocationOnScreen().y
+      + (0.5 * calibrationPoints[i].getHeight()))
+      / windowBounds.height;
+double absoluteX = calibrationPoints[i].getLocationOnScreen().x + (0.5 * calibrationPoints[i].getWidth());
+double absoluteY = calibrationPoints[i].getLocationOnScreen().y + (0.5 * calibrationPoints[i].getHeight());
+useCalibrationPoint(x, y, absoluteX, absoluteY);
+
                 try {
                     Thread.sleep(MILISECONDS_BETWEEN_POINTS);
                 } catch (InterruptedException e) {
@@ -127,16 +140,9 @@ public abstract class Calibrator extends JFrame {
                     throw new CalibrationException(
                             "Thread.sleep interrupted.");
                 }
-                Dimension windowBounds = Toolkit.getDefaultToolkit()
-                                          .getScreenSize();
-                double x = (calibrationPoints[i].getLocationOnScreen().x
-                        + (0.5 * calibrationPoints[i].getWidth()))
-                        / windowBounds.width;
-                double y = (calibrationPoints[i].getLocationOnScreen().y
-                        + (0.5 * calibrationPoints[i].getHeight()))
-                        / windowBounds.height;
-                useCalibrationPoint(x, y);
+                usedCalibrationPoint(x, y, absoluteX, absoluteY);
             }
+            
             stopCalibration();
         }
         //Rethrow CalibrationExceptions.
@@ -176,8 +182,10 @@ public abstract class Calibrator extends JFrame {
 
     protected abstract void startCalibration() throws Exception;
     protected abstract void stopCalibration() throws Exception;
-    protected abstract void useCalibrationPoint(double x, double y)
+    protected abstract void useCalibrationPoint(double x, double y, double absoluteX, double absoluteY)
             throws Exception;
+    protected abstract void usedCalibrationPoint(double x, double y, double absoluteX, double absoluteY)
+    		throws Exception;
 
     public void moveCrosshair(int screenX, int screenY) {
         crosshairWindow.setLocation(screenX, screenY);

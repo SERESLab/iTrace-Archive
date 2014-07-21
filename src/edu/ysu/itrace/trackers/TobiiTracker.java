@@ -43,9 +43,13 @@ public class TobiiTracker implements IEyeTracker {
             jniStopCalibration();
         }
 
-        protected void useCalibrationPoint(double x, double y)
+        protected void usedCalibrationPoint(double x, double y, double absoluteX, double absoluteY)
                 throws Exception {
             jniAddPoint(x, y);
+        }
+        
+        protected void useCalibrationPoint(double x, double y, double absoluteX, double absoluteY) {
+        	//do nothing
         }
 
         private native void jniAddPoint(double x, double y)

@@ -6,7 +6,6 @@ import java.util.Map;
 
 import edu.ysu.itrace.trackers.*;
 import edu.ysu.itrace.exceptions.EyeTrackerConnectException;
-
 import fj.data.Option;
 import static fj.data.Option.none;
 import static fj.data.Option.some;
@@ -20,6 +19,7 @@ public class EyeTrackerFactory {
     public enum TrackerType {
         SYSTEM_MOUSE_TRACKER,
         TOBII_TRACKER,
+        EYETRIBE,
     }
 
     /**
@@ -32,6 +32,7 @@ public class EyeTrackerFactory {
             = new LinkedHashMap<TrackerType, String>();
         result.put(TrackerType.SYSTEM_MOUSE_TRACKER, "System Mouse Tracker");
         result.put(TrackerType.TOBII_TRACKER, "Tobii Tracker");
+        result.put(TrackerType.EYETRIBE, "Eyetribe");
         return result;
     }
 
@@ -62,6 +63,8 @@ public class EyeTrackerFactory {
                 return some((IEyeTracker) new SystemMouseTracker());
             case TOBII_TRACKER:
                 return some((IEyeTracker) new TobiiTracker());
+            case EYETRIBE:
+            	return some((IEyeTracker) new EyetribeTracker());
             default:
                 return none();
             }
