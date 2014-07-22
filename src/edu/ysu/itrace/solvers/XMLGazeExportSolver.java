@@ -142,6 +142,12 @@ public class XMLGazeExportSolver implements IFileExportSolver {
                         String.valueOf(response.getGaze().getLeftValidity()));
                 responseWriter.writeAttribute("right-validation",
                         String.valueOf(response.getGaze().getRightValidity()));
+                responseWriter.writeAttribute("left-pupil-diameter",
+                        String.valueOf(response.getGaze()
+                                       .getLeftPupilDiameter()));
+                responseWriter.writeAttribute("right-pupil-diameter",
+                        String.valueOf(response.getGaze()
+                                       .getRightPupilDiameter()));
                 responseWriter.writeAttribute(
                         "tracker-time",
                         String.valueOf(response.getGaze().getTrackerTime()
