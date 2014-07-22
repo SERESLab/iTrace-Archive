@@ -15,5 +15,6 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ClassPath: .,
  lib/slf4j-api-1.7.5.jar,
  lib/functionaljava-4.1.jar,
- lib/gson-2.2.4.jar
+ lib/gson-2.2.4.jar,
+ lib/TETJavaClient.jar
 Import-Package: org.eclipse.jdt.core.dom
