@@ -1,10 +1,13 @@
 #include <ctime>
-#include <tobii/sdk/cpp/init.hpp>
-#include <tobii/sdk/cpp/mainloop.hpp>
-#include <tobii/sdk/cpp/discovery/eyetracker-browser.hpp>
-#include <tobii/sdk/cpp/discovery/factory-info.hpp>
-#include <tobii/sdk/cpp/tracking/eyetracker-factory.hpp>
-#include <tobii/sdk/cpp/tracking/gaze-data-item.hpp>
+#include <tobii/sdk/cpp/Library.hpp>
+#include <tobii/sdk/cpp/MainLoop.hpp>
+#include <tobii/sdk/cpp/EyeTracker.hpp>
+#include <tobii/sdk/cpp/EyeTrackerInfo.hpp>
+#include <tobii/sdk/cpp/EyeTrackerException.hpp>
+#include <tobii/sdk/cpp/EyeTrackerBrowser.hpp>
+#include <tobii/sdk/cpp/EyeTrackerBrowserFactory.hpp>
+#include <tobii/sdk/cpp/EyeTrackerFactory.hpp>
+#include <tobii/sdk/cpp/GazeDataItem.hpp>
 #include "edu_ysu_itrace_trackers_TobiiTracker.h"
 #include "edu_ysu_itrace_trackers_TobiiTracker_BackgroundThread.h"
 #include "edu_ysu_itrace_trackers_TobiiTracker_Calibrator.h"
@@ -16,16 +19,15 @@ struct TobiiNativeData
 	JavaVM* jvm;
 	jobject j_tobii_tracker;
 	jobject j_background_thread;
-	mainloop main_loop;
-	tracking::eyetracker::pointer eye_tracker;
+	MainLoop main_loop;
+	EyeTracker::pointer_t eye_tracker;
 };
 
 //Only one TobiiTracker can be active at one time.
 bool g_already_initialised = false;
 //Sort of ugly but necessary. When connecting to eye tracker, this is used to
 //pass the tracker information to the main thread.
-discovery::eyetracker_info::pointer g_et_info =
-	discovery::eyetracker_info::pointer();
+EyeTrackerInfo::pointer_t g_et_info = EyeTrackerInfo::pointer_t();
 //Also not very clean.
 TobiiNativeData* g_native_data_current = NULL;
 
@@ -67,7 +69,7 @@ JNIEXPORT jboolean JNICALL
 		return JNI_FALSE;
 	else
 	{
-		tobii::sdk::cpp::init_library();
+		tobii::sdk::cpp::Library::init();
 		g_already_initialised = true;
 	}
 
@@ -100,10 +102,10 @@ JNIEXPORT jboolean JNICALL
 	return JNI_TRUE;
 }
 
-void handleBrowserEvent(discovery::eyetracker_browser::event_type type,
-	discovery::eyetracker_info::pointer et_info)
+void handleBrowserEvent(EyeTrackerBrowser::event_type_t type,
+	EyeTrackerInfo::pointer_t et_info)
 {
-	if (type == discovery::eyetracker_browser::TRACKER_FOUND)
+	if (type == EyeTrackerBrowser::TRACKER_FOUND)
 		g_et_info = et_info;
 }
 
@@ -119,26 +121,26 @@ JNIEXPORT jboolean JNICALL
 	native_data->j_tobii_tracker = env->NewGlobalRef(obj);
 
 	//Find Tobii trackers.
-	discovery::eyetracker_browser browser(native_data->main_loop);
-	browser.start();
-	browser.add_browser_event_listener(handleBrowserEvent);
+	EyeTrackerBrowser::pointer_t browser =
+		EyeTrackerBrowserFactory::createBrowser(native_data->main_loop);
+	browser->start();
+	browser->addEventListener(handleBrowserEvent);
 	time_t start_time = time(NULL);
 	//Wait until found or timeout occurs.
 	while (g_et_info == NULL)
 	{
 		if (time(NULL) > start_time + timeout_seconds)
 		{
-			browser.stop();
+			browser->stop();
 			return JNI_FALSE;
 		}
 	}
-	discovery::eyetracker_info::pointer et_info = g_et_info;
-	browser.stop();
+	EyeTrackerInfo::pointer_t et_info = g_et_info;
+	browser->stop();
 
 	//Connect eye tracker
-	const discovery::factory_info fact_info(*et_info);
-	native_data->eye_tracker =
-		tracking::create_eyetracker(fact_info, native_data->main_loop);
+	native_data->eye_tracker = et_info->getEyeTrackerFactory()->
+		createEyeTracker(native_data->main_loop);
 	return JNI_TRUE;
 }
 
@@ -158,7 +160,7 @@ JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_TobiiTracker_close
 	native_data->main_loop.quit();
 }
 
-void handleGazeData(tracking::gaze_data_item::pointer gaze_data)
+void handleGazeData(GazeDataItem::pointer_t gaze_data)
 {
 	JNIEnv* env = NULL;
 	jint rs = g_native_data_current->jvm->GetEnv((void**) &env, JNI_VERSION_1_6);
@@ -175,10 +177,10 @@ void handleGazeData(tracking::gaze_data_item::pointer gaze_data)
 	if (jmid_new_gaze_point == NULL)
 		return;
 	//Call newGazePoint.
-	env->CallVoidMethod(obj, jmid_new_gaze_point, (jlong) gaze_data->time_stamp,
-		gaze_data->left_gaze_point_2d.x, gaze_data->right_gaze_point_2d.y,
-		gaze_data->right_gaze_point_2d.x, gaze_data->right_gaze_point_2d.y,
-		gaze_data->left_validity, gaze_data->right_validity);
+	env->CallVoidMethod(obj, jmid_new_gaze_point, (jlong) gaze_data->timestamp,
+		gaze_data->leftGazePoint2d.x, gaze_data->rightGazePoint2d.y,
+		gaze_data->rightGazePoint2d.x, gaze_data->rightGazePoint2d.y,
+		gaze_data->leftValidity, gaze_data->rightValidity);
 }
 
 JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_TobiiTracker_startTracking
@@ -204,10 +206,10 @@ JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_TobiiTracker_startTracking
 
 	try
 	{
-		native_data->eye_tracker->start_tracking();
-		native_data->eye_tracker->add_gaze_data_received_listener(handleGazeData);
+		native_data->eye_tracker->startTracking();
+		native_data->eye_tracker->addGazeDataReceivedListener(handleGazeData);
 	}
-	catch (eyetracker_exception e)
+	catch (EyeTrackerException e)
 	{
 		throwJException(env, "java/io/IOException", e.what());
 		return;
@@ -219,10 +221,10 @@ JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_TobiiTracker_stopTracking
 {
 	try
 	{
-		g_native_data_current->eye_tracker->stop_tracking();
+		g_native_data_current->eye_tracker->stopTracking();
 		g_native_data_current = NULL;
 	}
-	catch (eyetracker_exception e)
+	catch (EyeTrackerException e)
 	{
 		throwJException(env, "java/io/IOException", e.what());
 		return;
@@ -248,10 +250,10 @@ JNIEXPORT void
 	try
 	{
 		//Add new calibration point
-		native_data->eye_tracker->add_calibration_point(tracking::point_2d(
+		native_data->eye_tracker->addCalibrationPoint(Point2d(
 			(double) x, (double) y));
 	}
-	catch (eyetracker_exception e)
+	catch (EyeTrackerException e)
 	{
 		throwJException(env, "java/io/IOException", e.what());
 		return;
@@ -277,10 +279,10 @@ JNIEXPORT void JNICALL
 	try
 	{
 		//Start and clear calibration
-		native_data->eye_tracker->start_calibration();
-		native_data->eye_tracker->clear_calibration();
+		native_data->eye_tracker->startCalibration();
+		native_data->eye_tracker->clearCalibration();
 	}
-	catch (eyetracker_exception e)
+	catch (EyeTrackerException e)
 	{
 		throwJException(env, "java/io/IOException", e.what());
 		return;
@@ -306,10 +308,10 @@ JNIEXPORT void JNICALL
 	try
 	{
 		//Compute and stop calibration
-		native_data->eye_tracker->compute_calibration();
-		native_data->eye_tracker->stop_calibration();
+		native_data->eye_tracker->computeCalibration();
+		native_data->eye_tracker->stopCalibration();
 	}
-	catch (eyetracker_exception e)
+	catch (EyeTrackerException e)
 	{
 		throwJException(env, "java/io/IOException", e.what());
 		return;

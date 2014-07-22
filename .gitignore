@@ -162,11 +162,10 @@ pip-log.txt
 .DS_Store
 
 #JNI
-jni/libTobiiTracker.so
-jni/libTobiiTracker.dll
-jni/libTobiiTracker.dll.a
-libTobiiTracker.so
-TobiiTracker.dll
+*.so
+*.dll
+*.dll.a
+
 #CMake
 jni/CMakeCache.txt
 jni/CMakeFiles/*
