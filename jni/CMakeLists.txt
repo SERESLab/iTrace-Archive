@@ -17,6 +17,6 @@ if(BUILD_TOBIITRACKER)
 	include_directories(${JNI_INCLUDE_DIRS})
 	add_library(TobiiTracker SHARED edu_ysu_itrace_trackers_TobiiTracker.cpp)
 	include_directories(${Boost_INCLUDE_DIR})
-	target_link_libraries(TobiiTracker tobiisdk ${Boost_FILESYSTEM_LIBRARY}
+	target_link_libraries(TobiiTracker tetio ${Boost_FILESYSTEM_LIBRARY}
 		${Boost_REGEX_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_SYSTEM_LIBRARY})
 endif(BUILD_TOBIITRACKER)
