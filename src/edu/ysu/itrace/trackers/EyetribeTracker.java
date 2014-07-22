@@ -353,7 +353,7 @@ public class EyetribeTracker implements IEyeTracker {
         double right_y_mod = right_y;
         
         try {
-            Gaze gaze = new Gaze(left_x, right_x, left_y, right_y, 1, 1,
+            Gaze gaze = new Gaze(left_x, right_x, left_y, right_y, Double.NaN, Double.NaN,
                                  leftPupilDiameter, rightPupilDiameter, new Date(timestamp / 1000));
             if (recentGazes.size() >= 15)
                 recentGazes.remove();
@@ -372,7 +372,7 @@ public class EyetribeTracker implements IEyeTracker {
             right_y_mod /= recentGazes.size() + 1;
 
             Gaze modifiedGaze = new Gaze(left_x_mod, right_x_mod, left_y_mod,
-                                         right_y_mod, 1, 1, leftPupilDiameter, rightPupilDiameter,
+                                         right_y_mod, Double.NaN, Double.NaN, leftPupilDiameter, rightPupilDiameter,
                                          new Date(timestamp / 1000));
 
             gaze_points.put(modifiedGaze);
