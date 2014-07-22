@@ -69,6 +69,8 @@ public class CSVGazeExportSolver implements IFileExportSolver {
 
 	        try {
 	        	StringBuilder output = new StringBuilder();
+	        	output.append("screen dimension");
+	        	output.append(SEPARATOR);
 	        	output.append("file");
 	        	output.append(SEPARATOR);
 	        	output.append("type");
@@ -114,6 +116,8 @@ public class CSVGazeExportSolver implements IFileExportSolver {
              int screenY =
                      (int) (screenRect.height * response.getGaze().getY());
 			StringBuilder output = new StringBuilder();
+			output.append(screenX + "/" + screenY);
+			output.append(SEPARATOR);
 			output.append(response.getName());
 			output.append(SEPARATOR);
 			output.append(response.getType());
@@ -170,8 +174,8 @@ public class CSVGazeExportSolver implements IFileExportSolver {
 	@Override
 	public void setFilenamePattern(String filenamePattern) {
 		this.fileNamePattern = filenamePattern;
-	}
-
+	}	
+	
 	@Override
 	public String getFilename() {
 		String workspaceLocation =
