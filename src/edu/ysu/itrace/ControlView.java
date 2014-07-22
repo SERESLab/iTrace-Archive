@@ -40,6 +40,7 @@ import edu.ysu.itrace.exceptions.CalibrationException;
 import edu.ysu.itrace.exceptions.EyeTrackerConnectException;
 import edu.ysu.itrace.gaze.IGazeHandler;
 import edu.ysu.itrace.gaze.IGazeResponse;
+import edu.ysu.itrace.solvers.CSVGazeExportSolver;
 import edu.ysu.itrace.solvers.ISolver;
 import edu.ysu.itrace.solvers.JSONGazeExportSolver;
 import edu.ysu.itrace.solvers.XMLGazeExportSolver;
@@ -79,6 +80,7 @@ public class ControlView extends ViewPart implements IPartListener2,
 
     private JSONGazeExportSolver jsonSolver;
     private XMLGazeExportSolver xmlSolver;
+    private CSVGazeExportSolver csvSolver;
 
     private CopyOnWriteArrayList<ISolver> availableSolvers =
             new CopyOnWriteArrayList<ISolver>();
@@ -343,6 +345,9 @@ public class ControlView extends ViewPart implements IPartListener2,
         xmlSolver.setFontHeight(font_height);
         xmlSolver.setLineHeight(line_height);
         availableSolvers.add(new XMLGazeExportSolver(rootShell));
+        
+        csvSolver = new CSVGazeExportSolver(rootShell);
+        availableSolvers.add(csvSolver);
 
         for (final ISolver solver : availableSolvers) {
             final Button solverEnabled =
