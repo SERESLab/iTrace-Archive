@@ -23,6 +23,14 @@ JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_disconnectEyeTra
 JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_connectEyeTracker
   (JNIEnv *, jobject);
 
+/*
+* Class:     edu_ysu_itrace_trackers_EyeXTracker
+* Method:    register
+* Signature: ()Z
+*/
+JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_register
+(JNIEnv *, jobject);
+
 #ifdef __cplusplus
 }
 #endif

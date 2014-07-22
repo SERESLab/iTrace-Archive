@@ -1,4 +1,5 @@
 #include <Windows.h>
+#include <jni.h>
 #include <stdio.h>
 #include <conio.h>
 #include <assert.h>
@@ -7,10 +8,18 @@
 
 #pragma comment (lib, "Tobii.EyeX.Client.lib")
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 static const TX_STRING InteractorId = "iTrace";
 
 // global variables
 static TX_HANDLE g_hGlobalInteractorSnapshot = TX_EMPTY_HANDLE;
+
+JavaVM * g_vm;
+jobject g_obj;
+jmethodID g_mid;
 
 /*
 * Initializes g_hGlobalInteractorSnapshot with an interactor that has the Gaze Point behavior.
@@ -90,13 +99,43 @@ void TX_CALLCONVENTION OnEngineConnectionStateChanged(TX_CONNECTIONSTATE connect
 }
 
 /*
+* Calls a Java method to notify of new events
+*/
+void callback(double x, double y, long long timestamp) {
+	JNIEnv * g_env;
+	// double check it's all ok
+	int getEnvStat = g_vm->GetEnv((void **)&g_env, JNI_VERSION_1_4);
+	if (getEnvStat == JNI_EDETACHED) {
+		printf("GetEnv: not attached");
+		if (g_vm->AttachCurrentThread((void **)&g_env, NULL) != 0) {
+			printf("Failed to attach");
+		}
+	}
+	else if (getEnvStat == JNI_OK) {
+		//
+	}
+	else if (getEnvStat == JNI_EVERSION) {
+		printf("GetEnv: version not supported");
+	}
+
+	g_env->CallVoidMethod(g_obj, g_mid, x, y, timestamp);
+
+	if (g_env->ExceptionCheck()) {
+		g_env->ExceptionDescribe();
+	}
+
+	g_vm->DetachCurrentThread();
+}
+
+/*
 * Handles an event from the Gaze Point data stream.
 */
 void OnGazeDataEvent(TX_HANDLE hGazeDataBehavior)
 {
 	TX_GAZEPOINTDATAEVENTPARAMS eventParams;
 	if (txGetGazePointDataEventParams(hGazeDataBehavior, &eventParams) == TX_RESULT_OK) {
-		printf("Gaze Data: (%.1f, %.1f) timestamp %.0f ms\n", eventParams.X, eventParams.Y, eventParams.Timestamp);
+		//printf("Gaze Data: (%.1f, %.1f) timestamp %.0f ms\n", eventParams.X, eventParams.Y, eventParams.Timestamp);
+		callback(eventParams.X, eventParams.Y, eventParams.Timestamp);
 	}
 	else {
 		printf("Failed to interpret gaze data event packet.\n");
@@ -129,7 +168,30 @@ void TX_CALLCONVENTION HandleEvent(TX_CONSTHANDLE hAsyncData, TX_USERPARAM userP
 }
 
 JNIEXPORT jboolean JNICALL
-Java_edu_ysu_itrace_trackers_EyeXTracker_connectEyeTracker(JNIEnv *env, jobject obj)
+Java_edu_ysu_itrace_trackers_EyeXTracker_register(JNIEnv * env, jobject obj) {
+	bool returnValue = true;
+	// convert local to global reference 
+	// (local will die after this method call)
+	g_obj = env->NewGlobalRef(obj);
+
+	env->GetJavaVM(&g_vm);
+
+	// save refs for callback
+	jclass g_clazz = env->GetObjectClass(g_obj);
+	if (g_clazz == NULL) {
+		printf("Failed to find class");
+	}
+
+	g_mid = env->GetMethodID(g_clazz, "callback", "(DDJ)V");
+	if (g_mid == NULL) {
+		printf("Unable to get method ref");
+	}
+	return (jboolean)returnValue;
+}
+
+
+JNIEXPORT jboolean JNICALL
+Java_edu_ysu_itrace_trackers_EyeXTracker_connectEyeTracker(JNIEnv * env, jobject obj)
 {
 	TX_CONTEXTHANDLE hContext = TX_EMPTY_HANDLE;
 	TX_TICKET hConnectionStateChangedTicket = TX_INVALID_TICKET;
@@ -159,3 +221,7 @@ Java_edu_ysu_itrace_trackers_EyeXTracker_disconnectEyeTracker(JNIEnv *env, jobje
 	printf("Disconnect");
 	return;
 }
+
+#ifdef __cplusplus
+}
+#endif

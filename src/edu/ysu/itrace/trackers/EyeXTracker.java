@@ -27,11 +27,22 @@ public class EyeXTracker implements IEyeTracker {
 
     private native void disconnectEyeTracker();
     private native boolean connectEyeTracker();
-   
-    public static void main(String... args) {
-    	boolean s = new EyeXTracker().connectEyeTracker();
+    private native boolean register();
+    
+    public static void main(String... args) throws InterruptedException {
+    	EyeXTracker tracker = new EyeXTracker();
+    	boolean s = tracker.register();
 		System.out.println(s);
-	}
+		tracker.connectEyeTracker();
+		while(true) {
+			Thread.currentThread().sleep(50);
+		}
+    }
+    
+    public void callback(double x, double y, long timestamp) {
+    	System.out.println(x + "/" + y + " @ " + timestamp);
+    }
+    
 	@Override
 	public void close() {
 		// TODO Auto-generated method stub
@@ -49,6 +60,7 @@ public class EyeXTracker implements IEyeTracker {
 	}
 	@Override
 	public void startTracking() throws IOException {
+		register();
 		boolean success = connectEyeTracker();
 		if (success) {
 			System.out.println("Sucessfully connected");
