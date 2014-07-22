@@ -60,7 +60,7 @@ public class EyetribeTracker implements IEyeTracker {
 		public void onGazeUpdate(GazeData gazeData) {
 			tracker.newGazePoint(gazeData.timeStamp, gazeData.leftEye.smoothedCoordinates.x, gazeData.leftEye.smoothedCoordinates.y,
 					gazeData.rightEye.smoothedCoordinates.x, gazeData.rightEye.smoothedCoordinates.y, gazeData.leftEye.pupilSize,
-					gazeData.rightEye.pupilSize);
+					gazeData.rightEye.pupilSize, gazeData.isFixated);
 		}
 		
 	}
@@ -303,7 +303,8 @@ public class EyetribeTracker implements IEyeTracker {
 	}
 	
 	public void newGazePoint(long timestamp, double left_x, double left_y,
-		double right_x, double right_y, double leftPupilDiameter, double rightPupilDiameter) {
+		double right_x, double right_y, double leftPupilDiameter, double rightPupilDiameter,
+		boolean isFixation) {
 	   
 	 	//Drift
         left_x += xDrift;
@@ -353,8 +354,9 @@ public class EyetribeTracker implements IEyeTracker {
         double right_y_mod = right_y;
         
         try {
-            Gaze gaze = new Gaze(left_x, right_x, left_y, right_y, Double.NaN, Double.NaN,
-                                 leftPupilDiameter, rightPupilDiameter, new Date(timestamp / 1000));
+            Gaze gaze = new Gaze(left_x, right_x, left_y, right_y, Double.MIN_VALUE, Double.MIN_VALUE,
+                                 leftPupilDiameter, rightPupilDiameter, new Date(timestamp / 1000),
+                        		 isFixation);
             if (recentGazes.size() >= 15)
                 recentGazes.remove();
             recentGazes.add(gaze);
@@ -372,8 +374,8 @@ public class EyetribeTracker implements IEyeTracker {
             right_y_mod /= recentGazes.size() + 1;
 
             Gaze modifiedGaze = new Gaze(left_x_mod, right_x_mod, left_y_mod,
-                                         right_y_mod, Double.NaN, Double.NaN, leftPupilDiameter, rightPupilDiameter,
-                                         new Date(timestamp / 1000));
+                                         right_y_mod, Double.MIN_VALUE, Double.MIN_VALUE, leftPupilDiameter, rightPupilDiameter,
+                                         new Date(timestamp / 1000), isFixation);
 
             gaze_points.put(modifiedGaze);
         } catch (InterruptedException e) {

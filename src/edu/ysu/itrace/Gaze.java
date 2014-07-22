@@ -13,6 +13,8 @@ public class Gaze {
     private double left_pupil_diameter;
     private double right_pupil_diameter;
 
+    private boolean isFixation;
+    
     private Date trackerTime;
     private long systemTime = System.currentTimeMillis();
     private long nanoTime = System.nanoTime();
@@ -20,7 +22,7 @@ public class Gaze {
     public Gaze(double left_x, double right_x, double left_y, double right_y,
                 double left_validity, double right_validity,
                 double left_pupil_diameter, double right_pupil_diameter,
-                Date timestamp) {
+                Date timestamp, boolean isFixation) {
         this.left_x = left_x;
         this.right_x = right_x;
 
@@ -36,8 +38,14 @@ public class Gaze {
 
         this.left_pupil_diameter = left_pupil_diameter;
         this.right_pupil_diameter = right_pupil_diameter;
+        
+        this.isFixation = isFixation;
     }
 
+    public boolean isFixation() {
+		return isFixation;
+	}
+    
     public double getX() {
         return x;
     }

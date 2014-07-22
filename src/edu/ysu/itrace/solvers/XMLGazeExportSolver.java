@@ -145,6 +145,8 @@ public class XMLGazeExportSolver implements IFileExportSolver {
                 responseWriter.writeAttribute("left-pupil-diameter",
                         String.valueOf(response.getGaze()
                                        .getLeftPupilDiameter()));
+                responseWriter.writeAttribute("fixation",
+                		String.valueOf(response.getGaze().isFixation()));
                 responseWriter.writeAttribute("right-pupil-diameter",
                         String.valueOf(response.getGaze()
                                        .getRightPupilDiameter()));

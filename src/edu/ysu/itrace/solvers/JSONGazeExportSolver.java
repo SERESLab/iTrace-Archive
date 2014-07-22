@@ -136,6 +136,8 @@ public class JSONGazeExportSolver implements IFileExportSolver {
                                 .value(response.getGaze().getLeftValidity())
                                 .name("right-pupil-diameter")
                                 .value(response.getGaze().getRightValidity())
+                                .name("fixation")
+                                .value(response.getGaze().isFixation())
                                 .name("tracker_time")
                                 .value(response.getGaze().getTrackerTime().getTime())
                                 .name("system_time")
