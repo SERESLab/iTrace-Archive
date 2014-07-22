@@ -59,7 +59,8 @@ public class EyetribeTracker implements IEyeTracker {
 		@Override
 		public void onGazeUpdate(GazeData gazeData) {
 			tracker.newGazePoint(gazeData.timeStamp, gazeData.leftEye.smoothedCoordinates.x, gazeData.leftEye.smoothedCoordinates.y,
-					gazeData.rightEye.smoothedCoordinates.x, gazeData.rightEye.smoothedCoordinates.y);
+					gazeData.rightEye.smoothedCoordinates.x, gazeData.rightEye.smoothedCoordinates.y, gazeData.leftEye.pupilSize,
+					gazeData.rightEye.pupilSize);
 		}
 		
 	}
@@ -302,7 +303,7 @@ public class EyetribeTracker implements IEyeTracker {
 	}
 	
 	public void newGazePoint(long timestamp, double left_x, double left_y,
-		double right_x, double right_y) {
+		double right_x, double right_y, double leftPupilDiameter, double rightPupilDiameter) {
 	   
 	 	//Drift
         left_x += xDrift;
@@ -353,7 +354,7 @@ public class EyetribeTracker implements IEyeTracker {
         
         try {
             Gaze gaze = new Gaze(left_x, right_x, left_y, right_y, 1, 1,
-                                 0.0, 0.0, new Date(timestamp / 1000));
+                                 leftPupilDiameter, rightPupilDiameter, new Date(timestamp / 1000));
             if (recentGazes.size() >= 15)
                 recentGazes.remove();
             recentGazes.add(gaze);
@@ -371,7 +372,7 @@ public class EyetribeTracker implements IEyeTracker {
             right_y_mod /= recentGazes.size() + 1;
 
             Gaze modifiedGaze = new Gaze(left_x_mod, right_x_mod, left_y_mod,
-                                         right_y_mod, 1, 1, 0.0, 0.0,
+                                         right_y_mod, 1, 1, leftPupilDiameter, rightPupilDiameter,
                                          new Date(timestamp / 1000));
 
             gaze_points.put(modifiedGaze);

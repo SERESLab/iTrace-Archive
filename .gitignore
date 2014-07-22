@@ -174,3 +174,6 @@ cmake_install.cmake
 #Generated Docs
 docs/*html
 *.class
+*.log
+jni/edu_ysu_itrace_trackers_EyeXTracker.dll
+jni/edu_ysu_itrace_trackers_EyeXTracker.dll
