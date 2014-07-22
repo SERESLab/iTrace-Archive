@@ -10,12 +10,17 @@ public class Gaze {
     private double left_validity;
     private double right_validity;
 
+    private double left_pupil_diameter;
+    private double right_pupil_diameter;
+
     private Date trackerTime;
     private long systemTime = System.currentTimeMillis();
     private long nanoTime = System.nanoTime();
 
     public Gaze(double left_x, double right_x, double left_y, double right_y,
-                double left_validity, double right_validity, Date timestamp) {
+                double left_validity, double right_validity,
+                double left_pupil_diameter, double right_pupil_diameter,
+                Date timestamp) {
         this.left_x = left_x;
         this.right_x = right_x;
 
@@ -28,6 +33,9 @@ public class Gaze {
         this.trackerTime = timestamp;
         this.left_validity = left_validity;
         this.right_validity = right_validity;
+
+        this.left_pupil_diameter = left_pupil_diameter;
+        this.right_pupil_diameter = right_pupil_diameter;
     }
 
     public double getX() {
@@ -60,6 +68,14 @@ public class Gaze {
 
     public double getRightValidity() {
         return right_validity;
+    }
+
+    public double getLeftPupilDiameter() {
+        return left_pupil_diameter;
+    }
+
+    public double getRightPupilDiameter() {
+        return right_pupil_diameter;
     }
 
     public Date getTrackerTime() {

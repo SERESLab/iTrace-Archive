@@ -156,7 +156,8 @@ public class TobiiTracker implements IEyeTracker {
 
     public void newGazePoint(long timestamp, double left_x, double left_y,
             double right_x, double right_y, int left_validity,
-            int right_validity) {
+            int right_validity, double left_pupil_diameter,
+            double right_pupil_diameter) {
         //Drift
         left_x += xDrift;
         right_x += xDrift;
@@ -199,6 +200,7 @@ public class TobiiTracker implements IEyeTracker {
         try {
             Gaze gaze = new Gaze(left_x, right_x, left_y, right_y,
                                  gaze_left_validity, gaze_right_validity,
+                                 left_pupil_diameter, right_pupil_diameter,
                                  new Date(timestamp / 1000));
             if (recentGazes.size() >= 15)
                 recentGazes.remove();
@@ -217,9 +219,9 @@ public class TobiiTracker implements IEyeTracker {
             right_y_mod /= recentGazes.size() + 1;
 
             Gaze modifiedGaze = new Gaze(left_x_mod, right_x_mod, left_y_mod,
-                                         right_y_mod, gaze_left_validity,
-                                         gaze_right_validity,
-                                         new Date(timestamp / 1000));
+                    right_y_mod, gaze_left_validity, gaze_right_validity,
+                    left_pupil_diameter, right_pupil_diameter,
+                    new Date(timestamp / 1000));
 
             gaze_points.put(modifiedGaze);
         } catch (InterruptedException e) {
