@@ -168,11 +168,16 @@ useCalibrationPoint(x, y, absoluteX, absoluteY);
             throws IOException, URISyntaxException {
         BufferedImage result = null;
         Bundle bundle = Platform.getBundle("edu.ysu.itrace");
+        
         //Eclipse
         if (bundle != null) {
-            URL fileUrl = bundle.getEntry("res/" + resourceName);
-            result = ImageIO.read(
-                    new File(FileLocator.resolve(fileUrl).toURI()));
+        	if (System.getProperty("os.arch").equals("x86")) {
+        		result = ImageIO.read(Activator.class.getResourceAsStream("/res/" + resourceName));
+        	} else {
+	        	URL fileUrl = bundle.getEntry("res/" + resourceName);
+	            result = ImageIO.read(
+	                    new File(FileLocator.resolve(fileUrl).toURI()));
+            }
         //No eclipse
         } else {
             result = ImageIO.read(new File("res/" + resourceName));
