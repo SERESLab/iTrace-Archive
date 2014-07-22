@@ -20,6 +20,8 @@ static TX_HANDLE g_hGlobalInteractorSnapshot = TX_EMPTY_HANDLE;
 JavaVM * g_vm;
 jobject g_obj;
 jmethodID g_mid;
+bool alreadyStreamed = false;
+TX_CONTEXTHANDLE hContext;
 
 /*
 * Initializes g_hGlobalInteractorSnapshot with an interactor that has the Gaze Point behavior.
@@ -106,9 +108,9 @@ void callback(double x, double y, long long timestamp) {
 	// double check it's all ok
 	int getEnvStat = g_vm->GetEnv((void **)&g_env, JNI_VERSION_1_4);
 	if (getEnvStat == JNI_EDETACHED) {
-		printf("GetEnv: not attached");
+		//Do nothing
 		if (g_vm->AttachCurrentThread((void **)&g_env, NULL) != 0) {
-			printf("Failed to attach");
+		//Do nothing
 		}
 	}
 	else if (getEnvStat == JNI_OK) {
@@ -135,6 +137,10 @@ void OnGazeDataEvent(TX_HANDLE hGazeDataBehavior)
 	TX_GAZEPOINTDATAEVENTPARAMS eventParams;
 	if (txGetGazePointDataEventParams(hGazeDataBehavior, &eventParams) == TX_RESULT_OK) {
 		//printf("Gaze Data: (%.1f, %.1f) timestamp %.0f ms\n", eventParams.X, eventParams.Y, eventParams.Timestamp);
+		if (!alreadyStreamed) {
+			alreadyStreamed = true;
+			printf("Start streaming");
+		}
 		callback(eventParams.X, eventParams.Y, eventParams.Timestamp);
 	}
 	else {
@@ -193,7 +199,7 @@ Java_edu_ysu_itrace_trackers_EyeXTracker_register(JNIEnv * env, jobject obj) {
 JNIEXPORT jboolean JNICALL
 Java_edu_ysu_itrace_trackers_EyeXTracker_connectEyeTracker(JNIEnv * env, jobject obj)
 {
-	TX_CONTEXTHANDLE hContext = TX_EMPTY_HANDLE;
+	hContext = TX_EMPTY_HANDLE;
 	TX_TICKET hConnectionStateChangedTicket = TX_INVALID_TICKET;
 	TX_TICKET hEventHandlerTicket = TX_INVALID_TICKET;
 	BOOL success;
@@ -219,6 +225,10 @@ JNIEXPORT void JNICALL
 Java_edu_ysu_itrace_trackers_EyeXTracker_disconnectEyeTracker(JNIEnv *env, jobject obj)
 {
 	printf("Disconnect");
+	txDisableConnection(hContext);
+	txReleaseObject(&g_hGlobalInteractorSnapshot);
+	txShutdownContext(hContext, TX_CLEANUPTIMEOUT_DEFAULT, TX_FALSE);
+	txReleaseContext(&hContext);
 	return;
 }
 
