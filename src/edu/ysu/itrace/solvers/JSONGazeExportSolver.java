@@ -31,6 +31,7 @@ public class JSONGazeExportSolver implements IFileExportSolver {
     private int lineHeight;
     private int fontHeight;
     private Shell parent;
+	private boolean extended;
 
     public JSONGazeExportSolver(Shell parent) {
         this.parent = parent;
@@ -114,36 +115,51 @@ public class JSONGazeExportSolver implements IFileExportSolver {
     public void process(IGazeResponse response) {
         try {
             if (response.getProperties().size() > 0) {
-                int screenX =
-                        (int) (screenRect.width * response.getGaze().getX());
-                int screenY =
-                        (int) (screenRect.height * response.getGaze().getY());
+               
 
-                responseWriter.beginObject()
-                                .name("file")
-                                .value(response.getName())
-                                .name("type")
-                                .value(response.getType())
-                                .name("x")
-                                .value(screenX)
-                                .name("y")
-                                .value(screenY)
-                                .name("left_validation")
-                                .value(response.getGaze().getLeftValidity())
-                                .name("right_validation")
-                                .value(response.getGaze().getRightValidity())
-                                .name("left-pupil-diameter")
-                                .value(response.getGaze().getLeftPupilDiameter())
-                                .name("right-pupil-diameter")
-                                .value(response.getGaze().getRightPupilDiameter())
-                                .name("fixation")
-                                .value(response.getGaze().isFixation())
-                                .name("tracker_time")
-                                .value(response.getGaze().getTrackerTime().getTime())
-                                .name("system_time")
-                                .value(response.getGaze().getSystemTime())
-                                .name("nano_time")
-                                .value(response.getGaze().getNanoTime());
+                if (extended) {
+                
+                	 int screenX =
+                             (int) (screenRect.width * response.getGaze().getX());
+                     int screenY =
+                             (int) (screenRect.height * response.getGaze().getY());
+                     
+	                responseWriter.beginObject()
+	                                .name("file")
+	                                .value(response.getName())
+	                                .name("type")
+	                                .value(response.getType())
+	                                .name("x")
+	                                .value(screenX)
+	                                .name("y")
+	                                .value(screenY)
+	                                .name("left_validation")
+	                                .value(response.getGaze().getLeftValidity())
+	                                .name("right_validation")
+	                                .value(response.getGaze().getRightValidity())
+	                                .name("left-pupil-diameter")
+	                                .value(response.getGaze().getLeftPupilDiameter())
+	                                .name("right-pupil-diameter")
+	                                .value(response.getGaze().getRightPupilDiameter())
+	                                .name("fixation")
+	                                .value(response.getGaze().isFixation())
+	                                .name("tracker_time")
+	                                .value(response.getGaze().getTrackerTime().getTime())
+	                                .name("system_time")
+	                                .value(response.getGaze().getSystemTime())
+	                                .name("nano_time")
+	                                .value(response.getGaze().getNanoTime());
+                } else {
+                	responseWriter.beginObject()
+                    .name("file")
+                    .value(response.getName())
+                    .name("type")
+                    .value(response.getType())
+                    .name("fixation")
+                    .value(response.getGaze().isFixation())
+                    .name("system_time")
+                    .value(response.getGaze().getSystemTime());
+                }
 
                 for (Iterator<Entry<String, String>> entries =
                         response.getProperties().entrySet().iterator(); entries
@@ -200,4 +216,9 @@ public class JSONGazeExportSolver implements IFileExportSolver {
             setFilenamePattern(configDialog.getValue());
         }
     }
+
+	@Override
+	public void printAdditionalInfo(boolean extended) {
+		this.extended = extended;
+	}
 }

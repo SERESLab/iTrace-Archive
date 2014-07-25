@@ -4,6 +4,7 @@ import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.io.IOException;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -17,6 +18,7 @@ import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.events.ShellEvent;
 import org.eclipse.swt.events.ShellListener;
 import org.eclipse.swt.graphics.Point;
@@ -376,7 +378,44 @@ public class ControlView extends ViewPart implements IPartListener2,
             });
             grayedControls.addIfAbsent(solverConfig);
         }
+        
+        final Composite outputSelectionComposite = new Composite(parent, SWT.NONE);
+        outputSelectionComposite.setLayout(new RowLayout(SWT.VERTICAL));
+        OutputListener listener = new OutputListener(availableSolvers);
+        Button fullOutput = new Button(outputSelectionComposite, SWT.RADIO);
+        fullOutput.setText("All information");
+        fullOutput.addSelectionListener(listener);
+        Button codeOutput = new Button(outputSelectionComposite, SWT.RADIO);
+        codeOutput.setText("Only gaze information");
+        codeOutput.setSelection(true);
+        codeOutput.addSelectionListener(listener);
+    }
+    
+    private static class OutputListener implements SelectionListener {
 
+    	private List<ISolver> solvers;
+    	
+    	public OutputListener(List<ISolver> solvers) {
+    		this.solvers = solvers;
+    	}
+    	
+		@Override
+		public void widgetSelected(SelectionEvent e) {
+			Button source = (Button) e.getSource();
+			
+			boolean everyGaze = (source.getText().equals("Every gaze") & source.getSelection());
+			
+			System.out.println("Every gaze: " + everyGaze);
+			for (ISolver solver : solvers) {
+				solver.printAdditionalInfo(everyGaze);
+			}
+		}
+
+		@Override
+		public void widgetDefaultSelected(SelectionEvent e) {
+			//do nothing
+		}
+    	
     }
 
     @Override

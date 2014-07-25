@@ -37,4 +37,12 @@ public interface ISolver {
      * after calling dispose. Not sure if we need this, either.
      */
     public void dispose();
+
+    /**
+     * Indicates whether only AST information and timestamp should be written to the output
+     * or if additional information should be added to the output.
+     * @param extended if true, additional information is printed.
+     */
+	public void printAdditionalInfo(boolean extended);
+	
 }

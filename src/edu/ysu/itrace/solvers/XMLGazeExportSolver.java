@@ -35,6 +35,7 @@ public class XMLGazeExportSolver implements IFileExportSolver {
     private int lineHeight;
     private int fontHeight;
     private Shell parent;
+	private boolean extended;
 
     public XMLGazeExportSolver(Shell parent) {
         this.parent = parent;
@@ -220,4 +221,9 @@ public class XMLGazeExportSolver implements IFileExportSolver {
             setFilenamePattern(configDialog.getValue());
         }
     }
+
+	@Override
+	public void printAdditionalInfo(boolean extended) {
+		this.extended = extended;
+	}
 }
