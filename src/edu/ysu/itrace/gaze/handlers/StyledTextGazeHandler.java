@@ -58,11 +58,23 @@ public class StyledTextGazeHandler implements IGazeHandler {
                     this.properties.put("line", String.valueOf(lineIndex + 1));
                     this.properties.put("col", String.valueOf(col));
 
-                    AstManager.SCEQueryResponse sceResp =
-                            astManager.getSCE(lineIndex + 1, col);
-                    this.properties.put("fullyQualifiedName",
-                                        sceResp.fullyQualifiedName);
-                    this.properties.put("type", sceResp.sce.type.name());
+                    AstManager.SourceCodeEntity[] entities =
+                            astManager.getSCEs(lineIndex + 1, col);
+                    String names = "";
+                    String types = "";
+                    String hows = "";
+                    for (AstManager.SourceCodeEntity entity : entities) {
+                        names += entity.name + ";";
+                        types += entity.type.name() + ";";
+                        hows += entity.how.name() + ";";
+                    }
+                    this.properties.put("fullyQualifiedNames",
+                            names.length() > 0 ?
+                            names.substring(0, names.length() - 1) : "");
+                    this.properties.put("types", types.length() > 0 ?
+                            types.substring(0, types.length() - 1) : "");
+                    this.properties.put("hows", hows.length() > 0 ?
+                            hows.substring(0, hows.length() - 1) : "");
                 } catch(Exception e){}
 
                 this.type = "text";

@@ -3,11 +3,15 @@ package edu.ysu.itrace;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
-import java.util.Stack;
 
+import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
@@ -15,12 +19,18 @@ import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Comment;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
+import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
+import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.progress.UIJob;
 
 /**
@@ -39,23 +49,23 @@ public class AstManager {
     }
 
     /**
+     * How the source code entity is referenced in the expression.
+     */
+    public enum SCEHow {
+        DECLARE,
+        USE,
+    }
+
+    /**
      * Information extracted about a source code entity.
      */
     public class SourceCodeEntity {
         public SCEType type;
+        public SCEHow how;
         public String name;
         public int totalLength;
         public int startLine, endLine;
         public int startCol, endCol;
-    }
-
-    /**
-     * Response object for getSCE(). Contains source code entity and the fully
-     * qualified name of the entity.
-     */
-    public class SCEQueryResponse {
-        public SourceCodeEntity sce;
-        public String fullyQualifiedName;
     }
 
     /**
@@ -79,6 +89,7 @@ public class AstManager {
 
     final private int AFTER_KEYPRESS_RELOAD_THRESHOLD_MILLIS = 1000;
 
+    private IEditorPart editor;
     private StyledText styledText;
     private ReloadAstJob reloadAstJob;
     private LinkedList<SourceCodeEntity> sourceCodeEntities;
@@ -86,26 +97,29 @@ public class AstManager {
     /**
      * Constructor. Loads the AST and sets up the StyledText to automatically
      * reload after certain events.
+     * @param editor IEditorPart which owns the following StyledText.
      * @param styledText StyledText to which this AST pertains.
      */
-    public AstManager(StyledText styledText) {
+    public AstManager(IEditorPart editor, StyledText styledText) {
+        this.editor = editor;
         this.styledText = styledText;
         hookupAutoReload();
         reload();
     }
 
     /**
-     * Gets the source code entity found at a location in source.
+     * Gets the source code entities found at a location in source.
      * @param lineNumber 1-based line number.
      * @param colNumber 0-based column number.
-     * @return Response containing source code entity and its fully qualified
-     *     name.
+     * @return Array of all source code entities found.
      */
-    public SCEQueryResponse getSCE(int lineNumber, int colNumber) {
-        SourceCodeEntity responseSce = null;
-        Stack<SourceCodeEntity> sceFullyQualified =
-                new Stack<SourceCodeEntity>();
+    public SourceCodeEntity[] getSCEs(int lineNumber, int colNumber) {
+        LinkedList<SourceCodeEntity> entities =
+                new LinkedList<SourceCodeEntity>();
 
+        //Look through source code entities to find all entities at the given
+        //location. They are already sorted from most specific to least
+        //specific.
         for (SourceCodeEntity sce : sourceCodeEntities) {
             boolean found = true;
             if (lineNumber < sce.startLine || lineNumber > sce.endLine)
@@ -114,28 +128,11 @@ public class AstManager {
                 found = false;
             if (lineNumber == sce.endLine && colNumber > sce.endCol)
                 found = false;
-            if (found) {
-                sceFullyQualified.push(sce);
-                //The first encountered SCE is the most specific SCE and will be
-                //returned in the response.
-                if (responseSce == null)
-                    responseSce = sce;
-            }
+            if (found)
+                entities.add(sce);
         }
 
-        if (responseSce != null) {
-            String fqName = "";
-            while (!sceFullyQualified.empty())
-                fqName += sceFullyQualified.pop().name + ".";
-            fqName = fqName.substring(0, fqName.length() - 1);
-
-            SCEQueryResponse result = new SCEQueryResponse();
-            result.sce = responseSce;
-            result.fullyQualifiedName = fqName;
-            return result;
-        } else {
-            return null;
-        }
+        return entities.toArray(new SourceCodeEntity[0]);
     }
 
     /**
@@ -145,10 +142,17 @@ public class AstManager {
         //Reset source code entities list.
         sourceCodeEntities = new LinkedList<SourceCodeEntity>();
 
+        IFile file = ((IFileEditorInput) editor.getEditorInput()).getFile();
+        IProject project = file.getProject();
+        IJavaProject jProject = JavaCore.create(project);
+        ICompilationUnit compUnit = (ICompilationUnit) JavaCore.create(file);
+
         ASTParser parser = ASTParser.newParser(AST.JLS4);
         parser.setKind(ASTParser.K_COMPILATION_UNIT);
-        parser.setSource(styledText.getText().toCharArray());
+        parser.setProject(jProject);
+        parser.setSource(compUnit);
         parser.setResolveBindings(true);
+        parser.setUnitName(file.getName());
         final CompilationUnit compileUnit =
                 (CompilationUnit) parser.createAST(null);
 
@@ -156,7 +160,12 @@ public class AstManager {
             public boolean visit(TypeDeclaration node) {
                 SourceCodeEntity sce = new SourceCodeEntity();
                 sce.type = SCEType.TYPE;
-                sce.name = node.getName().getFullyQualifiedName();
+                sce.how = SCEHow.DECLARE;
+                ITypeBinding binding = node.resolveBinding();
+                if (binding != null)
+                    sce.name = binding.getQualifiedName();
+                else
+                    sce.name = "?." + node.getName().getFullyQualifiedName();
                 determineSCEPosition(compileUnit, node, sce);
                 sourceCodeEntities.add(sce);
                 return true;
@@ -165,8 +174,10 @@ public class AstManager {
             public boolean visit(MethodDeclaration node) {
                 SourceCodeEntity sce = new SourceCodeEntity();
                 sce.type = SCEType.METHOD;
+                sce.how = SCEHow.DECLARE;
                 sce.name = node.getName().getFullyQualifiedName();
                 determineSCEPosition(compileUnit, node, sce);
+                extractDataFromMethodBinding(node.resolveBinding(), sce);
                 sourceCodeEntities.add(sce);
                 return true;
             }
@@ -174,8 +185,10 @@ public class AstManager {
             public boolean visit(VariableDeclarationFragment node) {
                 SourceCodeEntity sce = new SourceCodeEntity();
                 sce.type = SCEType.VARIABLE;
+                sce.how = SCEHow.DECLARE;
                 sce.name = node.getName().getFullyQualifiedName();
                 determineSCEPosition(compileUnit, node, sce);
+                extractDataFromVariableBinding(node.resolveBinding(), sce);
                 sourceCodeEntities.add(sce);
                 return true;
             }
@@ -183,10 +196,22 @@ public class AstManager {
             public boolean visit(EnumDeclaration node) {
                 SourceCodeEntity sce = new SourceCodeEntity();
                 sce.type = SCEType.ENUM;
+                sce.how = SCEHow.DECLARE;
                 sce.name = node.getName().getFullyQualifiedName();
                 determineSCEPosition(compileUnit, node, sce);
                 sourceCodeEntities.add(sce);
                 return true;
+            }
+
+            public boolean visit(MethodInvocation node) {
+                SourceCodeEntity sce = new SourceCodeEntity();
+                sce.type = SCEType.METHOD;
+                sce.how = SCEHow.USE;
+                sce.name = node.getName().getFullyQualifiedName();
+                determineSCEPosition(compileUnit, node, sce);
+                extractDataFromMethodBinding(node.resolveMethodBinding(), sce);
+                sourceCodeEntities.add(sce);
+                return false;
             }
         };
         compileUnit.accept(visitor);
@@ -228,6 +253,75 @@ public class AstManager {
         sce.startCol = compileUnit.getColumnNumber(node.getStartPosition());
         sce.endCol = compileUnit.getColumnNumber(node.getStartPosition() +
                                                  node.getLength());
+    }
+
+    /**
+     * Extracts the fully qualified name and parameters from a method binding
+     * and applies them to the name in a SourceCodeEntity.
+     * @param binding The method binding.
+     * @param sce SourceCodeEntity to which to apply changes. Name must be set
+     *            to the entity's unqualified name.
+     */
+    private void extractDataFromMethodBinding(IMethodBinding binding,
+            SourceCodeEntity sce) {
+        if (binding != null) {
+            //Get package and type name within which this method is declared.
+            ITypeBinding type = binding.getDeclaringClass();
+            if (type != null)
+                sce.name = type.getQualifiedName() + "." + sce.name;
+            else
+                sce.name = "?." + sce.name;
+            //Get method parameter types
+            String params = "";
+            for (ITypeBinding paramType : binding.getParameterTypes()) {
+                if (paramType != null)
+                    params += paramType.getQualifiedName() + ",";
+            }
+            if (params.length() > 0) {
+                sce.name += "("
+                          + params.substring(0, params.length() - 1)
+                          + ")";
+            } else
+                sce.name += "()";
+        } else {
+            //If binding fails, mark the qualification as "?" to show it could
+            //not be determined.
+            sce.name = "?." + sce.name + "(?)";
+        }
+    }
+
+    /**
+     * Extracts the fully qualified name from a variable binding and applies
+     * them to the name in a SourceCodeEntity.
+     * @param binding The variable binding.
+     * @param sce SourceCodeEntity to which to apply changes. Name must be set
+     *            to the entity's unqualified name.
+     */
+    private static void extractDataFromVariableBinding(
+            IVariableBinding binding, SourceCodeEntity sce) {
+        if (binding != null) {
+            //Type member variable.
+            ITypeBinding type = binding.getDeclaringClass();
+            if (type != null)
+                sce.name = type.getQualifiedName() + "." + sce.name;
+            //Variable declared in method.
+            else {
+                IMethodBinding method = binding.getDeclaringMethod();
+                if (method != null) {
+                    type = method.getDeclaringClass();
+                    if (type != null) {
+                        sce.name = type.getQualifiedName() + "."
+                                 + method.getName() + "." + sce.name;
+                    } else
+                        sce.name = "?." + method.getName() + "." + sce.name;
+                } else
+                    sce.name = "?." + sce.name;
+            }
+        } else {
+            //If binding fails, mark the qualification as "?" to show it could
+            //not be determined.
+            sce.name = "?." + sce.name;
+        }
     }
 
     /**

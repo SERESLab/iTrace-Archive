@@ -31,8 +31,11 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Spinner;
+import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.IPartListener2;
 import org.eclipse.ui.IWorkbenchPartReference;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
 
@@ -462,42 +465,35 @@ public class ControlView extends ViewPart implements IPartListener2,
     }
 
     /**
-     * Find a styled text control within a part, set it up to be used by iTrace,
+     * Find styled text controls within a part, set it up to be used by iTrace,
      * and extract meta-data from it.
      * 
-     * @param partRef
-     *            Highest-level part reference possible.
+     * @param partRef Highest-level part reference possible.
      */
     private void setupStyledText(IWorkbenchPartReference partRef) {
-        Shell workbenchShell =
-                partRef.getPage().getWorkbenchWindow().getShell();
-        for (Control control : workbenchShell.getChildren())
-            setupStyledText(control);
+        IEditorReference[] editors = PlatformUI.getWorkbench()
+                .getActiveWorkbenchWindow().getActivePage()
+                .getEditorReferences();
+        for (IEditorReference editor : editors) {
+            IEditorPart editorPart = editor.getEditor(true);
+            StyledText text = (StyledText) editorPart.getAdapter(Control.class);
+            setupStyledText(editorPart, text);
+        }
     }
 
     /**
      * Recursive helper method for setupStyledText(IWorkbenchPartReference).
      * 
-     * @param control
-     *            Control under which to recursively search for styled text.
+     * @param editor IEditorPart which owns the StyledText in the next
+     *               parameter.
+     * @param control StyledText to set up.
      */
-    private void setupStyledText(Control control) {
-        if (control instanceof StyledText) {
-            StyledText styledText = (StyledText) control;
-            this.line_height = styledText.getLineHeight();
-            this.font_height =
-                    styledText.getFont().getFontData()[0].getHeight();
-            if (styledText.getData(KEY_AST) == null)
-                styledText.setData(KEY_AST, new AstManager(styledText));
-        }
-
-        if (control instanceof Composite) {
-            Composite composite = (Composite) control;
-            for (Control curControl : composite.getChildren()) {
-                if (control != null)
-                    setupStyledText(curControl);
-            }
-        }
+    private void setupStyledText(IEditorPart editor, StyledText control) {
+        StyledText styledText = (StyledText) control;
+        this.line_height = styledText.getLineHeight();
+        this.font_height = styledText.getFont().getFontData()[0].getHeight();
+        if (styledText.getData(KEY_AST) == null)
+            styledText.setData(KEY_AST, new AstManager(editor, styledText));
     }
 
     /*
