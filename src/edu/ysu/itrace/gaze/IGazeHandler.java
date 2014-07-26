@@ -15,5 +15,6 @@ public interface IGazeHandler {
      * to the target object. Return value may be null if the gaze is not
      * meaningful to the target.
      */
-    public IGazeResponse handleGaze(int x, int y, Gaze gaze);
+    public IGazeResponse handleGaze(int absoluteX, int absoluteY,
+            int relativeX, int relativeY, Gaze gaze);
 }
