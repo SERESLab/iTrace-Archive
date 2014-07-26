@@ -19,6 +19,7 @@ import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Comment;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
+import org.eclipse.jdt.core.dom.FieldAccess;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
@@ -210,6 +211,17 @@ public class AstManager {
                 sce.name = node.getName().getFullyQualifiedName();
                 determineSCEPosition(compileUnit, node, sce);
                 extractDataFromMethodBinding(node.resolveMethodBinding(), sce);
+                sourceCodeEntities.add(sce);
+                return false;
+            }
+
+            public boolean visit(FieldAccess node) {
+                SourceCodeEntity sce = new SourceCodeEntity();
+                sce.type = SCEType.VARIABLE;
+                sce.how = SCEHow.USE;
+                sce.name = node.getName().getFullyQualifiedName();
+                determineSCEPosition(compileUnit, node, sce);
+                extractDataFromVariableBinding(node.resolveFieldBinding(), sce);
                 sourceCodeEntities.add(sce);
                 return false;
             }
