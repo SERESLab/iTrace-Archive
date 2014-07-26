@@ -527,7 +527,7 @@ public class ControlView extends ViewPart implements IPartListener2,
                             (IGazeHandler) child
                                     .getData(HandlerBindManager.KEY_HANDLER);
                     if (child.isVisible() && handler != null) {
-                        return handler.handleGaze(
+                        return handler.handleGaze(screenX, screenY,
                                 screenX - childScreenBounds.x, screenY
                                         - childScreenBounds.y, gaze);
                     }

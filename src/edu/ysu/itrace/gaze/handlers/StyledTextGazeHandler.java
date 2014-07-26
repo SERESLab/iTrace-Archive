@@ -34,7 +34,8 @@ public class StyledTextGazeHandler implements IGazeHandler {
 
 
     @Override
-    public IGazeResponse handleGaze(final int x, final int y, final Gaze gaze) {
+    public IGazeResponse handleGaze(final int absoluteX, final int absoluteY,
+            final int relativeX, final int relativeY, final Gaze gaze) {
         final AstManager astManager =
                 (AstManager) targetStyledText.getData(ControlView.KEY_AST);
 
@@ -48,15 +49,36 @@ public class StyledTextGazeHandler implements IGazeHandler {
             // construct the type and properties for the response
             {
                 try {
-                    int lineIndex = targetStyledText.getLineIndex(y);
+                    int lineIndex = targetStyledText.getLineIndex(relativeY);
                     int lineOffset
                             = targetStyledText.getOffsetAtLine(lineIndex);
                     int offset = targetStyledText.getOffsetAtLocation(
-                            new Point(x, y));
+                            new Point(relativeX, relativeY));
                     int col = offset - lineOffset;
 
                     this.properties.put("line", String.valueOf(lineIndex + 1));
                     this.properties.put("col", String.valueOf(col));
+
+                    //(0, 0) relative to the control in absolute screen
+                    //coordinates.
+                    Point relativeRoot = new Point(absoluteX - relativeX,
+                            absoluteY - relativeY);
+
+                    //Top-left position of the first character on the line in
+                    //relative coordinates.
+                    Point lineAnchorPosition = targetStyledText.
+                            getLocationAtOffset(targetStyledText.
+                            getOffsetAtLine(lineIndex));
+                    //To absolute.
+                    lineAnchorPosition = new Point(
+                            lineAnchorPosition.x + relativeRoot.x,
+                            lineAnchorPosition.y + relativeRoot.y);
+                    //Write out the position at the top-left of the first
+                    //character in absolute screen coordinates.
+                    this.properties.put("line_base_x",
+                                        String.valueOf(lineAnchorPosition.x));
+                    this.properties.put("line_base_y",
+                                        String.valueOf(lineAnchorPosition.y));
 
                     AstManager.SourceCodeEntity[] entities =
                             astManager.getSCEs(lineIndex + 1, col);
