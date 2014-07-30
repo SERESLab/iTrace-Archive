@@ -3,6 +3,7 @@ package edu.ysu.itrace;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Stack;
 
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -15,6 +16,7 @@ import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Comment;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
+import org.eclipse.jdt.core.dom.IExtendedModifier;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
@@ -22,6 +24,7 @@ import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.ui.progress.UIJob;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 
 /**
  * Keeps updated information about the source code viewed in one StyledText.
@@ -44,6 +47,8 @@ public class AstManager {
     public class SourceCodeEntity {
         public SCEType type;
         public String name;
+        public String signature;
+        public String declaration;
         public int totalLength;
         public int startLine, endLine;
         public int startCol, endCol;
@@ -163,14 +168,70 @@ public class AstManager {
             }
 
             public boolean visit(MethodDeclaration node) {
-                SourceCodeEntity sce = new SourceCodeEntity();
+            	SourceCodeEntity sce = new SourceCodeEntity();
                 sce.type = SCEType.METHOD;
                 sce.name = node.getName().getFullyQualifiedName();
+                sce.declaration = extractMethodDeclaration(node);
+                sce.signature = extractMethodSignature(node);
                 determineSCEPosition(compileUnit, node, sce);
                 sourceCodeEntities.add(sce);
                 return true;
             }
+            
+            private String extractMethodSignature(MethodDeclaration methodDeclaration) {
+            	List<SingleVariableDeclaration> parameters = methodDeclaration.parameters();
+           	 
+           	 	//Method name
+           	 	String signature = " " + methodDeclaration.getName() + "(";
+           	 
+           	 	//Method parameters
+           	 	boolean hasParameter = false;
+           	 	for (SingleVariableDeclaration decl : parameters) {
+           	 		signature +=  decl.getType() + ", ";
+                	hasParameter = true;
+           	 	}
+                if (hasParameter) {
+	                signature = signature.substring(0, signature.length() - 2);
+                }
+                signature += ")";
+                return signature;
+           }
 
+            private String extractMethodDeclaration(MethodDeclaration methodDeclaration) {
+            	 List<SingleVariableDeclaration> parameters = methodDeclaration.parameters();
+            	 List<IExtendedModifier> modifiers = methodDeclaration.modifiers();
+            	 
+            	 String signature = "";
+            	 
+            	 //Method modifiers
+            	 boolean hasModifier = false;
+            	 for (IExtendedModifier modifier : modifiers) {
+            		 signature += modifier + " ";
+            		 hasModifier = true;
+            	 }
+            	 if (hasModifier) {
+            		 signature = signature.substring(0, signature.length() - 1);
+            	 }
+            	 
+            	 //Return type
+            	 signature += " " + methodDeclaration.getReturnType2();
+            	 
+            	 //Method name
+            	 signature += " " + methodDeclaration.getName() + "(";
+            	 
+            	 //Method parameters
+                 boolean hasParameter = false;
+                 for (SingleVariableDeclaration decl : parameters) {
+                 	signature +=  decl.getType() + ", ";
+                 	hasParameter = true;
+                 }
+                 if (hasParameter) {
+ 	                signature = signature.substring(0, signature.length() - 2);
+                 }
+                 signature += ")";
+                 return signature;
+            }
+            
             public boolean visit(VariableDeclarationFragment node) {
                 SourceCodeEntity sce = new SourceCodeEntity();
                 sce.type = SCEType.VARIABLE;

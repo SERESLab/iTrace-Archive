@@ -63,6 +63,9 @@ public class StyledTextGazeHandler implements IGazeHandler {
                     this.properties.put("fullyQualifiedName",
                                         sceResp.fullyQualifiedName);
                     this.properties.put("typeName", sceResp.sce.type.name());
+                    this.properties.put("signature", sceResp.sce.signature);
+                    this.properties.put("declaration", sceResp.sce.declaration);
+                    
                 } catch(Exception e){}
 
                 this.type = "text";
