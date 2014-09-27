@@ -85,10 +85,21 @@ public class StyledTextGazeHandler implements IGazeHandler {
                     String names = "";
                     String types = "";
                     String hows = "";
+                    String signatures = "";
+                    String declarations = "";
                     for (AstManager.SourceCodeEntity entity : entities) {
-                        names += entity.name + ";";
-                        types += entity.type.name() + ";";
-                        hows += entity.how.name() + ";";
+                        names += entity.name != null ? (entity.name + ";") :
+                                                       ";";
+                        types += entity.type != null ?
+                                (entity.type.name() + ";") : ";";
+                        hows += entity.how != null ? entity.how.name() + ";" :
+                                ";";
+                        signatures += entity.signature + ";";
+                        declarations += entity.declaration + ";";
+                        signatures += entity.signature != null ?
+                                      (entity.signature + ";") : ";";
+                        declarations += entity.declaration != null ?
+                                        (entity.declaration + ";") : ";";
                     }
                     this.properties.put("fullyQualifiedNames",
                             names.length() > 0 ?
@@ -97,7 +108,13 @@ public class StyledTextGazeHandler implements IGazeHandler {
                             types.substring(0, types.length() - 1) : "");
                     this.properties.put("hows", hows.length() > 0 ?
                             hows.substring(0, hows.length() - 1) : "");
-                } catch(Exception e){}
+                    this.properties.put("signature", signatures.length() > 0 ?
+                            signatures.substring(0, signatures.length() - 1) :
+                            "");
+                    this.properties.put("declaration",
+                            declarations.length() > 0 ? declarations.
+                            substring(0, declarations.length() - 1) : "");
+                } catch(IllegalArgumentException e) { }
 
                 this.type = "text";
             }

@@ -25,6 +25,7 @@ public class CSVGazeExportSolver implements IFileExportSolver {
 	private FileWriter responseWriter;
 	private String fileNamePattern = "'gaze-responses-'yyyyMMdd'T'HHmmss','SSSSZ'.csv'";
 	private Dimension screenRect;
+	private boolean extended;
  
 	public CSVGazeExportSolver(Shell parent) {
 		this.parent = parent;
@@ -75,31 +76,35 @@ public class CSVGazeExportSolver implements IFileExportSolver {
 	        	output.append(SEPARATOR);
 	        	output.append("type");
 	        	output.append(SEPARATOR);
-	        	output.append("x");
-	        	output.append(SEPARATOR);
-	        	output.append("y");
-	        	output.append(SEPARATOR);
-	        	output.append("left validation");
-	        	output.append(SEPARATOR);
-	        	output.append("right validation");
-	        	output.append(SEPARATOR);
-	        	output.append("left pupil diameter");
-	        	output.append(SEPARATOR);
-	        	output.append("right pupil diameter");
-	        	output.append(SEPARATOR);
 	        	output.append("fixation");
-	        	output.append(SEPARATOR);
-	        	output.append("tracker time");
-	        	output.append(SEPARATOR);
-	        	output.append("system time");
-	        	output.append(SEPARATOR);
-	        	output.append("nano time");
 	        	output.append(SEPARATOR);
 	        	output.append("line");
 	        	output.append(SEPARATOR);
 	        	output.append("column");
 	        	output.append(SEPARATOR);
 	        	output.append("fully qualified name");
+	        	output.append(SEPARATOR);
+	        	output.append("system time");
+	        	
+	        	if (extended) {
+	        		output.append(SEPARATOR);
+		        	output.append("x");
+		        	output.append(SEPARATOR);
+		        	output.append("y");
+		        	output.append(SEPARATOR);
+		        	output.append("left validation");
+		        	output.append(SEPARATOR);
+		        	output.append("right validation");
+		        	output.append(SEPARATOR);
+		        	output.append("left pupil diameter");
+		        	output.append(SEPARATOR);
+		        	output.append("right pupil diameter");
+		        	output.append(SEPARATOR);
+		        	output.append("tracker time");
+		        	output.append(SEPARATOR);
+		        	output.append("nano time");
+		        }
+	        	
 	        	output.append(NEW_LINE);
 	        	responseWriter.write(output.toString());
 	        } catch (IOException e) {
@@ -122,31 +127,35 @@ public class CSVGazeExportSolver implements IFileExportSolver {
 			output.append(SEPARATOR);
 			output.append(response.getType());
 			output.append(SEPARATOR);
-			output.append(screenX);
-			output.append(SEPARATOR);
-			output.append(screenY);
-			output.append(SEPARATOR);
-			output.append(response.getGaze().getLeftValidity());
-			output.append(SEPARATOR);
-			output.append(response.getGaze().getRightValidity());
-			output.append(SEPARATOR);
-			output.append(response.getGaze().getLeftPupilDiameter());
-			output.append(SEPARATOR);
-			output.append(response.getGaze().getRightPupilDiameter());
-			output.append(SEPARATOR);
-	        output.append(response.getGaze().isFixation());
-	        output.append(SEPARATOR);
-	        output.append(response.getGaze().getTrackerTime());
-	        output.append(SEPARATOR);
-	        output.append(response.getGaze().getSystemTime());
-	        output.append(SEPARATOR);
-	        output.append(response.getGaze().getNanoTime());
+			output.append(response.getGaze().isFixation());
 	        output.append(SEPARATOR);
 	        output.append(response.getProperties().get("line"));
 	        output.append(SEPARATOR);
 	        output.append(response.getProperties().get("col"));
 	        output.append(SEPARATOR);
 	        output.append(response.getProperties().get("fullyQualifiedName"));
+	        output.append(SEPARATOR);
+	        output.append(response.getGaze().getSystemTime());
+	        
+			if (extended) {
+				output.append(SEPARATOR);
+				output.append(screenX);
+				output.append(SEPARATOR);
+				output.append(screenY);
+				output.append(SEPARATOR);
+				output.append(response.getGaze().getLeftValidity());
+				output.append(SEPARATOR);
+				output.append(response.getGaze().getRightValidity());
+				output.append(SEPARATOR);
+				output.append(response.getGaze().getLeftPupilDiameter());
+				output.append(SEPARATOR);
+				output.append(response.getGaze().getRightPupilDiameter());
+				output.append(SEPARATOR);
+		        output.append(response.getGaze().getTrackerTime());
+		        output.append(SEPARATOR);
+		        output.append(response.getGaze().getNanoTime());
+			}
+			
 	        output.append(NEW_LINE);
 	        responseWriter.write(output.toString());
         } catch (IOException e) {
@@ -187,6 +196,11 @@ public class CSVGazeExportSolver implements IFileExportSolver {
         } catch (IllegalArgumentException e) {
             return workspaceLocation + "/" + fileNamePattern;
         }
+	}
+
+	@Override
+	public void printAdditionalInfo(boolean extended) {
+		this.extended = extended;
 	}
 
 }

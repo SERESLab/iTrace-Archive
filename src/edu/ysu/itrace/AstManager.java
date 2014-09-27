@@ -3,6 +3,8 @@ package edu.ysu.itrace;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Stack;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -18,15 +20,26 @@ import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Comment;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.ConditionalExpression;
+import org.eclipse.jdt.core.dom.EnhancedForStatement;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
+
 import org.eclipse.jdt.core.dom.FieldAccess;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
+
+import org.eclipse.jdt.core.dom.ForStatement;
+import org.eclipse.jdt.core.dom.IExtendedModifier;
+import org.eclipse.jdt.core.dom.IfStatement;
+import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+import org.eclipse.jdt.core.dom.SwitchStatement;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+import org.eclipse.jdt.core.dom.WhileStatement;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
@@ -47,6 +60,8 @@ public class AstManager {
         VARIABLE,
         COMMENT,
         ENUM,
+        IMPORT,
+        FORSTATEMENT, METHOD_INVOCATION, IFSTATEMENT, WHILESTATEMENT, SWITCHSTATEMENT, CONDITIONAL_EXPRESSION,
     }
 
     /**
@@ -62,8 +77,10 @@ public class AstManager {
      */
     public class SourceCodeEntity {
         public SCEType type;
-        public SCEHow how;
         public String name;
+        public SCEHow how;
+        public String signature;
+        public String declaration;
         public int totalLength;
         public int startLine, endLine;
         public int startCol, endCol;
@@ -158,6 +175,7 @@ public class AstManager {
                 (CompilationUnit) parser.createAST(null);
 
         ASTVisitor visitor = new ASTVisitor() {
+
             public boolean visit(TypeDeclaration node) {
                 SourceCodeEntity sce = new SourceCodeEntity();
                 sce.type = SCEType.TYPE;
@@ -173,14 +191,71 @@ public class AstManager {
             }
 
             public boolean visit(MethodDeclaration node) {
-                SourceCodeEntity sce = new SourceCodeEntity();
+            	SourceCodeEntity sce = new SourceCodeEntity();
                 sce.type = SCEType.METHOD;
                 sce.how = SCEHow.DECLARE;
                 sce.name = node.getName().getFullyQualifiedName();
+                sce.declaration = extractMethodDeclaration(node);
+                sce.signature = extractMethodSignature(node);
+                sce.how = SCEHow.DECLARE;
                 determineSCEPosition(compileUnit, node, sce);
                 extractDataFromMethodBinding(node.resolveBinding(), sce);
                 sourceCodeEntities.add(sce);
                 return true;
+            }
+
+            private String extractMethodSignature(MethodDeclaration methodDeclaration) {
+            	List<SingleVariableDeclaration> parameters = methodDeclaration.parameters();
+
+           	 	//Method name
+           	 	String signature = " " + methodDeclaration.getName() + "(";
+
+           	 	//Method parameters
+           	 	boolean hasParameter = false;
+           	 	for (SingleVariableDeclaration decl : parameters) {
+           	 		signature +=  decl.getType() + ", ";
+                	hasParameter = true;
+           	 	}
+                if (hasParameter) {
+	                signature = signature.substring(0, signature.length() - 2);
+                }
+                signature += ")";
+                return signature;
+           }
+
+            private String extractMethodDeclaration(MethodDeclaration methodDeclaration) {
+            	 List<SingleVariableDeclaration> parameters = methodDeclaration.parameters();
+            	 List<IExtendedModifier> modifiers = methodDeclaration.modifiers();
+
+            	 String signature = "";
+
+            	 //Method modifiers
+            	 boolean hasModifier = false;
+            	 for (IExtendedModifier modifier : modifiers) {
+            		 signature += modifier + " ";
+            		 hasModifier = true;
+            	 }
+            	 if (hasModifier) {
+            		 signature = signature.substring(0, signature.length() - 1);
+            	 }
+
+            	 //Return type
+            	 signature += " " + methodDeclaration.getReturnType2();
+
+            	 //Method name
+            	 signature += " " + methodDeclaration.getName() + "(";
+
+            	 //Method parameters
+                 boolean hasParameter = false;
+                 for (SingleVariableDeclaration decl : parameters) {
+                 	signature +=  decl.getType() + ", ";
+                 	hasParameter = true;
+                 }
+                 if (hasParameter) {
+ 	                signature = signature.substring(0, signature.length() - 2);
+                 }
+                 signature += ")";
+                 return signature;
             }
 
             public boolean visit(VariableDeclarationFragment node) {
@@ -195,7 +270,7 @@ public class AstManager {
             }
 
             public boolean visit(EnumDeclaration node) {
-                SourceCodeEntity sce = new SourceCodeEntity();
+            	SourceCodeEntity sce = new SourceCodeEntity();
                 sce.type = SCEType.ENUM;
                 sce.how = SCEHow.DECLARE;
                 sce.name = node.getName().getFullyQualifiedName();
@@ -225,6 +300,76 @@ public class AstManager {
                 sourceCodeEntities.add(sce);
                 return false;
             }
+
+            public boolean visit(ImportDeclaration node) {
+            	SourceCodeEntity sce = new SourceCodeEntity();
+            	sce.type = SCEType.IMPORT;
+            	sce.how = SCEHow.DECLARE;
+            	sce.name = node.getName().getFullyQualifiedName();
+            	determineSCEPosition(compileUnit, node, sce);
+            	sourceCodeEntities.add(sce);
+            	return false;
+            }
+
+            public boolean visit(ForStatement node) {
+            	SourceCodeEntity sce = new SourceCodeEntity();
+            	sce.type = SCEType.FORSTATEMENT;
+            	sce.how = SCEHow.DECLARE;
+            	sce.name = node.toString();
+            	determineSCEPosition(compileUnit, node, sce);
+            	sourceCodeEntities.add(sce);
+            	return true;
+            }
+
+            public boolean visit(EnhancedForStatement node) {
+            	SourceCodeEntity sce = new SourceCodeEntity();
+            	sce.type = SCEType.FORSTATEMENT;
+            	sce.how = SCEHow.DECLARE;
+            	sce.name = node.toString();
+            	determineSCEPosition(compileUnit, node, sce);
+            	sourceCodeEntities.add(sce);
+            	return true;
+            }
+
+            public boolean visit(WhileStatement node) {
+            	SourceCodeEntity sce = new SourceCodeEntity();
+            	sce.type = SCEType.WHILESTATEMENT;
+            	sce.how = SCEHow.DECLARE;
+            	sce.name = node.toString();
+            	determineSCEPosition(compileUnit, node, sce);
+            	sourceCodeEntities.add(sce);
+            	return true;
+            }
+
+            public boolean visit(SwitchStatement node) {
+            	SourceCodeEntity sce = new SourceCodeEntity();
+            	sce.type = SCEType.SWITCHSTATEMENT;
+            	sce.how = SCEHow.DECLARE;
+            	sce.name = node.toString();
+            	determineSCEPosition(compileUnit, node, sce);
+            	sourceCodeEntities.add(sce);
+            	return true;
+            }
+
+            public boolean visit(IfStatement node) {
+            	SourceCodeEntity sce = new SourceCodeEntity();
+            	sce.type = SCEType.IFSTATEMENT;
+            	sce.how = SCEHow.DECLARE;
+            	sce.name = node.toString();
+            	determineSCEPosition(compileUnit, node, sce);
+            	sourceCodeEntities.add(sce);
+            	return true;
+            }
+
+            public boolean visit(ConditionalExpression node) {
+            	SourceCodeEntity sce = new SourceCodeEntity();
+            	sce.type = SCEType.CONDITIONAL_EXPRESSION;
+            	sce.how = SCEHow.DECLARE;
+            	sce.name = node.toString();
+            	determineSCEPosition(compileUnit, node, sce);
+            	sourceCodeEntities.add(sce);
+            	return true;
+            }
         };
         compileUnit.accept(visitor);
         //Get comments separately.
@@ -238,6 +383,9 @@ public class AstManager {
                 sourceCodeEntities.add(sce);
             }
         }
+
+
+
         //Smaller entities take higher priority. If a method appears in a class,
         //for example, a query for the method should return the method instead
         //of the class.
@@ -249,6 +397,8 @@ public class AstManager {
                 }
             });
     }
+
+
 
     /**
      * Get line/column start/end information about an ASTNode.
