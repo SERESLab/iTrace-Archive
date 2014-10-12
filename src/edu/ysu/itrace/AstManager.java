@@ -158,6 +158,10 @@ public class AstManager {
         IJavaProject jProject = JavaCore.create(project);
         ICompilationUnit compUnit = (ICompilationUnit) JavaCore.create(file);
 
+        //If the compilation unit is null, this is not a Java file.
+        if (compUnit == null)
+            return;
+
         ASTParser parser = ASTParser.newParser(AST.JLS4);
         parser.setKind(ASTParser.K_COMPILATION_UNIT);
         parser.setProject(jProject);
