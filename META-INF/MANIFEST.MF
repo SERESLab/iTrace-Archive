@@ -18,4 +18,6 @@ Bundle-ClassPath: .,
  lib/gson-2.2.4.jar,
  lib/TETJavaClient.jar
 Import-Package: org.eclipse.jdt.core,
- org.eclipse.jdt.core.dom
+ org.eclipse.jdt.core.dom,
+ org.eclipse.jface.text,
+ org.eclipse.ui.texteditor

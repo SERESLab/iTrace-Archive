@@ -3,9 +3,15 @@ package edu.ysu.itrace.gaze.handlers;
 import java.util.Hashtable;
 import java.util.Map;
 
+import org.eclipse.jface.text.ITextOperationTarget;
+import org.eclipse.jface.text.ITextViewer;
+import org.eclipse.jface.text.JFaceTextUtil;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.IWorkbenchPartReference;
+import org.eclipse.ui.texteditor.ITextEditor;
 
 import edu.ysu.itrace.AstManager;
 import edu.ysu.itrace.ControlView;
@@ -20,6 +26,7 @@ import edu.ysu.itrace.gaze.IGazeResponse;
 public class StyledTextGazeHandler implements IGazeHandler {
     private IWorkbenchPartReference partRef;
     private StyledText targetStyledText;
+    private ITextViewer viewer;
 
     /**
      * Constructs a new gaze handler for the target StyledText object within
@@ -30,6 +37,15 @@ public class StyledTextGazeHandler implements IGazeHandler {
         assert(target instanceof StyledText);
         this.targetStyledText = (StyledText)target;
         this.partRef = partRef;
+        if (partRef instanceof IEditorReference) {
+	        IEditorPart part = ((IEditorReference) partRef).getEditor(false);
+			if (part instanceof ITextEditor) {
+				ITextOperationTarget t = (ITextOperationTarget)part.getAdapter(ITextOperationTarget.class);
+			    if (t instanceof ITextViewer) {
+			        viewer = (ITextViewer)t;
+			    }
+			}
+        }
     }
 
 
@@ -50,6 +66,8 @@ public class StyledTextGazeHandler implements IGazeHandler {
             {
                 try {
                     int lineIndex = targetStyledText.getLineIndex(relativeY);
+                    int originalLineIndex = JFaceTextUtil.widgetLine2ModelLine(viewer, lineIndex);
+                    
                     int lineOffset
                             = targetStyledText.getOffsetAtLine(lineIndex);
                     int offset = targetStyledText.getOffsetAtLocation(
@@ -81,7 +99,7 @@ public class StyledTextGazeHandler implements IGazeHandler {
                                         String.valueOf(lineAnchorPosition.y));
 
                     AstManager.SourceCodeEntity[] entities =
-                            astManager.getSCEs(lineIndex + 1, col);
+                            astManager.getSCEs(originalLineIndex + 1, col);
                     String names = "";
                     String types = "";
                     String hows = "";
