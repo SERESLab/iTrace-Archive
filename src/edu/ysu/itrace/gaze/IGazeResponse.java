@@ -29,4 +29,9 @@ public interface IGazeResponse {
      * Returns the gaze object from which the response originated.
      */
     public Gaze getGaze();
+
+    /**
+     * Returns the gaze handler.
+     */
+    public IGazeHandler getGazeHandler();
 }

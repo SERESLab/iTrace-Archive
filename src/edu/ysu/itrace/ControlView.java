@@ -78,8 +78,6 @@ public class ControlView extends ViewPart implements IPartListener2,
     private Spinner xDrift;
     private Spinner yDrift;
 
-    private int line_height, font_height;
-
     private JSONGazeExportSolver jsonSolver;
     private XMLGazeExportSolver xmlSolver;
 
@@ -338,13 +336,9 @@ public class ControlView extends ViewPart implements IPartListener2,
 
         // Configure solvers here.
         jsonSolver = new JSONGazeExportSolver(rootShell);
-        jsonSolver.setFontHeight(font_height);
-        jsonSolver.setLineHeight(line_height);
         availableSolvers.add(jsonSolver);
 
         xmlSolver = new XMLGazeExportSolver(rootShell);
-        xmlSolver.setFontHeight(font_height);
-        xmlSolver.setLineHeight(line_height);
         availableSolvers.add(new XMLGazeExportSolver(rootShell));
 
         for (final ISolver solver : availableSolvers) {
@@ -485,8 +479,6 @@ public class ControlView extends ViewPart implements IPartListener2,
      */
     private void setupStyledText(IEditorPart editor, StyledText control) {
         StyledText styledText = (StyledText) control;
-        this.line_height = styledText.getLineHeight();
-        this.font_height = styledText.getFont().getFontData()[0].getHeight();
         if (styledText.getData(KEY_AST) == null)
             styledText.setData(KEY_AST, new AstManager(editor, styledText));
     }
