@@ -32,8 +32,6 @@ public class XMLGazeExportSolver implements IFileExportSolver {
     private String filenamePattern =
             "'gaze-responses-'yyyyMMdd'T'HHmmss','SSSSZ'.xml'";
     private Dimension screenRect;
-    private int lineHeight;
-    private int fontHeight;
     private Shell parent;
 	private boolean extended;
 
@@ -49,22 +47,6 @@ public class XMLGazeExportSolver implements IFileExportSolver {
     @Override
     public void setFilenamePattern(String filenamePattern) {
         this.filenamePattern = filenamePattern;
-    }
-
-    public int getLineHeight() {
-        return lineHeight;
-    }
-
-    public void setLineHeight(int lineHeight) {
-        this.lineHeight = lineHeight;
-    }
-
-    public int getFontHeight() {
-        return fontHeight;
-    }
-
-    public void setFontHeight(int fontHeight) {
-        this.fontHeight = fontHeight;
     }
 
     @Override
@@ -106,14 +88,6 @@ public class XMLGazeExportSolver implements IFileExportSolver {
                     String.valueOf(screenRect.width));
             responseWriter.writeAttribute("height",
                     String.valueOf(screenRect.height));
-            responseWriter.writeCharacters(EOL);
-            responseWriter.writeStartElement("line-height");
-            responseWriter.writeCharacters(String.valueOf(lineHeight));
-            responseWriter.writeEndElement();
-            responseWriter.writeCharacters(EOL);
-            responseWriter.writeStartElement("font-height");
-            responseWriter.writeCharacters(String.valueOf(fontHeight));
-            responseWriter.writeEndElement();
             responseWriter.writeCharacters(EOL);
             responseWriter.writeEndElement();
             responseWriter.writeCharacters(EOL);

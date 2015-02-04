@@ -28,8 +28,6 @@ public class JSONGazeExportSolver implements IFileExportSolver {
     private String filenamePattern =
             "'gaze-responses-'yyyyMMdd'T'HHmmss','SSSSZ'.json'";
     private Dimension screenRect;
-    private int lineHeight;
-    private int fontHeight;
     private Shell parent;
 	private boolean extended;
 
@@ -45,22 +43,6 @@ public class JSONGazeExportSolver implements IFileExportSolver {
     @Override
     public void setFilenamePattern(String filenamePattern) {
         this.filenamePattern = filenamePattern;
-    }
-
-    public int getLineHeight() {
-        return lineHeight;
-    }
-
-    public void setLineHeight(int lineHeight) {
-        this.lineHeight = lineHeight;
-    }
-
-    public int getFontHeight() {
-        return fontHeight;
-    }
-
-    public void setFontHeight(int fontHeight) {
-        this.fontHeight = fontHeight;
     }
 
     @Override
@@ -98,10 +80,6 @@ public class JSONGazeExportSolver implements IFileExportSolver {
                                       .name("height")
                                       .value(screenRect.height)
                                   .endObject()
-                                  .name("line_height")
-                                  .value(lineHeight)
-                                  .name("font_height")
-                                  .value(fontHeight)
                               .endObject()
                               .name("gazes")
                               .beginArray();

@@ -32,7 +32,6 @@ public class StyledTextGazeHandler implements IGazeHandler {
         this.partRef = partRef;
     }
 
-
     @Override
     public IGazeResponse handleGaze(final int absoluteX, final int absoluteY,
             final int relativeX, final int relativeY, final Gaze gaze) {
@@ -49,6 +48,12 @@ public class StyledTextGazeHandler implements IGazeHandler {
             // construct the type and properties for the response
             {
                 try {
+                    //Line and font height.
+                    this.properties.put("line_height",
+                                        String.valueOf(getLineHeight()));
+                    this.properties.put("font_height",
+                                        String.valueOf(getFontHeight()));
+
                     int lineIndex = targetStyledText.getLineIndex(relativeY);
                     int lineOffset
                             = targetStyledText.getOffsetAtLine(lineIndex);
@@ -138,9 +143,20 @@ public class StyledTextGazeHandler implements IGazeHandler {
             public Gaze getGaze() {
                 return gaze;
             }
+
+            public IGazeHandler getGazeHandler() {
+            return StyledTextGazeHandler.this;
+            }
         };
 
         return (response.getType() != null ? response : null);
     }
 
+    public int getLineHeight() {
+        return targetStyledText.getLineHeight();
+    }
+
+    public int getFontHeight() {
+        return targetStyledText.getFont().getFontData()[0].getHeight();
+    }
 }
