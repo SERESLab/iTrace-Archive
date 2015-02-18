@@ -61,7 +61,12 @@ public class AstManager {
         COMMENT,
         ENUM,
         IMPORT,
-        FORSTATEMENT, METHOD_INVOCATION, IFSTATEMENT, WHILESTATEMENT, SWITCHSTATEMENT, CONDITIONAL_EXPRESSION,
+        FORSTATEMENT,
+        METHOD_INVOCATION,
+        IFSTATEMENT,
+        WHILESTATEMENT,
+        SWITCHSTATEMENT,
+        CONDITIONAL_EXPRESSION,
     }
 
     /**
@@ -319,8 +324,9 @@ public class AstManager {
             	SourceCodeEntity sce = new SourceCodeEntity();
             	sce.type = SCEType.FORSTATEMENT;
             	sce.how = SCEHow.DECLARE;
-            	sce.name = node.toString();
             	determineSCEPosition(compileUnit, node, sce);
+            	sce.name = String.format("ForStatement-l%dc%d",
+            		sce.startLine, sce.startCol);
             	sourceCodeEntities.add(sce);
             	return true;
             }
@@ -329,8 +335,9 @@ public class AstManager {
             	SourceCodeEntity sce = new SourceCodeEntity();
             	sce.type = SCEType.FORSTATEMENT;
             	sce.how = SCEHow.DECLARE;
-            	sce.name = node.toString();
             	determineSCEPosition(compileUnit, node, sce);
+            	sce.name = String.format("EnhancedForStatement-l%dc%d",
+            		sce.startLine, sce.startCol);
             	sourceCodeEntities.add(sce);
             	return true;
             }
@@ -339,8 +346,9 @@ public class AstManager {
             	SourceCodeEntity sce = new SourceCodeEntity();
             	sce.type = SCEType.WHILESTATEMENT;
             	sce.how = SCEHow.DECLARE;
-            	sce.name = node.toString();
             	determineSCEPosition(compileUnit, node, sce);
+            	sce.name = String.format("WhileStatement-l%dc%d",
+            		sce.startLine, sce.startCol);
             	sourceCodeEntities.add(sce);
             	return true;
             }
@@ -349,8 +357,9 @@ public class AstManager {
             	SourceCodeEntity sce = new SourceCodeEntity();
             	sce.type = SCEType.SWITCHSTATEMENT;
             	sce.how = SCEHow.DECLARE;
-            	sce.name = node.toString();
             	determineSCEPosition(compileUnit, node, sce);
+            	sce.name = String.format("SwitchStatement-l%dc%d",
+            		sce.startLine, sce.startCol);
             	sourceCodeEntities.add(sce);
             	return true;
             }
@@ -359,8 +368,9 @@ public class AstManager {
             	SourceCodeEntity sce = new SourceCodeEntity();
             	sce.type = SCEType.IFSTATEMENT;
             	sce.how = SCEHow.DECLARE;
-            	sce.name = node.toString();
             	determineSCEPosition(compileUnit, node, sce);
+            	sce.name = String.format("IfStatement-l%dc%d",
+            		sce.startLine, sce.startCol);
             	sourceCodeEntities.add(sce);
             	return true;
             }
@@ -369,8 +379,9 @@ public class AstManager {
             	SourceCodeEntity sce = new SourceCodeEntity();
             	sce.type = SCEType.CONDITIONAL_EXPRESSION;
             	sce.how = SCEHow.DECLARE;
-            	sce.name = node.toString();
             	determineSCEPosition(compileUnit, node, sce);
+            	sce.name = String.format("ConditionalExpression-l%dc%d",
+            		sce.startLine, sce.startCol);
             	sourceCodeEntities.add(sce);
             	return true;
             }
