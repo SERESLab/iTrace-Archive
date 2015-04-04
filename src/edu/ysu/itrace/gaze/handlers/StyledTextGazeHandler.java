@@ -40,7 +40,8 @@ public class StyledTextGazeHandler implements IGazeHandler {
 
         IGazeResponse response = new IGazeResponse() {
 
-            private String name = partRef.getPartName();
+            private String name = astManager.getPath();
+            private String partName = partRef.getPartName();
             private String type = null;
             private Map<String,String> properties
                     = new Hashtable<String,String>();

@@ -124,6 +124,20 @@ public class AstManager {
     }
 
     /**
+     * Returns a string representation of the path to the
+     * file associated with the current editor.
+     */
+    public String getPath() {
+        try {
+            return ((IFileEditorInput) editor.getEditorInput()).getFile()
+                    .getFullPath().toFile().getCanonicalPath();
+    } catch (IOException e) {
+            // ignore IOErrors while constructing path
+            return "?";
+        }
+    }
+
+    /**
      * Gets the source code entities found at a location in source.
      * @param lineNumber 1-based line number.
      * @param colNumber 0-based column number.
