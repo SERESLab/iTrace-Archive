@@ -3,6 +3,7 @@ package edu.ysu.itrace;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
+import java.io.IOException;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
