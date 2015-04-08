@@ -110,6 +110,7 @@ public class AstManager {
     private StyledText styledText;
     private ReloadAstJob reloadAstJob;
     private LinkedList<SourceCodeEntity> sourceCodeEntities;
+    private String editorPath;
 
     /**
      * Constructor. Loads the AST and sets up the StyledText to automatically
@@ -118,6 +119,13 @@ public class AstManager {
      * @param styledText StyledText to which this AST pertains.
      */
     public AstManager(IEditorPart editor, StyledText styledText) {
+        try {
+            editorPath = ((IFileEditorInput) editor.getEditorInput()).getFile()
+                    .getFullPath().toFile().getCanonicalPath();
+        } catch (IOException e) {
+            // ignore IOErrors while constructing path
+            editorPath = "?";
+        }
         this.editor = editor;
         this.styledText = styledText;
         hookupAutoReload();
@@ -129,13 +137,7 @@ public class AstManager {
      * file associated with the current editor.
      */
     public String getPath() {
-        try {
-            return ((IFileEditorInput) editor.getEditorInput()).getFile()
-                    .getFullPath().toFile().getCanonicalPath();
-    } catch (IOException e) {
-            // ignore IOErrors while constructing path
-            return "?";
-        }
+        return editorPath;
     }
 
     /**
