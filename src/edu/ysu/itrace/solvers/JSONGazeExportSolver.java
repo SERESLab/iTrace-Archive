@@ -6,8 +6,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Date;
-import java.util.Iterator;
-import java.util.Map.Entry;
 import java.text.SimpleDateFormat;
 
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -91,7 +89,6 @@ public class JSONGazeExportSolver implements IFileExportSolver {
     @Override
     public void process(IGazeResponse response) {
         try {
-            if (response.getProperties().size() > 0) {
                 int screenX =
                         (int) (screenRect.width * response.getGaze().getX());
                 int screenY =
@@ -100,8 +97,8 @@ public class JSONGazeExportSolver implements IFileExportSolver {
                 responseWriter.beginObject()
                                 .name("file")
                                 .value(response.getName())
-                                .name("type")
-                                .value(response.getType())
+                                .name("gaze-type")
+                                .value(response.getGazeType())
                                 .name("x")
                                 .value(screenX)
                                 .name("y")
@@ -119,18 +116,8 @@ public class JSONGazeExportSolver implements IFileExportSolver {
                                 .name("system_time")
                                 .value(response.getGaze().getSystemTime())
                                 .name("nano_time")
-                                .value(response.getGaze().getNanoTime());
-
-                for (Iterator<Entry<String, String>> entries =
-                        response.getProperties().entrySet().iterator(); entries
-                        .hasNext();) {
-                    Entry<String, String> pair = entries.next();
-                    responseWriter.name(pair.getKey())
-                                  .value(pair.getValue());
-                }
-
-                responseWriter.endObject();
-            }
+                                .value(response.getGaze().getNanoTime())
+                                .endObject();
         } catch (IOException e) {
             // ignore write errors
         }

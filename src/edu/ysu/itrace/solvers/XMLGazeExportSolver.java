@@ -6,8 +6,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Date;
-import java.util.Iterator;
-import java.util.Map.Entry;
 import java.text.SimpleDateFormat;
 
 import javax.xml.stream.XMLOutputFactory;
@@ -101,7 +99,6 @@ public class XMLGazeExportSolver implements IFileExportSolver {
     @Override
     public void process(IGazeResponse response) {
         try {
-            if (response.getProperties().size() > 0) {
                 int screenX =
                         (int) (screenRect.width * response.getGaze().getX());
                 int screenY =
@@ -109,7 +106,7 @@ public class XMLGazeExportSolver implements IFileExportSolver {
 
                 responseWriter.writeEmptyElement("response");
                 responseWriter.writeAttribute("file", response.getName());
-                responseWriter.writeAttribute("type", response.getType());
+                responseWriter.writeAttribute("gazeType", response.getGazeType());
                 responseWriter.writeAttribute("x", String.valueOf(screenX));
                 responseWriter.writeAttribute("y", String.valueOf(screenY));
                 responseWriter.writeAttribute("left-validation",
@@ -132,16 +129,7 @@ public class XMLGazeExportSolver implements IFileExportSolver {
                 responseWriter.writeAttribute(
                         "nano-time",
                         String.valueOf(response.getGaze().getNanoTime()));
-
-                for (Iterator<Entry<String, String>> entries =
-                        response.getProperties().entrySet().iterator(); entries
-                        .hasNext();) {
-                    Entry<String, String> pair = entries.next();
-                    responseWriter.writeAttribute(pair.getKey(),
-                            pair.getValue());
-                }
                 responseWriter.writeCharacters(EOL);
-            }
         } catch (XMLStreamException e) {
             // ignore write errors
         }

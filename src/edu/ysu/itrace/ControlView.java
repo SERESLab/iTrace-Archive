@@ -483,7 +483,7 @@ public class ControlView extends ViewPart implements IPartListener2,
             styledText.setData(KEY_AST, new AstManager(editor, styledText));
     }
 
-    /*
+    /**
      * Finds the control under the specified screen coordinates and calls its
      * gaze handler on the localized point. Returns the gaze response or null if
      * the gaze is not handled.
