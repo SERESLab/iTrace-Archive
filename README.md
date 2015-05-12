@@ -8,9 +8,8 @@ traceability.
 
 ## Requirements
 * Project must be checked out as "iTrace" in your workspace.
-* Eclipse IDE
+* Eclipse IDE (Windows users should install Eclipse IDE for Java EE Developers)
 * Java development kit (JDK)
-  * Graphical Editing Framework GEF SDK
 * Apache IvyDE Eclipse Plugin (https://ant.apache.org/ivy/ivyde/)
 * C++ compiler: g++ on UNIX or Microsoft Visual Studio on Microsoft Windows
 * Java native interface (JNI) headers
