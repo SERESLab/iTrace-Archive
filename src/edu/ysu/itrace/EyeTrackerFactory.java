@@ -6,7 +6,6 @@ import java.util.Map;
 
 import edu.ysu.itrace.trackers.*;
 import edu.ysu.itrace.exceptions.EyeTrackerConnectException;
-
 import fj.data.Option;
 import static fj.data.Option.none;
 import static fj.data.Option.some;

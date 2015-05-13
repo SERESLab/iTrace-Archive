@@ -46,6 +46,7 @@ import edu.ysu.itrace.gaze.IGazeResponse;
 import edu.ysu.itrace.solvers.ISolver;
 import edu.ysu.itrace.solvers.JSONGazeExportSolver;
 import edu.ysu.itrace.solvers.XMLGazeExportSolver;
+import edu.ysu.itrace.trackers.IEyeTracker;
 import fj.data.Option;
 import static fj.data.Option.some;
 import static fj.data.Option.none;

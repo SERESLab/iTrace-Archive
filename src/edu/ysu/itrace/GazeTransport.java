@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Vector;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import edu.ysu.itrace.trackers.IEyeTracker;
 import fj.data.Option;
 import static fj.data.Option.none;
 import static fj.data.Option.some;
