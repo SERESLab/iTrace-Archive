@@ -381,7 +381,7 @@ public class ControlView extends ViewPart implements IPartListener2,
         if (trackingInProgress) {
             stopTracking();
         }
-        if (tracker != null)
+        if (tracker.isSome())
             tracker.some().close();
         // Else there's nothing to close.
 
