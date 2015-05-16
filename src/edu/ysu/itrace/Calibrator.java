@@ -165,8 +165,9 @@ public abstract class Calibrator extends JFrame {
         //Eclipse
         if (bundle != null) {
             URL fileUrl = bundle.getEntry("res/" + resourceName);
-            result = ImageIO.read(
-                    new File(FileLocator.resolve(fileUrl).toURI()));
+            URL url = new URL(
+            		FileLocator.resolve(fileUrl).toString().replace(" ", "%20"));
+            result = ImageIO.read(new File(url.toURI()));
         //No eclipse
         } else {
             result = ImageIO.read(new File("res/" + resourceName));
