@@ -6,15 +6,12 @@ import java.util.Map;
 
 import edu.ysu.itrace.trackers.*;
 import edu.ysu.itrace.exceptions.EyeTrackerConnectException;
-import fj.data.Option;
-import static fj.data.Option.none;
-import static fj.data.Option.some;
 
 /**
  * Constructs IEyeTracker instances.
  */
 public class EyeTrackerFactory {
-    private static Option<TrackerType> trackerTypeToBuild = none();
+    private static TrackerType trackerTypeToBuild = null;
 
     public enum TrackerType {
         SYSTEM_MOUSE_TRACKER,
@@ -40,7 +37,7 @@ public class EyeTrackerFactory {
      * @param type Type value of eye tracker.
      */
     public static void setTrackerType(TrackerType type) {
-        trackerTypeToBuild = some(type);
+        trackerTypeToBuild = type;
     }
 
     /**
@@ -53,19 +50,19 @@ public class EyeTrackerFactory {
      * @throws IOException if any I/O errors occur while constructing the
      *     IEyeTracker.
      */
-    public static Option<IEyeTracker> getConcreteEyeTracker() throws
+    public static IEyeTracker getConcreteEyeTracker() throws
             EyeTrackerConnectException, IOException {
-        if (trackerTypeToBuild.isSome()) {
-            switch (trackerTypeToBuild.some()) {
+        if (trackerTypeToBuild != null) {
+            switch (trackerTypeToBuild) {
             case SYSTEM_MOUSE_TRACKER:
-                return some((IEyeTracker) new SystemMouseTracker());
+                return (IEyeTracker) new SystemMouseTracker();
             case TOBII_TRACKER:
-                return some((IEyeTracker) new TobiiTracker());
+                return (IEyeTracker) new TobiiTracker();
             default:
-                return none();
+                return null;
             }
         } else {
-            return none();
+            return null;
         }
     }
 }
