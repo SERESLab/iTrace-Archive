@@ -40,9 +40,9 @@ public abstract class Calibrator extends JFrame {
                 pack();
                 setAlwaysOnTop(true);
             } catch (IOException e) {
-                System.out.println("Failed to load crosshair icon.");
+                System.out.println("Failed to load crosshair icon. IOException");
             } catch (URISyntaxException e) {
-                System.out.println("Failed to load crosshair icon.");
+                System.out.println("Failed to load crosshair icon. URISyntaxException");
             }
         }
 
@@ -164,10 +164,10 @@ public abstract class Calibrator extends JFrame {
         Bundle bundle = Platform.getBundle("edu.ysu.itrace");
         //Eclipse
         if (bundle != null) {
-            URL fileUrl = bundle.getEntry("res/" + resourceName);
+            URL fileUrl = bundle.getEntry("res/" + resourceName);System.out.println(FileLocator.resolve(fileUrl));
             result = ImageIO.read(
                     new File(FileLocator.resolve(fileUrl).toURI()));
-        //No eclipse
+        //No eclipse 
         } else {
             result = ImageIO.read(new File("res/" + resourceName));
         }
