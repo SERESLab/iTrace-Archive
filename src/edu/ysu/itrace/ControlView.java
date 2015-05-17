@@ -44,6 +44,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.UIManager;
 
 import edu.ysu.itrace.exceptions.CalibrationException;
 import edu.ysu.itrace.exceptions.EyeTrackerConnectException;
@@ -336,7 +337,7 @@ public class ControlView extends ViewPart implements IPartListener2,
         this.yDrift = yDrift;
 
         final Composite solversComposite = new Composite(parent, SWT.NONE);
-        solversComposite.setLayout(new GridLayout(1, false));
+        solversComposite.setLayout(new GridLayout(2, false));
 
         // Configure solvers here.
         jsonSolver = new JSONGazeExportSolver(rootShell);
@@ -369,24 +370,21 @@ public class ControlView extends ViewPart implements IPartListener2,
         infoButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
+            	UIManager.put("swing.boldMetal", new Boolean(false)); //make font plain
+            	
             	JTextField sessionID = new JTextField(5);
-            	JTextField date = new JTextField("yyyyMMdd");
-            	JTextField time = new JTextField("HHmmss");
-            	JTextField time2 = new JTextField("SSSSZ");
+            	JTextField taskID = new JTextField(5);
          
                 JPanel sessionPanel = new JPanel();
                 sessionPanel.setLayout(new BoxLayout(sessionPanel, BoxLayout.Y_AXIS));
                 sessionPanel.add(new JLabel("Enter the Session ID:"));
                 sessionPanel.add(sessionID);
-                sessionPanel.add(new JLabel("Enter the Date:"));
-                sessionPanel.add(date);
-                sessionPanel.add(new JLabel("Enter the Time to the Hour, Minute, and Second:"));
-                sessionPanel.add(time);
-                sessionPanel.add(new JLabel("Enter the Time to the Millisecond (SSSS) and the Timezone (Z):"));
-                sessionPanel.add(time2);
+                sessionPanel.add(new JLabel("Enter the Task ID:"));
+                sessionPanel.add(taskID);
 
                 int selection = JOptionPane.showConfirmDialog(null, sessionPanel, 
-                         "Enter the Current Session Information", JOptionPane.OK_CANCEL_OPTION);
+                         "Enter the Current Session Information",
+                         JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
                 if (selection == JOptionPane.OK_OPTION) {
                    //Do nothing for now
                 }
