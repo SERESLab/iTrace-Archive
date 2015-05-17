@@ -363,6 +363,15 @@ public class ControlView extends ViewPart implements IPartListener2,
                 }
             });
             grayedControls.addIfAbsent(solverEnabled);
+            final Button solverConfig = new Button(solversComposite, SWT.PUSH);
+            solverConfig.setText("...");
+            solverConfig.addSelectionListener(new SelectionAdapter() {
+                @Override
+                public void widgetSelected(SelectionEvent e) {
+                    solver.config();
+                }
+            });
+            grayedControls.addIfAbsent(solverConfig);
         }
         
         final Button infoButton = new Button(solversComposite, SWT.PUSH);
