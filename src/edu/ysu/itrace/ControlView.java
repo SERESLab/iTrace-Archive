@@ -204,7 +204,7 @@ public class ControlView extends ViewPart implements IPartListener2,
                 stopTracking();
             }
         });
-
+        
         Button calibrateButton = new Button(buttonComposite, SWT.PUSH);
         calibrateButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true,
                 true, 1, 1));
@@ -330,7 +330,7 @@ public class ControlView extends ViewPart implements IPartListener2,
         this.yDrift = yDrift;
 
         final Composite solversComposite = new Composite(parent, SWT.NONE);
-        solversComposite.setLayout(new GridLayout(2, false));
+        solversComposite.setLayout(new GridLayout(1, false));
 
         // Configure solvers here.
         jsonSolver = new JSONGazeExportSolver(rootShell);
@@ -356,17 +356,17 @@ public class ControlView extends ViewPart implements IPartListener2,
                 }
             });
             grayedControls.addIfAbsent(solverEnabled);
-            final Button solverConfig = new Button(solversComposite, SWT.PUSH);
-            solverConfig.setText("...");
-            solverConfig.addSelectionListener(new SelectionAdapter() {
-                @Override
-                public void widgetSelected(SelectionEvent e) {
-                    solver.config();
-                }
-            });
-            grayedControls.addIfAbsent(solverConfig);
         }
-
+        
+        final Button infoButton = new Button(solversComposite, SWT.PUSH);
+        infoButton.setText("Session Info");
+        infoButton.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+            	//don't do anything for now
+            }
+        });  
+        grayedControls.add(infoButton);
     }
 
     @Override
