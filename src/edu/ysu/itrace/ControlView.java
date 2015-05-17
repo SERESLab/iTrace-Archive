@@ -39,6 +39,12 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
 
+import javax.swing.BoxLayout;
+import javax.swing.JOptionPane;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+
 import edu.ysu.itrace.exceptions.CalibrationException;
 import edu.ysu.itrace.exceptions.EyeTrackerConnectException;
 import edu.ysu.itrace.gaze.IGazeHandler;
@@ -363,7 +369,27 @@ public class ControlView extends ViewPart implements IPartListener2,
         infoButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-            	//don't do anything for now
+            	JTextField sessionID = new JTextField(5);
+            	JTextField date = new JTextField("yyyyMMdd");
+            	JTextField time = new JTextField("HHmmss");
+            	JTextField time2 = new JTextField("SSSSZ");
+         
+                JPanel sessionPanel = new JPanel();
+                sessionPanel.setLayout(new BoxLayout(sessionPanel, BoxLayout.Y_AXIS));
+                sessionPanel.add(new JLabel("Enter the Session ID:"));
+                sessionPanel.add(sessionID);
+                sessionPanel.add(new JLabel("Enter the Date:"));
+                sessionPanel.add(date);
+                sessionPanel.add(new JLabel("Enter the Time to the Hour, Minute, and Second:"));
+                sessionPanel.add(time);
+                sessionPanel.add(new JLabel("Enter the Time to the Millisecond (SSSS) and the Timezone (Z):"));
+                sessionPanel.add(time2);
+
+                int selection = JOptionPane.showConfirmDialog(null, sessionPanel, 
+                         "Enter the Current Session Information", JOptionPane.OK_CANCEL_OPTION);
+                if (selection == JOptionPane.OK_OPTION) {
+                   //Do nothing for now
+                }
             }
         });  
         grayedControls.add(infoButton);
