@@ -10,10 +10,14 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 import java.text.SimpleDateFormat;
 
+import javax.swing.BoxLayout;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.UIManager;
+
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.jface.dialogs.InputDialog;
-import org.eclipse.jface.window.Window;
-import org.eclipse.swt.widgets.Shell;
 
 import com.google.gson.stream.JsonWriter;
 
@@ -28,10 +32,8 @@ public class JSONGazeExportSolver implements IFileExportSolver {
     private String filenamePattern =
             "'gaze-responses-'yyyyMMdd'T'HHmmss','SSSSZ'.json'";
     private Dimension screenRect;
-    private Shell parent;
 
-    public JSONGazeExportSolver(Shell parent) {
-        this.parent = parent;
+    public JSONGazeExportSolver() {
     }
 
     @Override
@@ -169,11 +171,21 @@ public class JSONGazeExportSolver implements IFileExportSolver {
 
     @Override
     public void config() {
-        final InputDialog configDialog =
-                new InputDialog(parent, friendlyName() + " Configuration",
-                        "Export Filename Pattern", getFilenamePattern(), null);
-        if (configDialog.open() == Window.OK) {
-            setFilenamePattern(configDialog.getValue());
+    	UIManager.put("swing.boldMetal", new Boolean(false)); //make font plain
+    	
+    	JTextField configVal = new JTextField(getFilenamePattern());
+    	
+    	JPanel configPanel = new JPanel();
+    	configPanel.setLayout(new BoxLayout(configPanel, BoxLayout.Y_AXIS)); //vertically align
+        configPanel.add(new JLabel("Export Filename Pattern"));
+        configPanel.add(configVal);
+        configPanel.setPreferredSize(new Dimension(300,40)); //resize appropriately
+
+        final int configDialog = JOptionPane.showConfirmDialog(null, configPanel, 
+                 friendlyName() + " Configuration", JOptionPane.OK_CANCEL_OPTION,
+                 JOptionPane.PLAIN_MESSAGE);
+        if (configDialog == JOptionPane.OK_OPTION) {
+           setFilenamePattern(configVal.getText());
         }
     }
 }

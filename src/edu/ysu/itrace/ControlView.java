@@ -340,11 +340,11 @@ public class ControlView extends ViewPart implements IPartListener2,
         solversComposite.setLayout(new GridLayout(2, false));
 
         // Configure solvers here.
-        jsonSolver = new JSONGazeExportSolver(rootShell);
+        jsonSolver = new JSONGazeExportSolver();
         availableSolvers.add(jsonSolver);
 
-        xmlSolver = new XMLGazeExportSolver(rootShell);
-        availableSolvers.add(new XMLGazeExportSolver(rootShell));
+        xmlSolver = new XMLGazeExportSolver();
+        availableSolvers.add(xmlSolver);
 
         for (final ISolver solver : availableSolvers) {
             final Button solverEnabled =
@@ -381,8 +381,8 @@ public class ControlView extends ViewPart implements IPartListener2,
             public void widgetSelected(SelectionEvent e) {
             	UIManager.put("swing.boldMetal", new Boolean(false)); //make font plain
             	
-            	JTextField sessionID = new JTextField(5);
-            	JTextField taskID = new JTextField(5);
+            	JTextField sessionID = new JTextField();
+            	JTextField taskID = new JTextField();
          
                 JPanel sessionPanel = new JPanel();
                 sessionPanel.setLayout(new BoxLayout(sessionPanel, BoxLayout.Y_AXIS));
@@ -391,8 +391,8 @@ public class ControlView extends ViewPart implements IPartListener2,
                 sessionPanel.add(new JLabel("Enter the Task ID:"));
                 sessionPanel.add(taskID);
 
-                int selection = JOptionPane.showConfirmDialog(null, sessionPanel, 
-                         "Enter the Current Session Information",
+                final int selection = JOptionPane.showConfirmDialog(null, sessionPanel, 
+                         "Enter the Current Session Info.",
                          JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
                 if (selection == JOptionPane.OK_OPTION) {
                    //Do nothing for now
