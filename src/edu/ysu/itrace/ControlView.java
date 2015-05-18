@@ -237,7 +237,7 @@ public class ControlView extends ViewPart implements IPartListener2,
                 if (gazeTransport != null) {
                     (new EyeStatusView(rootShell, gazeTransport)).open();
                 } else {
-                    displayError("You must initialise a tracker first.");
+                    displayError(DONT_DO_THAT_MSG);
                 }
             }
         });
