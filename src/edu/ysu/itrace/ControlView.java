@@ -379,24 +379,8 @@ public class ControlView extends ViewPart implements IPartListener2,
         infoButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-            	UIManager.put("swing.boldMetal", new Boolean(false)); //make font plain
-            	
-            	JTextField sessionID = new JTextField();
-            	JTextField taskID = new JTextField();
-         
-                JPanel sessionPanel = new JPanel();
-                sessionPanel.setLayout(new BoxLayout(sessionPanel, BoxLayout.Y_AXIS));
-                sessionPanel.add(new JLabel("Enter the Session ID:"));
-                sessionPanel.add(sessionID);
-                sessionPanel.add(new JLabel("Enter the Task ID:"));
-                sessionPanel.add(taskID);
-
-                final int selection = JOptionPane.showConfirmDialog(null, sessionPanel, 
-                         "Enter the Current Session Info.",
-                         JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-                if (selection == JOptionPane.OK_OPTION) {
-                   //Do nothing for now
-                }
+            	SessionInfoHandler sessionInfo = new SessionInfoHandler();
+            	sessionInfo.config();
             }
         });  
         grayedControls.add(infoButton);
