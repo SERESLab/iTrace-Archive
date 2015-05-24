@@ -3,6 +3,10 @@ package edu.ysu.itrace;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.regex.Pattern;
@@ -18,6 +22,8 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.UIManager;
 
+import org.eclipse.core.resources.ResourcesPlugin;
+
 public class SessionInfoHandler {
 	//session info
 	private final String sessionIDPattern = "yyyyMMdd'T'HHmmss-SSSSZ";
@@ -27,6 +33,11 @@ public class SessionInfoHandler {
 	//developer info
 	private String devUsername = null;
 	private String devName = null;
+	
+	//needed booleans
+	boolean hasSessionInfo = false;
+	boolean hasDevInfo = false;
+	boolean isConfigured = false;
 	
 	//use default constructor
 	
@@ -54,6 +65,10 @@ public class SessionInfoHandler {
 	
 	public String getDevName() {
 		return devName;
+	}
+	
+	public boolean isConfigured() {
+		return isConfigured;
 	}
 	
 	//UI methods/Setters
@@ -133,8 +148,9 @@ public class SessionInfoHandler {
 				//sessionPurpose remains null
 				System.out.println("Warning! "
 						+ "Your Session Purpose has not been selected.");
-        	}
-        }  
+				}
+			hasSessionInfo = true;
+		}  
 	}
 	
 	protected void developerUI() {
@@ -170,15 +186,68 @@ public class SessionInfoHandler {
 				developerUI();
 			}
 			devName = devNameText.getText();
-        }
+			hasDevInfo = true;
+		}
 	}
 	
 	public void config() {
 		sessionUI();
 		developerUI();
+		if (hasSessionInfo && hasDevInfo) {
+			isConfigured = true;
+		}
 	}
 	
-	public void export() {
-		//export session data
+	public void export() throws IOException {
+		//export session data if session info has been configured
+		if (isConfigured()) {
+			String workspaceLocation =
+					ResourcesPlugin.getWorkspace().getRoot().getLocation()
+					.toString();
+			File outFile = new File(workspaceLocation + "/" + getSessionID() +
+					"/session-info-" + devUsername + "-" +
+					getSessionID() + ".txt");
+			if (outFile.getParentFile().mkdir()) {
+				if (outFile.exists()) {
+					System.out.println("You cannot overwrite this file. If you "
+							+ "wish to continue, delete the file " + "manually.");
+					return;
+				} else {
+					System.out.println("Putting files at "
+							+ outFile.getAbsolutePath());
+					outFile.createNewFile();
+					
+					//export to new file
+					BufferedWriter writer = null;
+					try {
+						writer = new BufferedWriter( new FileWriter(outFile.getAbsolutePath()));
+						writer.write("Session ID,Session Purpose,Session Descrip,"
+								+ "Developer Username,Developer Name");
+						writer.newLine();
+						writer.write(getSessionID() + "," + sessionPurpose + ","
+								+ sessionDescrip + "," + devUsername + "," + devName);
+					} catch ( IOException e) {
+						throw new IOException("Failed to write session info. to file.");
+					} 
+					finally {
+						try {
+							if ( writer != null) writer.close( );
+						} catch ( IOException e) {
+							throw new IOException("Failed to write session info. to file.");
+						}
+					}
+				}
+			} else {
+				throw new IOException("Failed to create directory "
+						+ outFile.getParent());
+			}
+		} else {
+			//error
+			JOptionPane.showMessageDialog(null, "You need to configure "
+					+ "your Session Info.", "Error", 
+					JOptionPane.ERROR_MESSAGE);
+			//re-configure
+			config();
+		}
 	}
 }
