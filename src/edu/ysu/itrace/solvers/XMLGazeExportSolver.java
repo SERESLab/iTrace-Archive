@@ -37,6 +37,7 @@ public class XMLGazeExportSolver implements IFileExportSolver {
     private Dimension screenRect;
 
     public XMLGazeExportSolver() {
+    	UIManager.put("swing.boldMetal", new Boolean(false)); //make UI font plain
     }
 
     @Override
@@ -186,8 +187,6 @@ public class XMLGazeExportSolver implements IFileExportSolver {
 
     @Override
     public void config() {
-    	UIManager.put("swing.boldMetal", new Boolean(false)); //make font plain
-    	
     	JTextField configVal = new JTextField(getFilenamePattern());
     	
     	JPanel configPanel = new JPanel();

@@ -39,7 +39,9 @@ public class SessionInfoHandler {
 	boolean hasDevInfo = false;
 	boolean isConfigured = false;
 	
-	//use default constructor
+	public SessionInfoHandler() {
+		UIManager.put("swing.boldMetal", new Boolean(false)); //make UI font plain
+	}
 	
 	//Getters
 	public String getSessionID() {
@@ -73,8 +75,6 @@ public class SessionInfoHandler {
 	
 	//UI methods/Setters
 	protected void sessionUI() {
-		UIManager.put("swing.boldMetal", new Boolean(false)); //make font plain
-		
 		//textfields needed for UI
 		JTextField sessionIDText = new JTextField(getSessionID());
 		sessionIDText.setEditable(false);
@@ -145,17 +145,15 @@ public class SessionInfoHandler {
 			} else if (other.isSelected()) {
 				sessionPurpose = other.getText();
 			} else {
-				//sessionPurpose remains null
+				sessionPurpose = new String();
 				System.out.println("Warning! "
 						+ "Your Session Purpose has not been selected.");
-				}
+			}
 			hasSessionInfo = true;
 		}  
 	}
 	
 	protected void developerUI() {
-		UIManager.put("swing.boldMetal", new Boolean(false)); //make font plain
-    	
 		//Textfields needed for data entry
 		JTextField devUserText = new JTextField();
 		JTextField devNameText = new JTextField();
@@ -173,19 +171,22 @@ public class SessionInfoHandler {
 				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 		if (selection == JOptionPane.OK_OPTION) {
 			Pattern p = Pattern.compile("[^a-zA-Z0-9]");
-			if (!p.matcher(devUserText.getText()).find()) {
+			if (!p.matcher(devUserText.getText()).find() &&
+					!devUserText.getText().isEmpty() &&
+					!p.matcher(devNameText.getText()).find()) {
 				devUsername = devUserText.getText();
+				devName = devUserText.getText();
 			} else {
-				//warning
+				//error
 				JOptionPane.showMessageDialog(null, "You "
 						+ "have Non-alphanumeric Characters "
-						+ "in your Developer Username. Please re-enter "
+						+ "in your Developer Username/Name or you have not "
+						+ "provided a Developer Username. Please re-enter "
 						+ "your Developer Information.", "Error", 
 						JOptionPane.ERROR_MESSAGE);
 				//re-enter devUsername
 				developerUI();
 			}
-			devName = devNameText.getText();
 			hasDevInfo = true;
 		}
 	}
@@ -228,7 +229,7 @@ public class SessionInfoHandler {
 								+ sessionDescrip + "," + devUsername + "," + devName);
 					} catch ( IOException e) {
 						throw new IOException("Failed to write session info. to file.");
-					} 
+					}
 					finally {
 						try {
 							if ( writer != null) writer.close( );
@@ -242,12 +243,7 @@ public class SessionInfoHandler {
 						+ outFile.getParent());
 			}
 		} else {
-			//error
-			JOptionPane.showMessageDialog(null, "You need to configure "
-					+ "your Session Info.", "Error", 
-					JOptionPane.ERROR_MESSAGE);
-			//re-configure
-			config();
+			//handled in ControlView startTracking() method
 		}
 	}
 }

@@ -91,6 +91,8 @@ public class ControlView extends ViewPart implements IPartListener2,
 
     private CopyOnWriteArrayList<ISolver> activeSolvers =
             new CopyOnWriteArrayList<ISolver>();
+    
+    private SessionInfoHandler sessionInfo = new SessionInfoHandler();
 
     /*
      * Gets gazes from the eye tracker, calls gaze handlers, and adds responses
@@ -374,12 +376,15 @@ public class ControlView extends ViewPart implements IPartListener2,
             grayedControls.addIfAbsent(solverConfig);
         }
         
-        final Button infoButton = new Button(solversComposite, SWT.PUSH);
+        //Session info button
+        final Composite infoComposite = new Composite(parent, SWT.NONE);
+        infoComposite.setLayout(new GridLayout(2, false));
+        
+        final Button infoButton = new Button(infoComposite, SWT.PUSH);
         infoButton.setText("Session Info");
         infoButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-            	SessionInfoHandler sessionInfo = new SessionInfoHandler();
             	sessionInfo.config();
             }
         });  
@@ -583,9 +588,20 @@ public class ControlView extends ViewPart implements IPartListener2,
             // nothing happened.
             return;
         }
+        
+        if (!sessionInfo.isConfigured()) {
+        	displayError("You have not configured your Session Info.");
+        	return;
+        }
 
         for (Control c : grayedControls) {
             c.setEnabled(false);
+        }
+        
+        try {
+        	sessionInfo.export();
+        } catch(IOException e) {
+        	displayError(e.getMessage());
         }
 
         if (gazeTransport != null) {

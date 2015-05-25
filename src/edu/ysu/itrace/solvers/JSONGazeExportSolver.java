@@ -34,6 +34,7 @@ public class JSONGazeExportSolver implements IFileExportSolver {
     private Dimension screenRect;
 
     public JSONGazeExportSolver() {
+    	UIManager.put("swing.boldMetal", new Boolean(false)); //make UI font plain
     }
 
     @Override
@@ -170,9 +171,7 @@ public class JSONGazeExportSolver implements IFileExportSolver {
     }
 
     @Override
-    public void config() {
-    	UIManager.put("swing.boldMetal", new Boolean(false)); //make font plain
-    	
+    public void config() {    	
     	JTextField configVal = new JTextField(getFilenamePattern());
     	
     	JPanel configPanel = new JPanel();
