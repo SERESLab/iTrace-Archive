@@ -631,6 +631,8 @@ public class ControlView extends ViewPart implements IPartListener2,
             c.setEnabled(true);
         }
 
+        sessionInfo.reset();
+        
         if (tracker != null) {
             if (gazeTransport != null) {
                 if (gazeTransport.removeClient(

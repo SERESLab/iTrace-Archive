@@ -163,7 +163,7 @@ public class SessionInfoHandler {
 		devPanel.setLayout(new BoxLayout(devPanel, BoxLayout.Y_AXIS)); //vertically align
 		devPanel.add(new JLabel("Developer Username (Alphanumeric Characters Only):"));
 		devPanel.add(devUserText);
-		devPanel.add(new JLabel("Developer Name (Optional):"));
+		devPanel.add(new JLabel("Developer Name (Optional, Alpha/Space Characters Only):"));
 		devPanel.add(devNameText);
 		
 		final int selection = JOptionPane.showConfirmDialog(null, devPanel, 
@@ -171,16 +171,19 @@ public class SessionInfoHandler {
 				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 		if (selection == JOptionPane.OK_OPTION) {
 			Pattern p = Pattern.compile("[^a-zA-Z0-9]");
+			Pattern p2 = Pattern.compile("[^A-Za-z ]");
 			if (!p.matcher(devUserText.getText()).find() &&
 					!devUserText.getText().isEmpty() &&
-					!p.matcher(devNameText.getText()).find()) {
+					!p2.matcher(devNameText.getText()).find()) {
 				devUsername = devUserText.getText();
-				devName = devUserText.getText();
+				devName = devNameText.getText();
 			} else {
 				//error
 				JOptionPane.showMessageDialog(null, "You "
 						+ "have Non-alphanumeric Characters "
-						+ "in your Developer Username/Name or you have not "
+						+ "in your Developer Username or you have "
+						+ "Non-alphabetic/Space Characters "
+						+ "in your Developer Name or you have not "
 						+ "provided a Developer Username. Please re-enter "
 						+ "your Developer Information.", "Error", 
 						JOptionPane.ERROR_MESSAGE);
@@ -245,5 +248,15 @@ public class SessionInfoHandler {
 		} else {
 			//handled in ControlView startTracking() method
 		}
+	}
+	
+	public void reset() {
+		sessionPurpose = null;
+		sessionDescrip = null;
+		devUsername = null;
+		devName = null;
+		hasSessionInfo = false;
+		hasDevInfo = false;
+		isConfigured = false;
 	}
 }
