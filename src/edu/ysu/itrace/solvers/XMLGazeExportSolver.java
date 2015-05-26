@@ -5,10 +5,8 @@ import java.awt.Toolkit;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.Map.Entry;
-import java.text.SimpleDateFormat;
 
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
