@@ -27,6 +27,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 public class SessionInfoHandler {
 	//session info
 	private final String sessionIDPattern = "yyyyMMdd'T'HHmmss-SSSSZ";
+	private String sessionID = null;
 	private String sessionPurpose = null;
 	private String sessionDescrip = null;
 	
@@ -45,12 +46,7 @@ public class SessionInfoHandler {
 	
 	//Getters
 	public String getSessionID() {
-		try {
-			SimpleDateFormat formatter = new SimpleDateFormat(sessionIDPattern);
-			return formatter.format(new Date());
-		} catch (IllegalArgumentException e) {
-			return  sessionIDPattern;
-		}
+		return sessionID;
 	}
 	
 	public String getSessionPurpose() {
@@ -74,7 +70,17 @@ public class SessionInfoHandler {
 	}
 	
 	//UI methods/Setters
+	public void setSessionID() {
+		try {
+			SimpleDateFormat formatter = new SimpleDateFormat(sessionIDPattern);
+			sessionID = formatter.format(new Date());
+		} catch (IllegalArgumentException e) {
+			sessionID = sessionIDPattern;
+		}
+	}
+	
 	protected void sessionUI() {
+		setSessionID();
 		//textfields needed for UI
 		JTextField sessionIDText = new JTextField(getSessionID());
 		sessionIDText.setEditable(false);

@@ -32,24 +32,15 @@ public class XMLGazeExportSolver implements IFileExportSolver {
     private XMLOutputFactory outFactory = XMLOutputFactory.newInstance();
     private XMLStreamWriter responseWriter;
     private File outFile;
-    private String filenamePattern =
-            "'gaze-responses-'yyyyMMdd'T'HHmmss','SSSSZ'.xml'";
+    private String filename = "gaze-responses-USERNAME"
+    		+ "-yyMMddTHHmmss-SSSS-Z.xml";
     private Dimension screenRect;
+    private String sessionID;
 
     public XMLGazeExportSolver() {
     	UIManager.put("swing.boldMetal", new Boolean(false)); //make UI font plain
     }
-
-    @Override
-    public String getFilenamePattern() {
-        return filenamePattern;
-    }
-
-    @Override
-    public void setFilenamePattern(String filenamePattern) {
-        this.filenamePattern = filenamePattern;
-    }
-
+    
     @Override
     public void init() {
         screenRect = Toolkit.getDefaultToolkit().getScreenSize();
@@ -166,18 +157,20 @@ public class XMLGazeExportSolver implements IFileExportSolver {
                     + e.getMessage());
         }
     }
+    
+    @Override
+    public void config(String sessionID, String devUsername) {
+    	filename = "gaze-responses-" + devUsername + "-"
+    			+ sessionID + ".xml";
+    	this.sessionID = sessionID;
+    }
 
     @Override
     public String getFilename() {
         String workspaceLocation =
                 ResourcesPlugin.getWorkspace().getRoot().getLocation()
                         .toString();
-        try {
-            SimpleDateFormat formatter = new SimpleDateFormat(filenamePattern);
-            return workspaceLocation + "/" + formatter.format(new Date());
-        } catch (IllegalArgumentException e) {
-            return workspaceLocation + "/" + filenamePattern;
-        }
+        return workspaceLocation + "/" + sessionID + "/" + filename;
     }
 
     @Override
@@ -186,20 +179,21 @@ public class XMLGazeExportSolver implements IFileExportSolver {
     }
 
     @Override
-    public void config() {
-    	JTextField configVal = new JTextField(getFilenamePattern());
+    public void displayExportFile() {
+    	JTextField displayVal = new JTextField(filename);
+    	displayVal.setEditable(false);
     	
-    	JPanel configPanel = new JPanel();
-    	configPanel.setLayout(new BoxLayout(configPanel, BoxLayout.Y_AXIS)); //vertically align
-        configPanel.add(new JLabel("Export Filename Pattern"));
-        configPanel.add(configVal);
-        configPanel.setPreferredSize(new Dimension(300,40)); //resize appropriately
-
-        final int configDialog = JOptionPane.showConfirmDialog(null, configPanel, 
-                 friendlyName() + " Configuration", JOptionPane.OK_CANCEL_OPTION,
-                 JOptionPane.PLAIN_MESSAGE);
-        if (configDialog == JOptionPane.OK_OPTION) {
-           setFilenamePattern(configVal.getText());
-        }
+    	JPanel displayPanel = new JPanel();
+    	displayPanel.setLayout(new BoxLayout(displayPanel, BoxLayout.Y_AXIS)); //vertically align
+    	displayPanel.add(new JLabel("Export Filename"));
+    	displayPanel.add(displayVal);
+    	displayPanel.setPreferredSize(new Dimension(400,40)); //resize appropriately
+    	
+    	final int displayDialog = JOptionPane.showConfirmDialog(null, displayPanel, 
+    			friendlyName() + " Display", JOptionPane.OK_CANCEL_OPTION,
+    			JOptionPane.PLAIN_MESSAGE);
+    	if (displayDialog == JOptionPane.OK_OPTION) {
+    		//do nothing
+    	}
     }
 }

@@ -17,9 +17,14 @@ public interface ISolver {
     public String friendlyName();
 
     /**
-     * Launch a configuration dialog.
+     * Configure the export filename.
      */
-    public void config();
+    public void config(String sessionID, String devUsername);
+    
+    /**
+     * Launch dialog to display the export filename.
+     */
+    public void displayExportFile();
 
     /**
      * Any initialization work with side effects, such as opening files. This
