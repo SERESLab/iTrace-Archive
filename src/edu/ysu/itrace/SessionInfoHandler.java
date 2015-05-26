@@ -24,6 +24,8 @@ import javax.swing.UIManager;
 
 import org.eclipse.core.resources.ResourcesPlugin;
 
+import com.google.gson.stream.JsonWriter;
+
 public class SessionInfoHandler {
 	//session info
 	private final String sessionIDPattern = "yyyyMMdd'T'HHmmss-SSSSZ";
@@ -216,7 +218,7 @@ public class SessionInfoHandler {
 					.toString();
 			File outFile = new File(workspaceLocation + "/" + getSessionID() +
 					"/session-info-" + devUsername + "-" +
-					getSessionID() + ".txt");
+					getSessionID() + ".json");
 			if (outFile.getParentFile().mkdir()) {
 				if (outFile.exists()) {
 					System.out.println("You cannot overwrite this file. If you "
@@ -228,20 +230,34 @@ public class SessionInfoHandler {
 					outFile.createNewFile();
 					
 					//export to new file
-					BufferedWriter writer = null;
+					JsonWriter writer = null;
 					try {
-						writer = new BufferedWriter( new FileWriter(outFile.getAbsolutePath()));
-						writer.write("Session ID,Session Purpose,Session Descrip,"
-								+ "Developer Username,Developer Name");
-						writer.newLine();
-						writer.write(getSessionID() + "," + sessionPurpose + ","
-								+ sessionDescrip + "," + devUsername + "," + devName);
+						writer = new JsonWriter(new FileWriter(outFile));
+						writer.setIndent("  ");
+						writer.beginObject()
+								.name("session_info")
+									.beginObject()
+										.name("session_ID")
+										.value(sessionID)
+										.name("session_purpose")
+										.value(sessionPurpose)
+										.name("session_descrip")
+										.value(sessionDescrip)
+										.name("developer_username")
+										.value(devUsername)
+										.name("developer_name")
+										.value(devName)
+									.endObject();
 					} catch ( IOException e) {
 						throw new IOException("Failed to write session info. to file.");
 					}
 					finally {
 						try {
-							if ( writer != null) writer.close( );
+							if ( writer != null) {
+								writer.endObject();
+								writer.close( );
+								System.out.println("Session Info saved.");
+							}
 						} catch ( IOException e) {
 							throw new IOException("Failed to write session info. to file.");
 						}
