@@ -382,10 +382,12 @@ public class ControlView extends ViewPart implements IPartListener2,
             solverConfig.addSelectionListener(new SelectionAdapter() {
                 @Override
                 public void widgetSelected(SelectionEvent e) {
-                	if (solverEnabled.getSelection()) {
+                	if (sessionInfo.isConfigured()) {
+                		solver.config(sessionInfo.getSessionID(),
+                				sessionInfo.getDevUsername());
                 		solver.displayExportFile();
                 	} else {
-                		displayError("You must select this Solver "
+                		displayError("You must configure you Session Info. "
                 				+ "first.");
                 	}
                 }
