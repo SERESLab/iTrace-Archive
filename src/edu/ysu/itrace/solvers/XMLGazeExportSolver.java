@@ -5,19 +5,20 @@ import java.awt.Toolkit;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.Map.Entry;
-import java.text.SimpleDateFormat;
 
+import javax.swing.BoxLayout;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.UIManager;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.jface.dialogs.InputDialog;
-import org.eclipse.jface.window.Window;
-import org.eclipse.swt.widgets.Shell;
 
 import edu.ysu.itrace.gaze.IGazeResponse;
 
@@ -29,25 +30,15 @@ public class XMLGazeExportSolver implements IFileExportSolver {
     private XMLOutputFactory outFactory = XMLOutputFactory.newInstance();
     private XMLStreamWriter responseWriter;
     private File outFile;
-    private String filenamePattern =
-            "'gaze-responses-'yyyyMMdd'T'HHmmss','SSSSZ'.xml'";
+    private String filename = "gaze-responses-USERNAME"
+    		+ "-yyMMddTHHmmss-SSSS-Z.xml";
     private Dimension screenRect;
-    private Shell parent;
+    private String sessionID;
 
-    public XMLGazeExportSolver(Shell parent) {
-        this.parent = parent;
+    public XMLGazeExportSolver() {
+    	UIManager.put("swing.boldMetal", new Boolean(false)); //make UI font plain
     }
-
-    @Override
-    public String getFilenamePattern() {
-        return filenamePattern;
-    }
-
-    @Override
-    public void setFilenamePattern(String filenamePattern) {
-        this.filenamePattern = filenamePattern;
-    }
-
+    
     @Override
     public void init() {
         screenRect = Toolkit.getDefaultToolkit().getScreenSize();
@@ -164,18 +155,20 @@ public class XMLGazeExportSolver implements IFileExportSolver {
                     + e.getMessage());
         }
     }
+    
+    @Override
+    public void config(String sessionID, String devUsername) {
+    	filename = "gaze-responses-" + devUsername + "-"
+    			+ sessionID + ".xml";
+    	this.sessionID = sessionID;
+    }
 
     @Override
     public String getFilename() {
         String workspaceLocation =
                 ResourcesPlugin.getWorkspace().getRoot().getLocation()
                         .toString();
-        try {
-            SimpleDateFormat formatter = new SimpleDateFormat(filenamePattern);
-            return workspaceLocation + "/" + formatter.format(new Date());
-        } catch (IllegalArgumentException e) {
-            return workspaceLocation + "/" + filenamePattern;
-        }
+        return workspaceLocation + "/" + sessionID + "/" + filename;
     }
 
     @Override
@@ -184,12 +177,21 @@ public class XMLGazeExportSolver implements IFileExportSolver {
     }
 
     @Override
-    public void config() {
-        final InputDialog configDialog =
-                new InputDialog(parent, friendlyName() + " Configuration",
-                        "Export Filename Pattern", getFilenamePattern(), null);
-        if (configDialog.open() == Window.OK) {
-            setFilenamePattern(configDialog.getValue());
-        }
+    public void displayExportFile() {
+    	JTextField displayVal = new JTextField(filename);
+    	displayVal.setEditable(false);
+    	
+    	JPanel displayPanel = new JPanel();
+    	displayPanel.setLayout(new BoxLayout(displayPanel, BoxLayout.Y_AXIS)); //vertically align
+    	displayPanel.add(new JLabel("Export Filename"));
+    	displayPanel.add(displayVal);
+    	displayPanel.setPreferredSize(new Dimension(400,40)); //resize appropriately
+    	
+    	final int displayDialog = JOptionPane.showConfirmDialog(null, displayPanel, 
+    			friendlyName() + " Display", JOptionPane.OK_CANCEL_OPTION,
+    			JOptionPane.PLAIN_MESSAGE);
+    	if (displayDialog == JOptionPane.OK_OPTION) {
+    		//do nothing
+    	}
     }
 }
