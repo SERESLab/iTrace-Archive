@@ -84,6 +84,8 @@ public class ControlView extends ViewPart implements IPartListener2,
 
     private CopyOnWriteArrayList<ISolver> activeSolvers =
             new CopyOnWriteArrayList<ISolver>();
+    
+    private SessionInfoHandler sessionInfo = new SessionInfoHandler();
 
     /*
      * Gets gazes from the eye tracker, calls gaze handlers, and adds responses
@@ -204,7 +206,7 @@ public class ControlView extends ViewPart implements IPartListener2,
                 stopTracking();
             }
         });
-
+        
         Button calibrateButton = new Button(buttonComposite, SWT.PUSH);
         calibrateButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true,
                 true, 1, 1));
@@ -241,6 +243,10 @@ public class ControlView extends ViewPart implements IPartListener2,
                 }
             }
         });
+        
+        //Session info Composite
+        final Composite infoComposite = new Composite(parent, SWT.NONE);
+        infoComposite.setLayout(new GridLayout(1, false));
 
         final String DONT_CHANGE_THAT_MSG =
                 "Don't change this value until "
@@ -333,11 +339,11 @@ public class ControlView extends ViewPart implements IPartListener2,
         solversComposite.setLayout(new GridLayout(2, false));
 
         // Configure solvers here.
-        jsonSolver = new JSONGazeExportSolver(rootShell);
+        jsonSolver = new JSONGazeExportSolver();
         availableSolvers.add(jsonSolver);
 
-        xmlSolver = new XMLGazeExportSolver(rootShell);
-        availableSolvers.add(new XMLGazeExportSolver(rootShell));
+        xmlSolver = new XMLGazeExportSolver();
+        availableSolvers.add(xmlSolver);
 
         for (final ISolver solver : availableSolvers) {
             final Button solverEnabled =
@@ -346,13 +352,21 @@ public class ControlView extends ViewPart implements IPartListener2,
             solverEnabled.addSelectionListener(new SelectionAdapter() {
                 @Override
                 public void widgetSelected(SelectionEvent e) {
-                    if (solverEnabled.getSelection()) {
-                        activeSolvers.addIfAbsent(solver);
-                    } else {
-                        while (activeSolvers.contains(solver)) {
-                            activeSolvers.remove(solver);
-                        }
-                    }
+                	if (sessionInfo.isConfigured()) {
+                		solver.config(sessionInfo.getSessionID(),
+                				sessionInfo.getDevUsername());
+                		if (solverEnabled.getSelection()) {
+                			activeSolvers.addIfAbsent(solver);
+                		} else {
+                			while (activeSolvers.contains(solver)) {
+                				activeSolvers.remove(solver);
+                			}
+                		}
+                	} else {
+                		solverEnabled.setSelection(false);
+                		displayError("You must configure your Sesssion "
+                				+ "Info. first.");
+                	}
                 }
             });
             grayedControls.addIfAbsent(solverEnabled);
@@ -361,11 +375,33 @@ public class ControlView extends ViewPart implements IPartListener2,
             solverConfig.addSelectionListener(new SelectionAdapter() {
                 @Override
                 public void widgetSelected(SelectionEvent e) {
-                    solver.config();
+                	if (sessionInfo.isConfigured()) {
+                		solver.config(sessionInfo.getSessionID(),
+                				sessionInfo.getDevUsername());
+                		solver.displayExportFile();
+                	} else {
+                		displayError("You must configure you Session Info. "
+                				+ "first.");
+                	}
                 }
             });
             grayedControls.addIfAbsent(solverConfig);
         }
+        
+        //Session Info Button
+        final Button infoButton = new Button(infoComposite, SWT.PUSH);
+        infoButton.setText("Session Info");
+        infoButton.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+            	for (final Control controls : solversComposite.getChildren()) {
+            		Button button = (Button) controls;
+            		button.setSelection(false);
+            	}
+            	sessionInfo.config();
+            }
+        });  
+        grayedControls.add(infoButton);
 
     }
 
@@ -566,9 +602,20 @@ public class ControlView extends ViewPart implements IPartListener2,
             // nothing happened.
             return;
         }
+        
+        if (!sessionInfo.isConfigured()) {
+        	displayError("You have not configured your Session Info.");
+        	return;
+        }
 
         for (Control c : grayedControls) {
             c.setEnabled(false);
+        }
+        
+        try {
+        	sessionInfo.export();
+        } catch(IOException e) {
+        	displayError(e.getMessage());
         }
 
         if (gazeTransport != null) {
@@ -598,6 +645,8 @@ public class ControlView extends ViewPart implements IPartListener2,
             c.setEnabled(true);
         }
 
+        sessionInfo.reset();
+        
         if (tracker != null) {
             if (gazeTransport != null) {
                 if (gazeTransport.removeClient(
