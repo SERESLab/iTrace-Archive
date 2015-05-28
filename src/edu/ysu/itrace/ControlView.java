@@ -228,7 +228,7 @@ public class ControlView extends ViewPart implements IPartListener2,
                 }
             }
         });
-
+        /*
         final Button displayStatus = new Button(buttonComposite, SWT.PUSH);
         displayStatus.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true,
                 true, 1, 1));
@@ -242,7 +242,7 @@ public class ControlView extends ViewPart implements IPartListener2,
                     displayError(DONT_DO_THAT_MSG);
                 }
             }
-        });
+        });*/
         
         //Session info Composite
         final Composite infoComposite = new Composite(parent, SWT.NONE);
