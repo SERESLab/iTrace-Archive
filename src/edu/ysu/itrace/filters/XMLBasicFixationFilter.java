@@ -1,21 +1,17 @@
 package edu.ysu.itrace.filters;
 
+import java.io.File;
 import java.io.IOException;
 
 public class XMLBasicFixationFilter extends BasicFixationFilter {
 	
 	@Override
-	public void init() throws IOException {
+	public void read(File file) throws IOException {
 		
 	}
 	
 	@Override
-	public void export() {
-		
-	}
-	
-	@Override
-	public void dispose() throws IOException {
+	public void export() throws IOException {
 		
 	}
 }

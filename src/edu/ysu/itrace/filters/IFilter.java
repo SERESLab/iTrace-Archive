@@ -1,5 +1,6 @@
 package edu.ysu.itrace.filters;
 
+import java.io.File;
 import java.io.IOException;
 
 /**
@@ -20,7 +21,7 @@ public interface IFilter {
 	/**
 	 * Read in selected files.
 	 */
-	public void init() throws IOException;
+	public void read(File file) throws IOException;
 	
 	/**
 	 * Process the selected files based on specific filter type.
@@ -30,10 +31,5 @@ public interface IFilter {
 	/**
 	 * Export processed files.
 	 */
-	public void export();
-	
-	/**
-	 * Free resources.
-	 */
-	public void dispose() throws IOException;
+	public void export() throws IOException;
 }
