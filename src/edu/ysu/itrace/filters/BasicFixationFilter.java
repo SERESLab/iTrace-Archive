@@ -2,37 +2,45 @@ package edu.ysu.itrace.filters;
 
 
 import java.awt.geom.Point2D;
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-import edu.ysu.itrace.gaze.IGazeResponse;
+import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 /**
  * Class that defines functionality needed for a post-processing 
  * algorithm to find fixations in raw gaze data
  */
 public abstract class BasicFixationFilter implements IFilter {
-	private ArrayList<IGazeResponse> rawGazes;
-	private ArrayList<IGazeResponse> processedGazes;
+	private ArrayList<RawGaze> rawGazes;
+	private ArrayList<Fixation> processedGazes =
+			new ArrayList<Fixation>();
+	
 	private double[] diffVector;
 	private double[] peak;
 	private List<Integer> peakIndices;
 	private int r = 4; //sliding window
-	private double threshold = 
+	private double threshold = 35; //CHANGE THIS LATER!!
+	private double radius = 35;
+	
 	private String filterName = "Basic Fixation Filter";
+	private File[] fileList;
 
 	//Getters
 	/**
 	 * Return the raw gazes as an array list.
 	 */
-	public ArrayList<IGazeResponse> getRawGazes() {
+	public ArrayList<RawGaze> getRawGazes() {
 		return rawGazes;
 	}
 	
 	/**
 	 * Return the processed gazes as an array list.
 	 */
-	public ArrayList<IGazeResponse> getProcessedGazes() {
+	public ArrayList<Fixation> getProcessedGazes() {
 		return processedGazes;
 	}
 	
@@ -50,11 +58,25 @@ public abstract class BasicFixationFilter implements IFilter {
 		return threshold;
 	}
 	
+	/**
+	 * Return the list of files read in from UI
+	 */
+	public File[] getFileList() {
+		return fileList;
+	}
+	
+	/**
+	 * Return the Radius/Distance Threshold
+	 */
+	public double getRadius() {
+		return radius;
+	}
+	
 	//Setters
 	/**
 	 * Set the raw gazes as an array list of gazes.
 	 */
-	protected void setRawGazes(ArrayList<IGazeResponse> rawGazes) {
+	protected void setRawGazes(ArrayList<RawGaze> rawGazes) {
 		this.rawGazes = rawGazes;
 	}
 	
@@ -72,16 +94,23 @@ public abstract class BasicFixationFilter implements IFilter {
 		this.threshold = threshold;
 	}
 	
+	/**
+	 * Set the distance threshold
+	 */
+	protected void setRadius(double radius) {
+		this.radius = radius;
+	}
+	
 	//Computational/Processing functions
 	/**
 	 * Interpolate missing data
 	 */
 	public void interpolate() {
 		if (rawGazes != null) {
-			IGazeResponse lastPosition = rawGazes.get(0);
+			RawGaze lastPosition = rawGazes.get(0);
 			for (int i = 0; i < rawGazes.size(); i++) {
-				if (rawGazes.get(i).getGaze().getLeftValidity() == 1 ||
-						rawGazes.get(i).getGaze().getRightValidity() == 1) {
+				if (rawGazes.get(i).getLeftValid() == 1 ||
+						rawGazes.get(i).getRightValid() == 1) {
 					lastPosition = rawGazes.get(i);
 				} else {
 					rawGazes.set(i,lastPosition);
@@ -110,10 +139,10 @@ public abstract class BasicFixationFilter implements IFilter {
 				mBefore.setLocation(0,0);
 				mAfter.setLocation(0,0);
 				for (int j = 1; j <= r; j++) {
-					mBefore.x = mBefore.x + rawGazes.get(i-r).getGaze().getX() / r;
-					mBefore.y = mBefore.y + rawGazes.get(i-r).getGaze().getY() / r;
-					mAfter.x = mAfter.x + rawGazes.get(i+r).getGaze().getX() / r;
-					mAfter.y = mAfter.y + rawGazes.get(i+r).getGaze().getY() / r;
+					mBefore.x = mBefore.x + rawGazes.get(i-r).getX() / r;
+					mBefore.y = mBefore.y + rawGazes.get(i-r).getY() / r;
+					mAfter.x = mAfter.x + rawGazes.get(i+r).getX() / r;
+					mAfter.y = mAfter.y + rawGazes.get(i+r).getY() / r;
 				}
 				diffVector[i] = Math.sqrt(Math.pow(mAfter.x-mBefore.x, 2) +
 						Math.pow(mAfter.y-mBefore.y,2));
@@ -182,7 +211,93 @@ public abstract class BasicFixationFilter implements IFilter {
 	 * Estimate spatial position of fixations
 	 */
 	public void spatialPos() {
+		if (peakIndices != null) {
+			double shortestDist = 0;
+			
+			while (shortestDist < radius) {
+				processedGazes.clear();
+				for (int i = 1; i < peakIndices.size(); i++) {
+					processedGazes.add(mergeRawGazes(peakIndices.get(i-1),peakIndices.get(i)));
+				}
+				
+				shortestDist = Integer.MAX_VALUE;
+				int index = -1;
+				
+				for (int j = 1; j < processedGazes.size(); j++) {
+					double x =
+							processedGazes.get(j).getRawGaze().getX() -
+							processedGazes.get(j-1).getRawGaze().getX();
+					double y =
+							processedGazes.get(j).getRawGaze().getY() -
+							processedGazes.get(j-1).getRawGaze().getY();
+					double distance = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+					
+					if (distance < shortestDist) {
+						shortestDist = distance;
+						index = j;
+					}
+				}
+				
+				if (shortestDist < radius) {
+					peakIndices.remove(index);
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Merge raw gazes together based on peak indices
+	 */
+	public Fixation mergeRawGazes(int iStart, int iEnd) {
+		double[] x = new double[iEnd-iStart+1];
+		double[] y = new double[iEnd-iStart+1];
+		double leftPupilDiam = 0;
+		double rightPupilDiam = 0;
 		
+		for (int i = iStart; i <= iEnd; i++) {
+			x[i-iStart] = rawGazes.get(i).getX();
+			y[i-iStart] = rawGazes.get(i).getY();
+			
+			leftPupilDiam += rawGazes.get(i).getLeftPupilDiam();
+			rightPupilDiam += rawGazes.get(i).getRightPupilDiam();
+			
+		}
+		
+		//Compute the left/right pupil diameters by averaging across interval
+		leftPupilDiam = leftPupilDiam / (iEnd-iStart+1);
+		rightPupilDiam = rightPupilDiam / (iEnd-iStart+1);
+		
+		//Compute the median of all of the x and y values across interval
+		Arrays.sort(x);
+		Arrays.sort(y);
+		double medianX;
+		double medianY;
+		if (x.length % 2 == 0) {
+			medianX = (x[x.length/2] + x[x.length/2 - 1])/2;
+		} else {
+			medianX = x[x.length/2];
+		}
+		if (y.length % 2 == 0) {
+			medianY = (y[y.length/2] + y[y.length/2 - 1])/2;
+		} else {
+			medianY = y[y.length/2];
+		}
+
+		//Compute the fixation duration
+		int duration = rawGazes.get(iEnd).getSystemTime() -
+				rawGazes.get(iStart).getSystemTime();
+		
+		//Create the new processed fixation
+		RawGaze rawGaze = rawGazes.get(iStart);
+		RawGaze processedGaze = new RawGaze(rawGaze.getFile(), rawGaze.getType(),
+				medianX, medianY, 1, 1, leftPupilDiam, rightPupilDiam,
+				rawGaze.getTrackerTime(), rawGaze.getSystemTime(),
+				rawGaze.getNanoTime(), rawGaze.getLineBaseX(), rawGaze.getLine(),
+				rawGaze.getCol(), rawGaze.getHows(), rawGaze.getTypes(),
+				rawGaze.getFullyQualifiedNames(), rawGaze.getLineBaseY());
+		Fixation fixation = new Fixation(processedGaze, duration);
+		
+		return fixation;
 	}
 	
 	//Overridden function
@@ -203,6 +318,14 @@ public abstract class BasicFixationFilter implements IFilter {
 	
 	@Override
 	public void filterUI() {
-		
+		JFileChooser chooser = new JFileChooser();
+		FileNameExtensionFilter filter = new FileNameExtensionFilter(
+				"JSON & XML Files", "json", "xml");
+		chooser.setFileFilter(filter);
+		chooser.setMultiSelectionEnabled(true);
+		int returnVal = chooser.showOpenDialog(null);
+		if(returnVal == JFileChooser.APPROVE_OPTION) {
+			fileList = chooser.getSelectedFiles();
+		}
 	}
 }

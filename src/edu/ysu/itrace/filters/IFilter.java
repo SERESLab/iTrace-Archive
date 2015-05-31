@@ -1,5 +1,7 @@
 package edu.ysu.itrace.filters;
 
+import java.io.IOException;
+
 /**
  * Interface for defining basic I/O for filters used on exported gaze data.
  */
@@ -18,7 +20,7 @@ public interface IFilter {
 	/**
 	 * Read in selected files.
 	 */
-	public void init();
+	public void init() throws IOException;
 	
 	/**
 	 * Process the selected files based on specific filter type.
@@ -33,5 +35,5 @@ public interface IFilter {
 	/**
 	 * Free resources.
 	 */
-	public void dispose();
+	public void dispose() throws IOException;
 }
