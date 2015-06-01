@@ -2,14 +2,9 @@ package edu.ysu.itrace.filters;
 
 
 import java.awt.geom.Point2D;
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import javax.swing.JFileChooser;
-import javax.swing.filechooser.FileNameExtensionFilter;
 
 /**
  * Class that defines functionality needed for a post-processing 
