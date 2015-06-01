@@ -2,7 +2,7 @@ package edu.ysu.itrace.filters;
 
 public class Fixation {
 	private RawGaze rawGaze;
-	private int duration;
+	private long duration;
 	
 	public Fixation(RawGaze rawGaze, int duration) {
 		this.rawGaze = rawGaze;
@@ -13,7 +13,7 @@ public class Fixation {
 		return rawGaze;
 	}
 	
-	public int getDuration() {
+	public long getDuration() {
 		return duration;
 	}
 }

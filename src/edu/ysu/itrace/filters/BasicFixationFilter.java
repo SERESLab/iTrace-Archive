@@ -275,7 +275,7 @@ public abstract class BasicFixationFilter implements IFilter {
 		}
 
 		//Compute the fixation duration
-		int duration = rawGazes.get(iEnd).getSystemTime() -
+		long duration = rawGazes.get(iEnd).getSystemTime() -
 				rawGazes.get(iStart).getSystemTime();
 		
 		//Create the new processed fixation

@@ -131,9 +131,9 @@ public class JSONBasicFixationFilter extends BasicFixationFilter {
 		double rightValidity = -1;
 		double leftPupilDiam = -1;
 		double rightPupilDiam = -1;
-		int trackerTime = -1;
-		int systemTime = -1;
-		int nanoTime = -1;
+		long trackerTime = -1;
+		long systemTime = -1;
+		long nanoTime = -1;
 		int lineBaseX = -1;
 		int line = -1;
 		int col = -1;

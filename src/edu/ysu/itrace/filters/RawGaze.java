@@ -13,9 +13,9 @@ public class RawGaze {
 	private double rightValidity;
 	private double leftPupilDiam;
 	private double rightPupilDiam;
-	private int trackerTime;
-	private int systemTime;
-	private int nanoTime;
+	private long trackerTime;
+	private long systemTime;
+	private long nanoTime;
 	private int lineBaseX;
 	private int line;
 	private int col;
@@ -27,7 +27,7 @@ public class RawGaze {
 	public RawGaze(String file, String type, double x, double y,
 			double leftValidity, double rightValidity,
 			double leftPupilDiam, double rightPupilDiam,
-			int trackerTime, int systemTime, int nanoTime,
+			long trackerTime, long systemTime, long nanoTime,
 			int lineBaseX, int line, int col, String hows,
 			String types, String fullyQualifiedNames, int lineBaseY) {
 		
@@ -84,15 +84,15 @@ public class RawGaze {
 		return rightPupilDiam;
 	}
 	
-	public int getTrackerTime() {
+	public long getTrackerTime() {
 		return trackerTime;
 	}
 	
-	public int getSystemTime() {
+	public long getSystemTime() {
 		return systemTime;
 	}
 	
-	public int getNanoTime() {
+	public long getNanoTime() {
 		return nanoTime;
 	}
 	
