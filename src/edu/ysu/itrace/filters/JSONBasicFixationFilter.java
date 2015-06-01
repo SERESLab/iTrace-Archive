@@ -162,11 +162,11 @@ public class JSONBasicFixationFilter extends BasicFixationFilter {
 			} else if (name.equals("right-pupil-diameter")) {
 				rightPupilDiam = reader.nextDouble();
 			} else if (name.equals("tracker_time")) {
-				trackerTime = reader.nextInt();
+				trackerTime = reader.nextLong();
 			} else if (name.equals("system_time")) {
-				systemTime = reader.nextInt();
+				systemTime = reader.nextLong();
 			} else if (name.equals("nano_time")) {
-				nanoTime = reader.nextInt();
+				nanoTime = reader.nextLong();
 			} else if (name.equals("line_base_x")) {
 				lineBaseX = reader.nextInt();
 			} else if (name.equals("line")) {

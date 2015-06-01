@@ -109,9 +109,9 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 		double rightValidity = Double.parseDouble(reader.getAttributeValue(5));
 		double leftPupilDiam = Double.parseDouble(reader.getAttributeValue(6));
 		double rightPupilDiam = Double.parseDouble(reader.getAttributeValue(8));
-		long trackerTime = Integer.parseInt(reader.getAttributeValue(9));
-		long systemTime = Integer.parseInt(reader.getAttributeValue(10));
-		long nanoTime = Integer.parseInt(reader.getAttributeValue(11));
+		long trackerTime = Long.parseLong(reader.getAttributeValue(9));
+		long systemTime = Long.parseLong(reader.getAttributeValue(10));
+		long nanoTime = Long.parseLong(reader.getAttributeValue(11));
 		int lineBaseX = Integer.parseInt(reader.getAttributeValue(12));
 		int line = Integer.parseInt(reader.getAttributeValue(13));
 		int col = Integer.parseInt(reader.getAttributeValue(14));
