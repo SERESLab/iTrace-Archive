@@ -5,6 +5,10 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.regex.Pattern;
+
+import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
@@ -20,6 +24,28 @@ public class JSONBasicFixationFilter extends BasicFixationFilter {
 	private String devUsername;
 	private String sessionID;
 	
+	private final String filterName = "JSON Fixation Filter";
+	
+	@Override
+	public File[] filterUI() {
+		JFileChooser chooser = new JFileChooser();
+		FileNameExtensionFilter filter = new FileNameExtensionFilter(
+				"JSON Files", "json");
+		chooser.setFileFilter(filter);
+		chooser.setMultiSelectionEnabled(true);
+		int returnVal = chooser.showOpenDialog(null);
+		if(returnVal == JFileChooser.APPROVE_OPTION) {
+			return chooser.getSelectedFiles();
+		} else {
+			return null;
+		}
+	}
+	
+	@Override
+	public String getFilterName() {
+		return filterName;
+	}
+	
 	@Override
 	public void read(File file) throws IOException {
 		if (file != null) {
@@ -27,43 +53,39 @@ public class JSONBasicFixationFilter extends BasicFixationFilter {
 			fileDir = new String(file.getParent());
 			String[] parts = file.getName().split("-");
 			devUsername = parts[2];
-			sessionID = parts[3] + "-" + parts[4] + "-" + parts[5].split(".")[0];
+			sessionID = parts[3] + "-" + parts[4] + "-" + parts[5].split(Pattern.quote("."))[0];
 				
 			//Read from file
-				//if(file.getName().lastIndexOf(".") > 0) {
-					//int i = file.getName().lastIndexOf(".");
-					//if (file.getName().substring(i+1) == "json") {
+			if(file.getName().lastIndexOf(".") > 0) {
+				int i = file.getName().lastIndexOf(".");
+				if (file.getName().substring(i+1).equals("json")) {
 						
-			if (file.exists()) {
-				try {
-					JsonReader reader = new JsonReader(new FileReader(file.getAbsolutePath()));
-					reader.beginObject();
+					if (file.exists()) {
+						try {
+							JsonReader reader = new JsonReader(new FileReader(file.getAbsolutePath()));
+							reader.beginObject();
 				
-					while (reader.hasNext()) {
-						String name = reader.nextName();
+							while (reader.hasNext()) {
+								String name = reader.nextName();
 					
-						if (name.equals("environment")) {
-							setLogInfo(reader);
-						} else if (name.equals("gazes")) {
-							setRawGazes(reader);
-						} else {
-							reader.skipValue();
+								if (name.equals("environment")) {
+									setLogInfo(reader);
+								} else if (name.equals("gazes")) {
+									setRawGazes(reader);
+								} else {
+									reader.skipValue();
+								}
+							}
+							reader.endObject();
+							reader.close();
+						} catch (IOException e) {
+							throw new IOException("Could not read in data." +
+									getFilterName() + ".");
 						}
 					}
-					reader.endObject();
-					reader.close();
-				} catch (IOException e) {
-					throw new IOException("Could not read in data." +
-							getFilterName() + ".");
 				}
 			}
-					//}
-				//}
 		}
-			/*JOptionPane.showMessageDialog(null,
-					"You have not selected "
-					+ "any files to process!", "Error",
-					JOptionPane.ERROR_MESSAGE);*/
 	}
 		
 	public void setLogInfo(JsonReader reader) throws IOException {

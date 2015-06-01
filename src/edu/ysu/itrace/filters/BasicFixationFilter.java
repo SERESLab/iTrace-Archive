@@ -3,6 +3,7 @@ package edu.ysu.itrace.filters;
 
 import java.awt.geom.Point2D;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -22,12 +23,9 @@ public abstract class BasicFixationFilter implements IFilter {
 	private double[] diffVector;
 	private double[] peak;
 	private List<Integer> peakIndices;
-	private int r = 4; //sliding window
-	private double threshold = 35; //CHANGE THIS LATER!!
+	private int r = 5; //sliding window
+	private double threshold =  35 / (16.6 * r);
 	private double radius = 35;
-	
-	private String filterName = "Basic Fixation Filter";
-	private File[] fileList;
 
 	//Getters
 	/**
@@ -59,13 +57,6 @@ public abstract class BasicFixationFilter implements IFilter {
 	}
 	
 	/**
-	 * Return the list of files read in from UI
-	 */
-	public File[] getFileList() {
-		return fileList;
-	}
-	
-	/**
 	 * Return the Radius/Distance Threshold
 	 */
 	public double getRadius() {
@@ -90,8 +81,8 @@ public abstract class BasicFixationFilter implements IFilter {
 	/**
 	 * Set the threshold for removing peaks
 	 */
-	protected void setThreshold(double threshold) {
-		this.threshold = threshold;
+	protected void setThreshold(double thresholdPixels) {
+		this.threshold = thresholdPixels / (16.6 * r);
 	}
 	
 	/**
@@ -311,21 +302,4 @@ public abstract class BasicFixationFilter implements IFilter {
 		spatialPos();
 	}
 	
-	@Override
-	public String getFilterName() {
-		return filterName;
-	}
-	
-	@Override
-	public void filterUI() {
-		JFileChooser chooser = new JFileChooser();
-		FileNameExtensionFilter filter = new FileNameExtensionFilter(
-				"JSON & XML Files", "json", "xml");
-		chooser.setFileFilter(filter);
-		chooser.setMultiSelectionEnabled(true);
-		int returnVal = chooser.showOpenDialog(null);
-		if(returnVal == JFileChooser.APPROVE_OPTION) {
-			fileList = chooser.getSelectedFiles();
-		}
-	}
 }

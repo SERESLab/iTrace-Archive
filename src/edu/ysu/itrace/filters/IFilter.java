@@ -16,7 +16,7 @@ public interface IFilter {
 	/**
 	 * UI to select files for post-processing.
 	 */
-	public void filterUI();
+	public File[] filterUI();
 	
 	/**
 	 * Read in selected files.

@@ -2,6 +2,7 @@ package edu.ysu.itrace;
 
 import java.awt.Dimension;
 import java.awt.Toolkit;
+import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -41,6 +42,9 @@ import org.eclipse.ui.progress.UIJob;
 
 import edu.ysu.itrace.exceptions.CalibrationException;
 import edu.ysu.itrace.exceptions.EyeTrackerConnectException;
+import edu.ysu.itrace.filters.IFilter;
+import edu.ysu.itrace.filters.JSONBasicFixationFilter;
+import edu.ysu.itrace.filters.XMLBasicFixationFilter;
 import edu.ysu.itrace.gaze.IGazeHandler;
 import edu.ysu.itrace.gaze.IGazeResponse;
 import edu.ysu.itrace.solvers.ISolver;
@@ -84,6 +88,9 @@ public class ControlView extends ViewPart implements IPartListener2,
 
     private CopyOnWriteArrayList<ISolver> activeSolvers =
             new CopyOnWriteArrayList<ISolver>();
+    
+    private CopyOnWriteArrayList<IFilter> availableFilters =
+    		new CopyOnWriteArrayList<IFilter>();
     
     private SessionInfoHandler sessionInfo = new SessionInfoHandler();
 
@@ -402,7 +409,43 @@ public class ControlView extends ViewPart implements IPartListener2,
             }
         });  
         grayedControls.add(infoButton);
-
+        
+        //Configure Filters Here
+        JSONBasicFixationFilter jsonBFFilter =
+        		new JSONBasicFixationFilter();
+        availableFilters.add(jsonBFFilter);
+        XMLBasicFixationFilter xmlBFFilter =
+        		new XMLBasicFixationFilter();
+        availableFilters.add(xmlBFFilter);
+        
+        final Composite filterComposite = new Composite(parent, SWT.NONE);
+        filterComposite.setLayout(new GridLayout(1, false));
+        
+        for (IFilter filter: availableFilters) {
+        	final Button filterButton =
+        			new Button(filterComposite, SWT.PUSH);
+        	filterButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true,
+                	1, 1));
+        	filterButton.setText(filter.getFilterName());
+        	filterButton.addSelectionListener(new SelectionAdapter() {
+            	@Override
+            	public void widgetSelected(SelectionEvent e) {
+                	File[] fileList = filter.filterUI();
+                	if (fileList != null) {
+                		for (int i = 0; i < fileList.length; i++) {
+                			try {
+                				filter.read(fileList[i]);
+                				filter.process();
+                				filter.export();
+                			} catch(IOException exc) {
+                				displayError(exc.getMessage());
+                			}
+                		}
+                	}
+            	}
+        	});
+        	grayedControls.add(filterButton);
+        }
     }
 
     @Override

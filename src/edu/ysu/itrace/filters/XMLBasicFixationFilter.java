@@ -5,7 +5,10 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.regex.Pattern;
 
+import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamConstants;
@@ -23,8 +26,30 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 	private String devUsername;
 	private String sessionID;
 	
+	private final String filterName = "XML Fixation Filter";
+	
 	private ArrayList<RawGaze> rawGazes;
 	private static final String EOL = System.getProperty("line.separator");
+	
+	@Override
+	public File[] filterUI() {
+		JFileChooser chooser = new JFileChooser();
+		FileNameExtensionFilter filter = new FileNameExtensionFilter(
+				"XML Files", "xml");
+		chooser.setFileFilter(filter);
+		chooser.setMultiSelectionEnabled(true);
+		int returnVal = chooser.showOpenDialog(null);
+		if(returnVal == JFileChooser.APPROVE_OPTION) {
+			return chooser.getSelectedFiles();
+		} else {
+			return null;
+		}
+	}
+	
+	@Override
+	public String getFilterName() {
+		return filterName;
+	}
 	
 	@Override
 	public void read(File file) throws IOException {
@@ -33,38 +58,44 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 			fileDir = new String(file.getParent());
 			String[] parts = file.getName().split("-");
 			devUsername = parts[2];
-			sessionID = parts[3] + "-" + parts[4] + "-" + parts[5].split(".")[0];
-						
-			if (file.exists()) {
-				try {
-					XMLInputFactory factory = XMLInputFactory.newInstance();
-					XMLStreamReader reader = factory.createXMLStreamReader(
-							new FileReader(file.getAbsolutePath()));
+			sessionID = parts[3] + "-" + parts[4] + "-" + parts[5].split(Pattern.quote("."))[0];
+			
+			//Read from file
+			if(file.getName().lastIndexOf(".") > 0) {
+				int i = file.getName().lastIndexOf(".");
+				if (file.getName().substring(i+1).equals("xml")) {
+					if (file.exists()) { System.out.println("here");
+						try {
+							XMLInputFactory factory = XMLInputFactory.newInstance();
+							XMLStreamReader reader = factory.createXMLStreamReader(
+									new FileReader(file.getAbsolutePath()));
 				
-					while (reader.hasNext()) {
-						int event = reader.next();
-						switch(event) {
-							case XMLStreamConstants.START_ELEMENT:
-								if (reader.getLocalName().equals("screen-size")) {
-									width = Integer.parseInt(reader.getAttributeValue(0));
-									height = Integer.parseInt(reader.getAttributeValue(1));
-									break;
-								} else if (reader.getLocalName().equals("response")) {
-									rawGazes.add(getRawGaze(reader));
-									break;
-								} else {
-									break;
+							while (reader.hasNext()) {
+								int event = reader.next();
+								switch(event) {
+									case XMLStreamConstants.START_ELEMENT:
+										if (reader.getLocalName().equals("screen-size")) {
+											width = Integer.parseInt(reader.getAttributeValue(0));
+											height = Integer.parseInt(reader.getAttributeValue(1));
+											break;
+										} else if (reader.getLocalName().equals("response")) {
+											rawGazes.add(getRawGaze(reader));
+											break;
+										} else {
+											break;
+										}
+									case XMLStreamConstants.START_DOCUMENT:
+										rawGazes = new ArrayList<RawGaze>();
+										break;
 								}
-							case XMLStreamConstants.START_DOCUMENT:
-								rawGazes = new ArrayList<RawGaze>();
-								break;
-						}
 						
+							}
+						} catch (XMLStreamException e) {
+							throw new IOException("Could not read in data." +
+									getFilterName() + ".");
+						}
 					}
-				} catch (XMLStreamException e) {
-					throw new IOException("Could not read in data." +
-							getFilterName() + ".");
-				} 
+				}
 			}
 		}
 	}
@@ -108,7 +139,7 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 	public void export() throws IOException {
 		if (getProcessedGazes() != null) {
 			File outFile = new File(fileDir + "/processed-gazes-"
-					+ devUsername + "-" + sessionID + ".json");
+					+ devUsername + "-" + sessionID + ".xml");
 				if (outFile.exists()) {
 					System.out.println("You cannot overwrite this file. If you "
 							+ "wish to continue, delete the file " + "manually.");
