@@ -1,4 +1,4 @@
-package edu.ysu.itrace.filters;
+package edu.ysu.itrace.filters.fixation;
 
 import java.io.File;
 import java.io.FileReader;
@@ -12,6 +12,8 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
+
+import edu.ysu.itrace.filters.RawGaze;
 
 
 public class JSONBasicFixationFilter extends BasicFixationFilter {

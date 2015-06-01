@@ -1,4 +1,4 @@
-package edu.ysu.itrace.filters;
+package edu.ysu.itrace.filters.fixation;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -15,6 +15,8 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
+
+import edu.ysu.itrace.filters.RawGaze;
 
 public class XMLBasicFixationFilter extends BasicFixationFilter {
 	

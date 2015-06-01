@@ -1,4 +1,6 @@
-package edu.ysu.itrace.filters;
+package edu.ysu.itrace.filters.fixation;
+
+import edu.ysu.itrace.filters.RawGaze;
 
 public class Fixation {
 	private RawGaze rawGaze;

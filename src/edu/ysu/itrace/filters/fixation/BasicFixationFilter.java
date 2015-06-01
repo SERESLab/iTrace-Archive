@@ -1,10 +1,13 @@
-package edu.ysu.itrace.filters;
+package edu.ysu.itrace.filters.fixation;
 
 
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import edu.ysu.itrace.filters.IFilter;
+import edu.ysu.itrace.filters.RawGaze;
 
 /**
  * Class that defines functionality needed for a post-processing 
