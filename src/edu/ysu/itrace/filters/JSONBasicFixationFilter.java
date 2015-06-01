@@ -137,9 +137,9 @@ public class JSONBasicFixationFilter extends BasicFixationFilter {
 		int lineBaseX = -1;
 		int line = -1;
 		int col = -1;
-		String hows = null;
-		String types = null;
-		String fullyQualifiedNames = null;
+		String hows = new String();
+		String types = new String();
+		String fullyQualifiedNames = new String();
 		int lineBaseY = -1;
 		
 		reader.beginObject();

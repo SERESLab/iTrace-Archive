@@ -28,7 +28,7 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 	
 	private final String filterName = "XML Fixation Filter";
 	
-	private ArrayList<RawGaze> rawGazes;
+	private ArrayList<RawGaze> rawGazes = new ArrayList<RawGaze>();
 	private static final String EOL = System.getProperty("line.separator");
 	
 	@Override
@@ -72,24 +72,19 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 				
 							while (reader.hasNext()) {
 								int event = reader.next();
-								switch(event) {
-									case XMLStreamConstants.START_ELEMENT:
-										if (reader.getLocalName().equals("screen-size")) {
-											width = Integer.parseInt(reader.getAttributeValue(0));
-											height = Integer.parseInt(reader.getAttributeValue(1));
-											break;
-										} else if (reader.getLocalName().equals("response")) {
-											rawGazes.add(getRawGaze(reader));
-											break;
-										} else {
-											break;
-										}
-									case XMLStreamConstants.START_DOCUMENT:
-										rawGazes = new ArrayList<RawGaze>();
-										break;
+								if (event == XMLStreamConstants.START_ELEMENT) {
+									if (reader.getLocalName().equals("screen-size")) {
+										width = Integer.parseInt(reader.getAttributeValue(0));
+										height = Integer.parseInt(reader.getAttributeValue(1));
+									} else if (reader.getLocalName().equals("response")) {
+										rawGazes.add(getRawGaze(reader));
+									} else {
+										//do nothing
+									}
 								}
 						
 							}
+							setRawGazes(rawGazes);
 						} catch (XMLStreamException e) {
 							throw new IOException("Could not read in data." +
 									getFilterName() + ".");
@@ -115,9 +110,9 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 		int lineBaseX = Integer.parseInt(reader.getAttributeValue(12));
 		int line = Integer.parseInt(reader.getAttributeValue(13));
 		int col = Integer.parseInt(reader.getAttributeValue(14));
-		String hows = null;
-		String types = null;
-		String fullyQualifiedNames = null;
+		String hows = new String();
+		String types = new String();
+		String fullyQualifiedNames = new String();
 		int lineBaseY = -1;
 		
 		if (reader.getAttributeCount() == 19) {
