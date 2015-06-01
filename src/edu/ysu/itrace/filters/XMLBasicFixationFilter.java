@@ -3,7 +3,6 @@ package edu.ysu.itrace.filters;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -13,10 +12,6 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
-
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonWriter;
-
 
 public class XMLBasicFixationFilter extends BasicFixationFilter {
 	
