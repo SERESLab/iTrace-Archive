@@ -94,6 +94,10 @@ public class SystemMouseTracker implements IEyeTracker {
                 throws Exception {
             //Do nothing.
         }
+        
+        protected void displayCalibrationStatus() {
+        	//Do nothing.
+        }
     }
 
     private LinkedBlockingQueue<Gaze> gazePoints
@@ -119,6 +123,7 @@ public class SystemMouseTracker implements IEyeTracker {
 
     public void calibrate() throws CalibrationException {
         calibrator.calibrate();
+        calibrator.displayCalibrationStatus();
     }
 
     public void startTracking() throws IOException {

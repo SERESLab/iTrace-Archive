@@ -1,11 +1,19 @@
 package edu.ysu.itrace.trackers;
 
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Toolkit;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Date;
 import java.util.concurrent.LinkedBlockingQueue;
+
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 
 import edu.ysu.itrace.*;
 import edu.ysu.itrace.exceptions.CalibrationException;
@@ -47,6 +55,25 @@ public class TobiiTracker implements IEyeTracker {
                 throws Exception {
             jniAddPoint(x, y);
         }
+        
+        protected void displayCalibrationStatus() {
+        	int[] points = jniGetCalibration();
+        	BufferedImage buffImage = new BufferedImage(
+        			300, 500, BufferedImage.TYPE_INT_RGB);
+        	
+        	for (int i = 0; i < points.length; i += 2) {
+        		buffImage.setRGB(points[i], points[i+1], Color.GREEN.getRGB());
+        	}
+        	
+        	JFrame calibFrame = new JFrame();
+        	calibFrame.getContentPane().setLayout(new FlowLayout());
+        	calibFrame.getContentPane().add(
+        			new JLabel(new ImageIcon(buffImage)));
+        	calibFrame.pack();
+        	calibFrame.setVisible(true);
+        	
+        	JOptionPane.showMessageDialog(calibFrame, "Calibration Status");
+        }
 
         private native void jniAddPoint(double x, double y)
                 throws RuntimeException, IOException;
@@ -54,6 +81,7 @@ public class TobiiTracker implements IEyeTracker {
                 IOException;
         private native void jniStopCalibration() throws RuntimeException,
                 IOException;
+        private native int[] jniGetCalibration();
     }
 
     private BackgroundThread bg_thread = null;
@@ -140,6 +168,7 @@ public class TobiiTracker implements IEyeTracker {
 
     public void calibrate() throws CalibrationException {
         calibrator.calibrate();
+        calibrator.displayCalibrationStatus();
     }
 
     public Gaze getGaze() {
