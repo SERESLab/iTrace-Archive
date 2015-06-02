@@ -95,7 +95,7 @@ public class SystemMouseTracker implements IEyeTracker {
             //Do nothing.
         }
         
-        protected void displayCalibrationStatus() {
+        protected void displayCalibrationStatus() throws Exception {
         	//Do nothing.
         }
     }
@@ -123,7 +123,11 @@ public class SystemMouseTracker implements IEyeTracker {
 
     public void calibrate() throws CalibrationException {
         calibrator.calibrate();
-        calibrator.displayCalibrationStatus();
+        try {
+        	calibrator.displayCalibrationStatus();
+        } catch (Exception e) {
+        	throw new CalibrationException("Cannot display calibration status!");
+        }
     }
 
     public void startTracking() throws IOException {

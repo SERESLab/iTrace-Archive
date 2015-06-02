@@ -56,7 +56,7 @@ public class TobiiTracker implements IEyeTracker {
             jniAddPoint(x, y);
         }
         
-        protected void displayCalibrationStatus() {
+        protected void displayCalibrationStatus() throws Exception {
         	int[] points = jniGetCalibration();
         	BufferedImage buffImage = new BufferedImage(
         			300, 500, BufferedImage.TYPE_INT_RGB);
@@ -81,7 +81,8 @@ public class TobiiTracker implements IEyeTracker {
                 IOException;
         private native void jniStopCalibration() throws RuntimeException,
                 IOException;
-        private native int[] jniGetCalibration();
+        private native int[] jniGetCalibration() throws RuntimeException,
+        		IOException;
     }
 
     private BackgroundThread bg_thread = null;
@@ -168,7 +169,11 @@ public class TobiiTracker implements IEyeTracker {
 
     public void calibrate() throws CalibrationException {
         calibrator.calibrate();
-        calibrator.displayCalibrationStatus();
+        try {
+        	calibrator.displayCalibrationStatus();
+        } catch (Exception e) {
+        	throw new CalibrationException("Cannot display calibration status!");
+        }
     }
 
     public Gaze getGaze() {
