@@ -319,9 +319,9 @@ JNIEXPORT void JNICALL
 	}
 }
 	
-	JNIEXPORT jintArray JNICALL
+JNIEXPORT jintArray JNICALL
 	Java_edu_ysu_itrace_trackers_TobiiTracker_00024Calibrator_jniGetCalibration
-	(JNIEnv* env, jobject obj)
+  	(JNIEnv *env, jobject obj)
 {
 	//Get native data from parent TobiiTracker
 	jfieldID jfid_parent = getFieldID(env, obj, "parent",
@@ -330,7 +330,7 @@ JNIEXPORT void JNICALL
 	{
 		throwJException(env, "java/lang/RuntimeException",
 			"Parent TobiiTracker not found.");
-		return;
+		return NULL;
 	}
 	jobject parent_tobii_tracker = env->GetObjectField(obj, jfid_parent);
 	TobiiNativeData* native_data = getTobiiNativeData(env, parent_tobii_tracker);
@@ -338,7 +338,7 @@ JNIEXPORT void JNICALL
 	try
 	{
 		//Get calibration
-		Calibration::pointer_r calibrationData =
+		Calibration::pointer_t calibrationData =
 				native_data->eye_tracker->getCalibration();
 		
 		Calibration::plot_data_vector_t calibrationPlotData =
@@ -346,15 +346,16 @@ JNIEXPORT void JNICALL
 		
 		int itemCount = static_cast<int>(calibrationPlotData->size());
 		
-		jintArray calibrationPoints = env->NewIntArray(env, 2 * itemCount);  // allocate
+		jintArray calibrationPoints = env->NewIntArray(2 * itemCount);  // allocate
 		
    		if (NULL == calibrationPoints) return NULL;
    		
    		jint *points = env->GetIntArrayElements(calibrationPoints, NULL);
    		
+   		CalibrationPlotItem item;
    		for (int i = 0; i < itemCount; i++)
     	{
-        	Calibration::CalibrationPlotItem item = calibrationPlotData->at(i);
+        	item = calibrationPlotData->at(i);
         	points[i] = item.truePosition.x;
         	points[itemCount+i] = item.truePosition.y;
         }
@@ -365,6 +366,6 @@ JNIEXPORT void JNICALL
 	catch (EyeTrackerException e)
 	{
 		throwJException(env, "java/io/IOException", e.what());
-		return;
+		return NULL;
 	}
 }
