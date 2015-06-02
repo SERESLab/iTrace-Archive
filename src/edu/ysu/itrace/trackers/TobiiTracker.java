@@ -61,8 +61,8 @@ public class TobiiTracker implements IEyeTracker {
         	BufferedImage buffImage = new BufferedImage(
         			300, 500, BufferedImage.TYPE_INT_RGB);
         	
-        	for (int i = 0; i < points.length; i += 2) {
-        		buffImage.setRGB(points[i], points[i+1], Color.GREEN.getRGB());
+        	for (int i = 0; i < points.length / 2; i++) {
+        		buffImage.setRGB(points[i], points[points.length/2+i], Color.GREEN.getRGB());
         	}
         	
         	JFrame calibFrame = new JFrame();
