@@ -183,8 +183,30 @@ public class ControlView extends ViewPart implements IPartListener2,
         parent.setLayout(new RowLayout());
 
         final Composite buttonComposite = new Composite(parent, SWT.NONE);
-        buttonComposite.setLayout(new GridLayout(2, false));
+        buttonComposite.setLayout(new GridLayout(3, false));
 
+        Button calibrateButton = new Button(buttonComposite, SWT.PUSH);
+        calibrateButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true,
+                true, 1, 1));
+        calibrateButton.setText("Calibrate");
+        calibrateButton.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                requestTracker();
+                if (tracker != null) {
+                    try {
+                        tracker.calibrate();
+                    } catch (CalibrationException e1) {
+                        displayError("Failed to calibrate. Reason: "
+                                + e1.getMessage());
+                    }
+                } else {
+                    // If tracker is none, requestTracker() would have already
+                    // raised an error.
+                }
+            }
+        });
+        
         final Button startButton = new Button(buttonComposite, SWT.PUSH);
         startButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true,
                 1, 1));
@@ -207,27 +229,6 @@ public class ControlView extends ViewPart implements IPartListener2,
             }
         });
         
-        Button calibrateButton = new Button(buttonComposite, SWT.PUSH);
-        calibrateButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true,
-                true, 1, 1));
-        calibrateButton.setText("Calibrate");
-        calibrateButton.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                requestTracker();
-                if (tracker != null) {
-                    try {
-                        tracker.calibrate();
-                    } catch (CalibrationException e1) {
-                        displayError("Failed to calibrate. Reason: "
-                                + e1.getMessage());
-                    }
-                } else {
-                    // If tracker is none, requestTracker() would have already
-                    // raised an error.
-                }
-            }
-        });
         /*
         final Button displayStatus = new Button(buttonComposite, SWT.PUSH);
         displayStatus.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true,
@@ -243,10 +244,6 @@ public class ControlView extends ViewPart implements IPartListener2,
                 }
             }
         });*/
-        
-        //Session info Composite
-        final Composite infoComposite = new Composite(parent, SWT.NONE);
-        infoComposite.setLayout(new GridLayout(1, false));
 
         final String DONT_CHANGE_THAT_MSG =
                 "Don't change this value until "
@@ -389,7 +386,7 @@ public class ControlView extends ViewPart implements IPartListener2,
         }
         
         //Session Info Button
-        final Button infoButton = new Button(infoComposite, SWT.PUSH);
+        final Button infoButton = new Button(buttonComposite, SWT.PUSH);
         infoButton.setText("Session Info");
         infoButton.addSelectionListener(new SelectionAdapter() {
             @Override
