@@ -104,9 +104,9 @@ JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_TobiiTracker_00024Calibrator
 /*
  * Class:     edu_ysu_itrace_trackers_TobiiTracker_Calibrator
  * Method:    jniGetCalibration
- * Signature: ()[I
+ * Signature: ()[D
  */
-JNIEXPORT jintArray JNICALL Java_edu_ysu_itrace_trackers_TobiiTracker_00024Calibrator_jniGetCalibration
+JNIEXPORT jdoubleArray JNICALL Java_edu_ysu_itrace_trackers_TobiiTracker_00024Calibrator_jniGetCalibration
   (JNIEnv *, jobject);
 
 #ifdef __cplusplus

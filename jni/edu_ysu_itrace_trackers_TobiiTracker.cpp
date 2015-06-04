@@ -319,7 +319,7 @@ JNIEXPORT void JNICALL
 	}
 }
 	
-JNIEXPORT jintArray JNICALL
+JNIEXPORT jdoubleArray JNICALL
 	Java_edu_ysu_itrace_trackers_TobiiTracker_00024Calibrator_jniGetCalibration
   	(JNIEnv *env, jobject obj)
 {
@@ -341,25 +341,26 @@ JNIEXPORT jintArray JNICALL
 		Calibration::pointer_t calibrationData =
 				native_data->eye_tracker->getCalibration();
 		
-		Calibration::plot_data_vector_t calibrationPlotData =
-				calibrationData->getPlotData();
+		Calibration::plot_data_vector_t calibrationPlotData = calibrationData->getPlotData();
 		
 		int itemCount = static_cast<int>(calibrationPlotData->size());
 		
-		jintArray calibrationPoints = env->NewIntArray(2 * itemCount);  // allocate
+		jdoubleArray calibrationPoints = env->NewDoubleArray(4 * itemCount);  // allocate
 		
    		if (NULL == calibrationPoints) return NULL;
    		
-   		jint *points = env->GetIntArrayElements(calibrationPoints, NULL);
+   		jdouble *points = env->GetDoubleArrayElements(calibrationPoints, 0);
    		
    		CalibrationPlotItem item;
    		for (int i = 0; i < itemCount; i++)
     	{
         	item = calibrationPlotData->at(i);
-        	points[i] = item.truePosition.x;
-        	points[itemCount+i] = item.truePosition.y;
+        	points[i] = item.leftMapPosition.x;
+        	points[itemCount+i] = item.leftMapPosition.y;
+        	points[2*itemCount+i] = item.rightMapPosition.x;
+        	points[3*itemCount+i] = item.rightMapPosition.y;
         }
-        env->ReleaseIntArrayElements(calibrationPoints, points, NULL);
+        env->ReleaseDoubleArrayElements(calibrationPoints, points, 0);
         
         return calibrationPoints;
 	}

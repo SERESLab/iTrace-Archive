@@ -57,14 +57,31 @@ public class TobiiTracker implements IEyeTracker {
         }
         
         protected void displayCalibrationStatus() throws Exception {
-        	int[] points = jniGetCalibration();
-        	BufferedImage buffImage = new BufferedImage(
-        			300, 500, BufferedImage.TYPE_INT_RGB);
-        	
-        	for (int i = 0; i < points.length / 2; i++) {
-        		buffImage.setRGB(points[i], points[points.length/2+i], Color.GREEN.getRGB());
+        	double[] pointsNormalized = jniGetCalibration();
+        	int itemCount = pointsNormalized.length/4;
+
+        	for (int i = 0; i < pointsNormalized.length; i++) {
+        		if (pointsNormalized[i] < 0.0001) {
+        			pointsNormalized[i] = 0.0001;
+        		} else if (pointsNormalized[i] > .9999) {
+        			pointsNormalized[i] = .9999;
+        		} else {
+        			//do nothing
+        		}
         	}
         	
+        	BufferedImage buffImage = new BufferedImage(
+        			500, 300, BufferedImage.TYPE_INT_RGB);
+
+        	for (int j = 0; j < itemCount; j++) {
+        		buffImage.setRGB((int)(pointsNormalized[j]*500),
+        				(int)(pointsNormalized[itemCount+j]*300),
+        				Color.GREEN.getRGB()); //left eye
+        		buffImage.setRGB((int)(pointsNormalized[2*itemCount+j]*500),
+        				(int)(pointsNormalized[3*itemCount+j]*300),
+        				Color.RED.getRGB()); //right eye
+        	}
+
         	JFrame calibFrame = new JFrame();
         	calibFrame.getContentPane().setLayout(new FlowLayout());
         	calibFrame.getContentPane().add(
@@ -81,7 +98,7 @@ public class TobiiTracker implements IEyeTracker {
                 IOException;
         private native void jniStopCalibration() throws RuntimeException,
                 IOException;
-        private native int[] jniGetCalibration() throws RuntimeException,
+        private native double[] jniGetCalibration() throws RuntimeException,
         		IOException;
     }
 

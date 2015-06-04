@@ -20,6 +20,7 @@ Here are the instructions for building the Tobii Tracker extension.
  - Download from: http://www.tobii.com/en/eye-tracking-research/global/landingpages/analysis-sdk-30/
  - Extract all libs in CPP to your MinGW lib/ directory and all includes in CPP
    to your MinGW include/ directory
+ - Use the 32bit version
 
 ### Building TobiiTracker
  - Create a directory build/ within this directory.
@@ -28,5 +29,8 @@ Here are the instructions for building the Tobii Tracker extension.
    - Naturally, if boost is installed elsewhere, change the above Boost paths
    - You may need to use CMake's -G flag to specify what type of build files to
      create
+ - Example:
+   - cmake .. -DBoost_DIR=C:Users/bwalters/Downloads/boost_1_40_0 -DBoost_INCLUDE_DIR=C:Users/bwalters/Downloads/boost_1_40_0 -G "MinGW Makefiles"
+   - mingw32-make
  - Copy the .so/.dll file created by make to the project root as
    libTobiiTracker.so on UNIX systems or TobiiTracker.dll on NT systems.
