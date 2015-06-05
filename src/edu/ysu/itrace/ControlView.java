@@ -421,7 +421,7 @@ public class ControlView extends ViewPart implements IPartListener2,
         final Composite filterComposite = new Composite(parent, SWT.NONE);
         filterComposite.setLayout(new GridLayout(1, false));
         
-        for (IFilter filter: availableFilters) {
+        for (final IFilter filter: availableFilters) {
         	final Button filterButton =
         			new Button(filterComposite, SWT.PUSH);
         	filterButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true,
