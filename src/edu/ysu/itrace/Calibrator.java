@@ -180,6 +180,7 @@ public abstract class Calibrator extends JFrame {
     protected abstract void stopCalibration() throws Exception;
     protected abstract void useCalibrationPoint(double x, double y)
             throws Exception;
+    protected abstract void displayCalibrationStatus() throws Exception;
 
     public void moveCrosshair(int screenX, int screenY) {
         crosshairWindow.setLocation(screenX, screenY);

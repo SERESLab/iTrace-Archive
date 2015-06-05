@@ -1,11 +1,19 @@
 package edu.ysu.itrace.trackers;
 
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Toolkit;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Date;
 import java.util.concurrent.LinkedBlockingQueue;
+
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 
 import edu.ysu.itrace.*;
 import edu.ysu.itrace.exceptions.CalibrationException;
@@ -47,6 +55,42 @@ public class TobiiTracker implements IEyeTracker {
                 throws Exception {
             jniAddPoint(x, y);
         }
+        
+        protected void displayCalibrationStatus() throws Exception {
+        	double[] pointsNormalized = jniGetCalibration();
+        	int itemCount = pointsNormalized.length/4;
+
+        	for (int i = 0; i < pointsNormalized.length; i++) {
+        		if (pointsNormalized[i] < 0.0001) {
+        			pointsNormalized[i] = 0.0001;
+        		} else if (pointsNormalized[i] > .9999) {
+        			pointsNormalized[i] = .9999;
+        		} else {
+        			//do nothing
+        		}
+        	}
+        	
+        	BufferedImage buffImage = new BufferedImage(
+        			500, 300, BufferedImage.TYPE_INT_RGB);
+
+        	for (int j = 0; j < itemCount; j++) {
+        		buffImage.setRGB((int)(pointsNormalized[j]*500),
+        				(int)(pointsNormalized[itemCount+j]*300),
+        				Color.GREEN.getRGB()); //left eye
+        		buffImage.setRGB((int)(pointsNormalized[2*itemCount+j]*500),
+        				(int)(pointsNormalized[3*itemCount+j]*300),
+        				Color.RED.getRGB()); //right eye
+        	}
+
+        	JFrame calibFrame = new JFrame();
+        	calibFrame.getContentPane().setLayout(new FlowLayout());
+        	calibFrame.getContentPane().add(
+        			new JLabel(new ImageIcon(buffImage)));
+        	calibFrame.pack();
+        	calibFrame.setVisible(true);
+        	
+        	JOptionPane.showMessageDialog(calibFrame, "Calibration Status");
+        }
 
         private native void jniAddPoint(double x, double y)
                 throws RuntimeException, IOException;
@@ -54,6 +98,8 @@ public class TobiiTracker implements IEyeTracker {
                 IOException;
         private native void jniStopCalibration() throws RuntimeException,
                 IOException;
+        private native double[] jniGetCalibration() throws RuntimeException,
+        		IOException;
     }
 
     private BackgroundThread bg_thread = null;
@@ -140,6 +186,11 @@ public class TobiiTracker implements IEyeTracker {
 
     public void calibrate() throws CalibrationException {
         calibrator.calibrate();
+        try {
+        	calibrator.displayCalibrationStatus();
+        } catch (Exception e) {
+        	throw new CalibrationException("Cannot display calibration status!");
+        }
     }
 
     public Gaze getGaze() {
