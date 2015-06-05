@@ -5,6 +5,7 @@ import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.IWorkbenchPartReference;
 
 import edu.ysu.itrace.gaze.handlers.StyledTextGazeHandler;
+import edu.ysu.itrace.gaze.handlers.WorkbenchPartGazeHandler;
 
 /**
  * Creates IGazeHandlers from objects within a workbench part.
@@ -21,6 +22,8 @@ public class GazeHandlerFactory {
         if (target instanceof StyledText &&
                 partRef instanceof IEditorReference) {
             return new StyledTextGazeHandler(target, partRef);
+        } else if (partRef instanceof IWorkbenchPartReference) {
+            return new WorkbenchPartGazeHandler(partRef);
         }
 
         return null;
