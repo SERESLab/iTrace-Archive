@@ -24,6 +24,7 @@ public abstract class BasicFixationFilter implements IFilter {
 	private int r = 5; //sliding window
 	private double threshold =  35 / (16.6 * r);
 	private double radius = 35;
+	private long durationThresh = 60;
 
 	//Getters
 	/**
@@ -61,6 +62,13 @@ public abstract class BasicFixationFilter implements IFilter {
 		return radius;
 	}
 	
+	/**
+	 * Return the Duration Threshold
+	 */
+	public long getDurationThresh() {
+		return durationThresh;
+	}
+	
 	//Setters
 	/**
 	 * Set the raw gazes as an array list of gazes.
@@ -88,6 +96,13 @@ public abstract class BasicFixationFilter implements IFilter {
 	 */
 	protected void setRadius(double radius) {
 		this.radius = radius;
+	}
+	
+	/**
+	 * Set the duration threshold
+	 */
+	protected void setDurationThresh(long durationThresh) {
+		this.durationThresh = durationThresh;
 	}
 	
 	//Computational/Processing functions
@@ -287,6 +302,17 @@ public abstract class BasicFixationFilter implements IFilter {
 		Fixation fixation = new Fixation(processedGaze, duration);
 		
 		return fixation;
+	}
+	
+	/**
+	 * Removed gazes below a certain duration threshold
+	 */
+	public void removeShortFixations() {
+		for (int i = 0; i < processedGazes.size(); i++) {
+			if (processedGazes.get(i).getDuration() < durationThresh) {
+				processedGazes.remove(i);
+			}
+		}
 	}
 	
 	//Overridden function
