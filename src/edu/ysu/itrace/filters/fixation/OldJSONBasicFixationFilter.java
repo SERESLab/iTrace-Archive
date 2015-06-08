@@ -16,7 +16,7 @@ import com.google.gson.stream.JsonWriter;
 import edu.ysu.itrace.filters.RawGaze;
 
 
-public class JSONBasicFixationFilter extends BasicFixationFilter {
+public class OldJSONBasicFixationFilter extends BasicFixationFilter {
 	
 	//log file header variables
 	private int width;
@@ -26,7 +26,7 @@ public class JSONBasicFixationFilter extends BasicFixationFilter {
 	private String devUsername;
 	private String sessionID;
 	
-	private final String filterName = "JSON Fixation Filter";
+	private final String filterName = "Old JSON Fixation Filter";
 	
 	@Override
 	public File[] filterUI() {
@@ -55,7 +55,7 @@ public class JSONBasicFixationFilter extends BasicFixationFilter {
 			fileDir = new String(file.getParent());
 			String[] parts = file.getName().split("-");
 			devUsername = parts[2];
-			sessionID = parts[3] + "-" + parts[4] + "-" + parts[5].split(Pattern.quote("."))[0];
+			sessionID = parts[3] + "-" + parts[4].split(Pattern.quote("."))[0];
 				
 			//Read from file
 			if(file.getName().lastIndexOf(".") > 0) {

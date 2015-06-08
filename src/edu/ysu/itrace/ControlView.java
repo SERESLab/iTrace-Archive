@@ -43,8 +43,8 @@ import org.eclipse.ui.progress.UIJob;
 import edu.ysu.itrace.exceptions.CalibrationException;
 import edu.ysu.itrace.exceptions.EyeTrackerConnectException;
 import edu.ysu.itrace.filters.IFilter;
-import edu.ysu.itrace.filters.fixation.JSONBasicFixationFilter;
-import edu.ysu.itrace.filters.fixation.XMLBasicFixationFilter;
+import edu.ysu.itrace.filters.fixation.OldJSONBasicFixationFilter;
+import edu.ysu.itrace.filters.fixation.OldXMLBasicFixationFilter;
 import edu.ysu.itrace.gaze.IGazeHandler;
 import edu.ysu.itrace.gaze.IGazeResponse;
 import edu.ysu.itrace.solvers.ISolver;
@@ -408,11 +408,11 @@ public class ControlView extends ViewPart implements IPartListener2,
         grayedControls.add(infoButton);
         
         //Configure Filters Here
-        JSONBasicFixationFilter jsonBFFilter =
-        		new JSONBasicFixationFilter();
+        OldJSONBasicFixationFilter jsonBFFilter =
+        		new OldJSONBasicFixationFilter();
         availableFilters.add(jsonBFFilter);
-        XMLBasicFixationFilter xmlBFFilter =
-        		new XMLBasicFixationFilter();
+        OldXMLBasicFixationFilter xmlBFFilter =
+        		new OldXMLBasicFixationFilter();
         availableFilters.add(xmlBFFilter);
         
         final Composite filterComposite = new Composite(parent, SWT.NONE);

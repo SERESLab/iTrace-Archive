@@ -18,7 +18,7 @@ import javax.xml.stream.XMLStreamWriter;
 
 import edu.ysu.itrace.filters.RawGaze;
 
-public class XMLBasicFixationFilter extends BasicFixationFilter {
+public class OldXMLBasicFixationFilter extends BasicFixationFilter {
 	
 	//log file header variables
 	private int width;
@@ -28,7 +28,7 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 	private String devUsername;
 	private String sessionID;
 	
-	private final String filterName = "XML Fixation Filter";
+	private final String filterName = "Old XML Fixation Filter";
 	
 	private ArrayList<RawGaze> rawGazes = new ArrayList<RawGaze>();
 	private static final String EOL = System.getProperty("line.separator");
@@ -60,7 +60,7 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 			fileDir = new String(file.getParent());
 			String[] parts = file.getName().split("-");
 			devUsername = parts[2];
-			sessionID = parts[3] + "-" + parts[4] + "-" + parts[5].split(Pattern.quote("."))[0];
+			sessionID = parts[3] + "-" + parts[4].split(Pattern.quote("."))[0];
 			
 			//Read from file
 			if(file.getName().lastIndexOf(".") > 0) {
