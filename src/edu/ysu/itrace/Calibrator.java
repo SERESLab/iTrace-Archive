@@ -9,8 +9,8 @@ import java.awt.GridLayout;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.io.File;
-
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 
@@ -165,8 +165,10 @@ public abstract class Calibrator extends JFrame {
         //Eclipse
         if (bundle != null) {
             URL fileUrl = bundle.getEntry("res/" + resourceName);
-            result = ImageIO.read(
-                    new File(FileLocator.resolve(fileUrl).toURI()));
+            URL url = FileLocator.resolve(fileUrl);
+            URI uri = new URI(url.getProtocol(), url.getUserInfo(), url.getHost(),
+            		url.getPort(), url.getPath(), url.getQuery(), url.getRef());
+            result = ImageIO.read(new File(uri));
         //No eclipse
         } else {
             result = ImageIO.read(new File("res/" + resourceName));
@@ -178,6 +180,7 @@ public abstract class Calibrator extends JFrame {
     protected abstract void stopCalibration() throws Exception;
     protected abstract void useCalibrationPoint(double x, double y)
             throws Exception;
+    protected abstract void displayCalibrationStatus() throws Exception;
 
     public void moveCrosshair(int screenX, int screenY) {
         crosshairWindow.setLocation(screenX, screenY);

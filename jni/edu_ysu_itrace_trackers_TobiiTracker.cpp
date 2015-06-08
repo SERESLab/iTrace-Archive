@@ -318,3 +318,55 @@ JNIEXPORT void JNICALL
 		return;
 	}
 }
+	
+JNIEXPORT jdoubleArray JNICALL
+	Java_edu_ysu_itrace_trackers_TobiiTracker_00024Calibrator_jniGetCalibration
+  	(JNIEnv *env, jobject obj)
+{
+	//Get native data from parent TobiiTracker
+	jfieldID jfid_parent = getFieldID(env, obj, "parent",
+		"Ledu/ysu/itrace/trackers/TobiiTracker;");
+	if (jfid_parent == NULL)
+	{
+		throwJException(env, "java/lang/RuntimeException",
+			"Parent TobiiTracker not found.");
+		return NULL;
+	}
+	jobject parent_tobii_tracker = env->GetObjectField(obj, jfid_parent);
+	TobiiNativeData* native_data = getTobiiNativeData(env, parent_tobii_tracker);
+
+	try
+	{
+		//Get calibration
+		Calibration::pointer_t calibrationData =
+				native_data->eye_tracker->getCalibration();
+		
+		Calibration::plot_data_vector_t calibrationPlotData = calibrationData->getPlotData();
+		
+		int itemCount = static_cast<int>(calibrationPlotData->size());
+		
+		jdoubleArray calibrationPoints = env->NewDoubleArray(4 * itemCount);  // allocate
+		
+   		if (NULL == calibrationPoints) return NULL;
+   		
+   		jdouble *points = env->GetDoubleArrayElements(calibrationPoints, 0);
+   		
+   		CalibrationPlotItem item;
+   		for (int i = 0; i < itemCount; i++)
+    	{
+        	item = calibrationPlotData->at(i);
+        	points[i] = item.leftMapPosition.x;
+        	points[itemCount+i] = item.leftMapPosition.y;
+        	points[2*itemCount+i] = item.rightMapPosition.x;
+        	points[3*itemCount+i] = item.rightMapPosition.y;
+        }
+        env->ReleaseDoubleArrayElements(calibrationPoints, points, 0);
+        
+        return calibrationPoints;
+	}
+	catch (EyeTrackerException e)
+	{
+		throwJException(env, "java/io/IOException", e.what());
+		return NULL;
+	}
+}

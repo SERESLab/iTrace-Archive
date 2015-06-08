@@ -53,7 +53,7 @@ public class EyeStatusView extends Window {
         getShell().addShellListener(new ShellListener() {
             public void shellActivated(ShellEvent e) {
                 //TODO: Handle none case.
-                gazeQueue = transport.createClient().some();
+                gazeQueue = transport.createClient();
             }
 
             public void shellClosed(ShellEvent e) {

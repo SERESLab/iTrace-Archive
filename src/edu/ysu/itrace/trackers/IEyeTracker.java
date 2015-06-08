@@ -1,6 +1,8 @@
-package edu.ysu.itrace;
+package edu.ysu.itrace.trackers;
 
 import java.io.IOException;
+
+import edu.ysu.itrace.Gaze;
 import edu.ysu.itrace.exceptions.CalibrationException;
 
 public interface IEyeTracker {

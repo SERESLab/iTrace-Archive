@@ -5,13 +5,15 @@ import java.awt.Toolkit;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Date;
-import java.text.SimpleDateFormat;
+
+import javax.swing.BoxLayout;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.UIManager;
 
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.jface.dialogs.InputDialog;
-import org.eclipse.jface.window.Window;
-import org.eclipse.swt.widgets.Shell;
 
 import com.google.gson.stream.JsonWriter;
 
@@ -25,22 +27,13 @@ import edu.ysu.itrace.gaze.IStyledTextGazeResponse;
 public class JSONGazeExportSolver implements IFileExportSolver {
     private JsonWriter responseWriter;
     private File outFile;
-    private String filenamePattern = "'gaze-responses-'yyyyMMdd'T'HHmmss','SSSSZ'.json'";
+    private String filename = "gaze-responses-USERNAME"
+    		+ "-yyMMddTHHmmss-SSSS-Z.json";
     private Dimension screenRect;
-    private Shell parent;
+    private String sessionID;
 
-    public JSONGazeExportSolver(Shell parent) {
-        this.parent = parent;
-    }
-
-    @Override
-    public String getFilenamePattern() {
-        return filenamePattern;
-    }
-
-    @Override
-    public void setFilenamePattern(String filenamePattern) {
-        this.filenamePattern = filenamePattern;
+    public JSONGazeExportSolver() {
+    	UIManager.put("swing.boldMetal", new Boolean(false)); //make UI font plain
     }
 
     @Override
@@ -186,15 +179,18 @@ public class JSONGazeExportSolver implements IFileExportSolver {
     }
 
     @Override
+    public void config(String sessionID, String devUsername) {
+    	filename = "gaze-responses-" + devUsername +
+    			"-" + sessionID + ".json";
+    	this.sessionID = sessionID;
+    }
+    
+    @Override
     public String getFilename() {
-        String workspaceLocation = ResourcesPlugin.getWorkspace().getRoot()
-                .getLocation().toString();
-        try {
-            SimpleDateFormat formatter = new SimpleDateFormat(filenamePattern);
-            return workspaceLocation + "/" + formatter.format(new Date());
-        } catch (IllegalArgumentException e) {
-            return workspaceLocation + "/" + filenamePattern;
-        }
+        String workspaceLocation =
+                ResourcesPlugin.getWorkspace().getRoot().getLocation()
+                        .toString();
+        return workspaceLocation + "/" + sessionID + "/" + filename;
     }
 
     @Override
@@ -203,12 +199,21 @@ public class JSONGazeExportSolver implements IFileExportSolver {
     }
 
     @Override
-    public void config() {
-        final InputDialog configDialog = new InputDialog(parent, friendlyName()
-                + " Configuration", "Export Filename Pattern",
-                getFilenamePattern(), null);
-        if (configDialog.open() == Window.OK) {
-            setFilenamePattern(configDialog.getValue());
-        }
+    public void displayExportFile() {
+    	JTextField displayVal = new JTextField(filename);
+    	displayVal.setEditable(false);
+    	
+    	JPanel displayPanel = new JPanel();
+    	displayPanel.setLayout(new BoxLayout(displayPanel, BoxLayout.Y_AXIS)); //vertically align
+    	displayPanel.add(new JLabel("Export Filename"));
+    	displayPanel.add(displayVal);
+    	displayPanel.setPreferredSize(new Dimension(400,40)); //resize appropriately
+    	
+    	final int displayDialog = JOptionPane.showConfirmDialog(null, displayPanel, 
+    			friendlyName() + " Display", JOptionPane.OK_CANCEL_OPTION,
+    			JOptionPane.PLAIN_MESSAGE);
+    	if (displayDialog == JOptionPane.OK_OPTION) {
+    		//do nothing
+    	}
     }
 }

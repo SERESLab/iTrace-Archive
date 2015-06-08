@@ -1,6 +1,5 @@
 package edu.ysu.itrace.gaze;
 
-import org.eclipse.draw2d.FigureCanvas;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.IWorkbenchPartReference;
