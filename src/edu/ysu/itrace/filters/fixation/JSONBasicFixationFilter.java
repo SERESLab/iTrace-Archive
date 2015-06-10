@@ -13,11 +13,9 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
-import edu.ysu.itrace.filters.OldRawGaze;
+import edu.ysu.itrace.filters.NewRawGaze;
 
-
-public class OldJSONBasicFixationFilter extends BasicFixationFilter {
-	
+public class JSONBasicFixationFilter extends BasicFixationFilter {
 	//log file header variables
 	private int width;
 	private int height;
@@ -26,7 +24,7 @@ public class OldJSONBasicFixationFilter extends BasicFixationFilter {
 	private String devUsername;
 	private String sessionID;
 	
-	private final String filterName = "Old JSON Fixation Filter";
+	private final String filterName = "JSON Fixation Filter";
 	
 	@Override
 	public File[] filterUI() {
@@ -42,7 +40,7 @@ public class OldJSONBasicFixationFilter extends BasicFixationFilter {
 			return null;
 		}
 	}
-	
+		
 	@Override
 	public String getFilterName() {
 		return filterName;
@@ -66,7 +64,7 @@ public class OldJSONBasicFixationFilter extends BasicFixationFilter {
 						try {
 							JsonReader reader = new JsonReader(new FileReader(file.getAbsolutePath()));
 							reader.beginObject();
-				
+					
 							while (reader.hasNext()) {
 								String name = reader.nextName();
 					
@@ -115,7 +113,7 @@ public class OldJSONBasicFixationFilter extends BasicFixationFilter {
 	}
 	
 	public void setRawGazes(JsonReader reader) throws IOException {
-		ArrayList<OldRawGaze> rawGazes = new ArrayList<OldRawGaze>();
+		ArrayList<RawGaze> rawGazes = new ArrayList<RawGaze>();
 		reader.beginArray();
 		while (reader.hasNext()) {
 			rawGazes.add(getRawGaze(reader));
@@ -124,7 +122,7 @@ public class OldJSONBasicFixationFilter extends BasicFixationFilter {
 		setRawGazes(rawGazes);
 	}
 	
-	public OldRawGaze getRawGaze(JsonReader reader) throws IOException {
+	public RawGaze getRawGaze(JsonReader reader) throws IOException {
 		String file = null;
 		String type = null;
 		double x = -1;
@@ -188,7 +186,7 @@ public class OldJSONBasicFixationFilter extends BasicFixationFilter {
 			}
 		}
 		reader.endObject();
-		return new OldRawGaze(file, type, x, y, leftValidity, rightValidity,
+		return new RawGaze(file, type, x, y, leftValidity, rightValidity,
 				leftPupilDiam, rightPupilDiam, trackerTime, systemTime,
 				nanoTime, lineBaseX, line, col, hows, types, fullyQualifiedNames,
 				lineBaseY);

@@ -7,14 +7,14 @@ import java.util.Arrays;
 import java.util.List;
 
 import edu.ysu.itrace.filters.IFilter;
-import edu.ysu.itrace.filters.RawGaze;
+import edu.ysu.itrace.filters.OldRawGaze;
 
 /**
  * Class that defines functionality needed for a post-processing 
  * algorithm to find fixations in raw gaze data
  */
 public abstract class BasicFixationFilter implements IFilter {
-	private ArrayList<RawGaze> rawGazes;
+	private ArrayList<OldRawGaze> rawGazes;
 	private ArrayList<Fixation> processedGazes =
 			new ArrayList<Fixation>();
 	
@@ -30,7 +30,7 @@ public abstract class BasicFixationFilter implements IFilter {
 	/**
 	 * Return the raw gazes as an array list.
 	 */
-	public ArrayList<RawGaze> getRawGazes() {
+	public ArrayList<OldRawGaze> getRawGazes() {
 		return rawGazes;
 	}
 	
@@ -73,7 +73,7 @@ public abstract class BasicFixationFilter implements IFilter {
 	/**
 	 * Set the raw gazes as an array list of gazes.
 	 */
-	protected void setRawGazes(ArrayList<RawGaze> rawGazes) {
+	protected void setRawGazes(ArrayList<OldRawGaze> rawGazes) {
 		this.rawGazes = rawGazes;
 	}
 	
@@ -111,7 +111,7 @@ public abstract class BasicFixationFilter implements IFilter {
 	 */
 	public void interpolate() {
 		if (rawGazes != null) {
-			RawGaze lastPosition = rawGazes.get(0);
+			OldRawGaze lastPosition = rawGazes.get(0);
 			for (int i = 0; i < rawGazes.size(); i++) {
 				if (rawGazes.get(i).getLeftValid() == 1 ||
 						rawGazes.get(i).getRightValid() == 1) {
@@ -292,8 +292,8 @@ public abstract class BasicFixationFilter implements IFilter {
 				rawGazes.get(iStart).getSystemTime();
 		
 		//Create the new processed fixation
-		RawGaze rawGaze = rawGazes.get(iStart);
-		RawGaze processedGaze = new RawGaze(rawGaze.getFile(), rawGaze.getType(),
+		OldRawGaze rawGaze = rawGazes.get(iStart);
+		OldRawGaze processedGaze = new OldRawGaze(rawGaze.getFile(), rawGaze.getType(),
 				medianX, medianY, 1, 1, leftPupilDiam, rightPupilDiam,
 				rawGaze.getTrackerTime(), rawGaze.getSystemTime(),
 				rawGaze.getNanoTime(), rawGaze.getLineBaseX(), rawGaze.getLine(),

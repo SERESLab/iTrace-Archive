@@ -1,17 +1,17 @@
 package edu.ysu.itrace.filters.fixation;
 
-import edu.ysu.itrace.filters.RawGaze;
+import edu.ysu.itrace.filters.OldRawGaze;
 
 public class Fixation {
-	private RawGaze rawGaze;
+	private OldRawGaze rawGaze;
 	private long duration;
 	
-	public Fixation(RawGaze rawGaze, long duration) {
+	public Fixation(OldRawGaze rawGaze, long duration) {
 		this.rawGaze = rawGaze;
 		this.duration = duration;
 	}
 	
-	public RawGaze getRawGaze() {
+	public OldRawGaze getRawGaze() {
 		return rawGaze;
 	}
 	

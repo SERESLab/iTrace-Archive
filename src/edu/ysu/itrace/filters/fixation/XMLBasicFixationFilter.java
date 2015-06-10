@@ -16,9 +16,9 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
 
-import edu.ysu.itrace.filters.OldRawGaze;
+import edu.ysu.itrace.filters.RawGaze;
 
-public class OldXMLBasicFixationFilter extends BasicFixationFilter {
+public class XMLBasicFixationFilter extends BasicFixationFilter {
 	
 	//log file header variables
 	private int width;
@@ -28,9 +28,9 @@ public class OldXMLBasicFixationFilter extends BasicFixationFilter {
 	private String devUsername;
 	private String sessionID;
 	
-	private final String filterName = "Old XML Fixation Filter";
+	private final String filterName = "XML Fixation Filter";
 	
-	private ArrayList<OldRawGaze> rawGazes = new ArrayList<OldRawGaze>();
+	private ArrayList<RawGaze> rawGazes = new ArrayList<RawGaze>();
 	private static final String EOL = System.getProperty("line.separator");
 	
 	@Override
@@ -97,7 +97,7 @@ public class OldXMLBasicFixationFilter extends BasicFixationFilter {
 		}
 	}
 	
-	public OldRawGaze getRawGaze(XMLStreamReader reader) {
+	public RawGaze getRawGaze(XMLStreamReader reader) {
 		String file = reader.getAttributeValue(0);
 		String type = reader.getAttributeValue(1);
 		double x = Double.parseDouble(reader.getAttributeValue(2));
@@ -126,7 +126,7 @@ public class OldXMLBasicFixationFilter extends BasicFixationFilter {
 			lineBaseY = Integer.parseInt(reader.getAttributeValue(15));
 		}
 		
-		return new OldRawGaze(file, type, x, y, leftValidity, rightValidity,
+		return new RawGaze(file, type, x, y, leftValidity, rightValidity,
 				leftPupilDiam, rightPupilDiam, trackerTime, systemTime,
 				nanoTime, lineBaseX, line, col, hows, types, fullyQualifiedNames,
 				lineBaseY);
