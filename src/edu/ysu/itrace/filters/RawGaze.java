@@ -4,7 +4,7 @@ package edu.ysu.itrace.filters;
  * Class that holds raw gaze data information. 
  * It may be re-inventing the wheel.
  */
-public class RawGaze {
+public abstract class RawGaze {
 	private String file;
 	private String type;
 	private double x;

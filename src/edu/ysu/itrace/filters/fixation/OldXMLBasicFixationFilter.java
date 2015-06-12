@@ -17,6 +17,7 @@ import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
 
 import edu.ysu.itrace.filters.OldRawGaze;
+import edu.ysu.itrace.filters.RawGaze;
 
 public class OldXMLBasicFixationFilter extends BasicFixationFilter {
 	
@@ -30,7 +31,7 @@ public class OldXMLBasicFixationFilter extends BasicFixationFilter {
 	
 	private final String filterName = "Old XML Fixation Filter";
 	
-	private ArrayList<OldRawGaze> rawGazes = new ArrayList<OldRawGaze>();
+	private ArrayList<RawGaze> rawGazes = new ArrayList<RawGaze>();
 	private static final String EOL = System.getProperty("line.separator");
 	
 	@Override
@@ -207,10 +208,12 @@ public class OldXMLBasicFixationFilter extends BasicFixationFilter {
 			                		String.valueOf(fixation.getRawGaze().getLine()));
 			                writer.writeAttribute("col",
 			                		String.valueOf(fixation.getRawGaze().getCol()));
-			                writer.writeAttribute("hows", fixation.getRawGaze().getHows());
-			                writer.writeAttribute("types", fixation.getRawGaze().getTypes());
+			                writer.writeAttribute("hows",
+			                		((OldRawGaze)fixation.getRawGaze()).getHows());
+			                writer.writeAttribute("types",
+			                		((OldRawGaze)fixation.getRawGaze()).getTypes());
 			                writer.writeAttribute("fullyQualifiedNames",
-			                		fixation.getRawGaze().getFullyQualifiedNames());
+			                		((OldRawGaze)fixation.getRawGaze()).getFullyQualifiedNames());
 			                writer.writeCharacters(EOL);
 						}
 					} catch ( XMLStreamException e) {

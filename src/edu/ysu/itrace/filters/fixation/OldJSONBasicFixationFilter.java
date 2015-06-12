@@ -14,6 +14,7 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
 import edu.ysu.itrace.filters.OldRawGaze;
+import edu.ysu.itrace.filters.RawGaze;
 
 
 public class OldJSONBasicFixationFilter extends BasicFixationFilter {
@@ -115,7 +116,7 @@ public class OldJSONBasicFixationFilter extends BasicFixationFilter {
 	}
 	
 	public void setRawGazes(JsonReader reader) throws IOException {
-		ArrayList<OldRawGaze> rawGazes = new ArrayList<OldRawGaze>();
+		ArrayList<RawGaze> rawGazes = new ArrayList<RawGaze>();
 		reader.beginArray();
 		while (reader.hasNext()) {
 			rawGazes.add(getRawGaze(reader));
@@ -265,11 +266,11 @@ public class OldJSONBasicFixationFilter extends BasicFixationFilter {
 									.name("col")
 									.value(fixation.getRawGaze().getCol())
 									.name("hows")
-									.value(fixation.getRawGaze().getHows())
+									.value(((OldRawGaze)fixation.getRawGaze()).getHows())
 									.name("types")
-									.value(fixation.getRawGaze().getTypes())
+									.value(((OldRawGaze)fixation.getRawGaze()).getTypes())
 									.name("fullyQualifiedNames")
-									.value(fixation.getRawGaze().getFullyQualifiedNames())
+									.value(((OldRawGaze)fixation.getRawGaze()).getFullyQualifiedNames())
 								.endObject();
 						}
 					} catch ( IOException e) {

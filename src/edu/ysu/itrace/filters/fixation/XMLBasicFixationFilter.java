@@ -16,6 +16,8 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
 
+import edu.ysu.itrace.filters.SourceCodeEntity;
+import edu.ysu.itrace.filters.NewRawGaze;
 import edu.ysu.itrace.filters.RawGaze;
 
 public class XMLBasicFixationFilter extends BasicFixationFilter {
@@ -60,7 +62,7 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 			fileDir = new String(file.getParent());
 			String[] parts = file.getName().split("-");
 			devUsername = parts[2];
-			sessionID = parts[3] + "-" + parts[4].split(Pattern.quote("."))[0];
+			sessionID = parts[3] + "-" + parts[4] + "-" + parts[5].split(Pattern.quote("."))[0];
 			
 			//Read from file
 			if(file.getName().lastIndexOf(".") > 0) {
@@ -97,7 +99,7 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 		}
 	}
 	
-	public RawGaze getRawGaze(XMLStreamReader reader) {
+	public NewRawGaze getRawGaze(XMLStreamReader reader) throws XMLStreamException {
 		String file = reader.getAttributeValue(0);
 		String type = reader.getAttributeValue(1);
 		double x = Double.parseDouble(reader.getAttributeValue(2));
@@ -105,31 +107,40 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 		double leftValidity = Double.parseDouble(reader.getAttributeValue(4));
 		double rightValidity = Double.parseDouble(reader.getAttributeValue(5));
 		double leftPupilDiam = Double.parseDouble(reader.getAttributeValue(6));
-		double rightPupilDiam = Double.parseDouble(reader.getAttributeValue(8));
-		long trackerTime = Long.parseLong(reader.getAttributeValue(9));
-		long systemTime = Long.parseLong(reader.getAttributeValue(10));
-		long nanoTime = Long.parseLong(reader.getAttributeValue(11));
-		int lineBaseX = Integer.parseInt(reader.getAttributeValue(12));
-		int line = Integer.parseInt(reader.getAttributeValue(13));
-		int col = Integer.parseInt(reader.getAttributeValue(14));
-		String hows = new String();
-		String types = new String();
-		String fullyQualifiedNames = new String();
-		int lineBaseY = -1;
+		double rightPupilDiam = Double.parseDouble(reader.getAttributeValue(7));
+		long trackerTime = Long.parseLong(reader.getAttributeValue(8));
+		long systemTime = Long.parseLong(reader.getAttributeValue(9));
+		long nanoTime = Long.parseLong(reader.getAttributeValue(10));
+		String path = reader.getAttributeValue(11);
+		int lineHeight = Integer.parseInt(reader.getAttributeValue(12));
+		int fontHeight = Integer.parseInt(reader.getAttributeValue(13));
+		int line = Integer.parseInt(reader.getAttributeValue(14));
+		int col = Integer.parseInt(reader.getAttributeValue(15));
+		int lineBaseX = Integer.parseInt(reader.getAttributeValue(16));
+		int lineBaseY = Integer.parseInt(reader.getAttributeValue(17));
+		ArrayList<SourceCodeEntity> sces = new ArrayList<SourceCodeEntity>();
 		
-		if (reader.getAttributeCount() == 19) {
-			hows = reader.getAttributeValue(15);
-			types = reader.getAttributeValue(16);
-			fullyQualifiedNames = reader.getAttributeValue(17);
-			lineBaseY = Integer.parseInt(reader.getAttributeValue(18));
-		} else {
-			lineBaseY = Integer.parseInt(reader.getAttributeValue(15));
+		reader.next();
+		reader.next();
+		while(reader.getAttributeCount() == 8) {
+			String name = reader.getAttributeValue(0);
+			String Type = reader.getAttributeValue(1);
+			String how = reader.getAttributeValue(2);
+			int length = Integer.parseInt(reader.getAttributeValue(3));
+			int startLine = Integer.parseInt(reader.getAttributeValue(4));
+			int endLine = Integer.parseInt(reader.getAttributeValue(5));
+			int startCol = Integer.parseInt(reader.getAttributeValue(6));
+			int endCol = Integer.parseInt(reader.getAttributeValue(7));
+			
+			sces.add(new SourceCodeEntity(name, Type, how, length,
+					startLine, endLine, startCol, endCol));
+			reader.next();
 		}
 		
-		return new RawGaze(file, type, x, y, leftValidity, rightValidity,
+		return new NewRawGaze(file, type, x, y, leftValidity, rightValidity,
 				leftPupilDiam, rightPupilDiam, trackerTime, systemTime,
-				nanoTime, lineBaseX, line, col, hows, types, fullyQualifiedNames,
-				lineBaseY);
+				nanoTime, path, lineHeight, fontHeight, lineBaseX, line,
+				col, lineBaseY, sces);
 	}
 	
 	@Override
@@ -172,9 +183,9 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 					    writer.writeCharacters(EOL);
 						
 						//export processed gazes
-						for (Fixation fixation : getProcessedGazes()) {
+						for (final Fixation fixation : getProcessedGazes()) {
 							writer.writeEmptyElement("response");
-			                writer.writeAttribute("file", fixation.getRawGaze().getFile());
+			                writer.writeAttribute("name", fixation.getRawGaze().getFile());
 			                writer.writeAttribute("type", fixation.getRawGaze().getType());
 			                writer.writeAttribute("x", String.valueOf(fixation.getRawGaze().getX()));
 			                writer.writeAttribute("y", String.valueOf(fixation.getRawGaze().getY()));
@@ -199,18 +210,42 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 			                        String.valueOf(fixation.getRawGaze().getNanoTime()));
 			                writer.writeAttribute("duration",
 			                		String.valueOf(fixation.getDuration()));
-			                writer.writeAttribute("line_base_x",
-			                		String.valueOf(fixation.getRawGaze().getLineBaseX()));
-			                writer.writeAttribute("line_base_y",
-			                		String.valueOf(fixation.getRawGaze().getLineBaseY()));
+			                writer.writeAttribute("path",
+			                		((NewRawGaze)fixation.getRawGaze()).getPath());
+			                writer.writeAttribute("line_height",
+			                		String.valueOf(((NewRawGaze)
+			                				fixation.getRawGaze()).getLineHeight()));
+			                writer.writeAttribute("font_height",
+			                		String.valueOf(((NewRawGaze)
+			                				fixation.getRawGaze()).getFontHeight()));
 			                writer.writeAttribute("line",
 			                		String.valueOf(fixation.getRawGaze().getLine()));
 			                writer.writeAttribute("col",
 			                		String.valueOf(fixation.getRawGaze().getCol()));
-			                writer.writeAttribute("hows", fixation.getRawGaze().getHows());
-			                writer.writeAttribute("types", fixation.getRawGaze().getTypes());
-			                writer.writeAttribute("fullyQualifiedNames",
-			                		fixation.getRawGaze().getFullyQualifiedNames());
+			                writer.writeAttribute("line_base_x",
+			                		String.valueOf(fixation.getRawGaze().getLineBaseX()));
+			                writer.writeAttribute("line_base_y",
+			                		String.valueOf(fixation.getRawGaze().getLineBaseY()));
+			                writer.writeStartElement("sces");
+			                
+			                for (final SourceCodeEntity sce : ((NewRawGaze)fixation.getRawGaze())
+			                		.getSces()) {
+			                	writer.writeStartElement("sce");
+			                	writer.writeAttribute("name", sce.getName());
+			                	writer.writeAttribute("type", sce.getType());
+			                	writer.writeAttribute("how", sce.getHow());
+			                	writer.writeAttribute("total_length",
+			                			String.valueOf(sce.getTotalLength()));
+			                	writer.writeAttribute("start_line",
+			                			String.valueOf(sce.getStartLine()));
+			                	writer.writeAttribute("end_line",
+			                			String.valueOf(sce.getEndLine()));
+			                	writer.writeAttribute("start_col",
+			                			String.valueOf(sce.getStartCol()));
+			                	writer.writeAttribute("end_col",
+			                			String.valueOf(sce.getEndCol()));
+			                	writer.writeEndElement();
+			                }
 			                writer.writeCharacters(EOL);
 						}
 					} catch ( XMLStreamException e) {

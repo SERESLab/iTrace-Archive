@@ -7,14 +7,16 @@ import java.util.Arrays;
 import java.util.List;
 
 import edu.ysu.itrace.filters.IFilter;
+import edu.ysu.itrace.filters.NewRawGaze;
 import edu.ysu.itrace.filters.OldRawGaze;
+import edu.ysu.itrace.filters.RawGaze;
 
 /**
  * Class that defines functionality needed for a post-processing 
  * algorithm to find fixations in raw gaze data
  */
 public abstract class BasicFixationFilter implements IFilter {
-	private ArrayList<OldRawGaze> rawGazes;
+	private ArrayList<RawGaze> rawGazes;
 	private ArrayList<Fixation> processedGazes =
 			new ArrayList<Fixation>();
 	
@@ -30,7 +32,7 @@ public abstract class BasicFixationFilter implements IFilter {
 	/**
 	 * Return the raw gazes as an array list.
 	 */
-	public ArrayList<OldRawGaze> getRawGazes() {
+	public ArrayList<RawGaze> getRawGazes() {
 		return rawGazes;
 	}
 	
@@ -73,7 +75,7 @@ public abstract class BasicFixationFilter implements IFilter {
 	/**
 	 * Set the raw gazes as an array list of gazes.
 	 */
-	protected void setRawGazes(ArrayList<OldRawGaze> rawGazes) {
+	protected void setRawGazes(ArrayList<RawGaze> rawGazes) {
 		this.rawGazes = rawGazes;
 	}
 	
@@ -111,7 +113,7 @@ public abstract class BasicFixationFilter implements IFilter {
 	 */
 	public void interpolate() {
 		if (rawGazes != null) {
-			OldRawGaze lastPosition = rawGazes.get(0);
+			RawGaze lastPosition = rawGazes.get(0);
 			for (int i = 0; i < rawGazes.size(); i++) {
 				if (rawGazes.get(i).getLeftValid() == 1 ||
 						rawGazes.get(i).getRightValid() == 1) {
@@ -292,13 +294,24 @@ public abstract class BasicFixationFilter implements IFilter {
 				rawGazes.get(iStart).getSystemTime();
 		
 		//Create the new processed fixation
-		OldRawGaze rawGaze = rawGazes.get(iStart);
-		OldRawGaze processedGaze = new OldRawGaze(rawGaze.getFile(), rawGaze.getType(),
-				medianX, medianY, 1, 1, leftPupilDiam, rightPupilDiam,
-				rawGaze.getTrackerTime(), rawGaze.getSystemTime(),
-				rawGaze.getNanoTime(), rawGaze.getLineBaseX(), rawGaze.getLine(),
-				rawGaze.getCol(), rawGaze.getHows(), rawGaze.getTypes(),
-				rawGaze.getFullyQualifiedNames(), rawGaze.getLineBaseY());
+		RawGaze processedGaze = null;
+		if (rawGazes.get(iStart) instanceof OldRawGaze) {
+			OldRawGaze rawGaze = (OldRawGaze)rawGazes.get(iStart);
+			 processedGaze = new OldRawGaze(rawGaze.getFile(), rawGaze.getType(),
+					medianX, medianY, 1, 1, leftPupilDiam, rightPupilDiam,
+					rawGaze.getTrackerTime(), rawGaze.getSystemTime(),
+					rawGaze.getNanoTime(), rawGaze.getLineBaseX(), rawGaze.getLine(),
+					rawGaze.getCol(), rawGaze.getHows(), rawGaze.getTypes(),
+					rawGaze.getFullyQualifiedNames(), rawGaze.getLineBaseY());
+		} else {
+			NewRawGaze rawGaze = (NewRawGaze)rawGazes.get(iStart);
+			processedGaze = new NewRawGaze(rawGaze.getFile(), rawGaze.getType(),
+					medianX, medianY, 1, 1, leftPupilDiam, rightPupilDiam,
+					rawGaze.getTrackerTime(), rawGaze.getSystemTime(),
+					rawGaze.getNanoTime(), rawGaze.getPath(), rawGaze.getLineHeight(),
+					rawGaze.getFontHeight(), rawGaze.getLineBaseX(), rawGaze.getLine(),
+					rawGaze.getCol(), rawGaze.getLineBaseY(), rawGaze.getSces());
+		}
 		Fixation fixation = new Fixation(processedGaze, duration);
 		
 		return fixation;

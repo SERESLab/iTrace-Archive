@@ -13,7 +13,9 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
+import edu.ysu.itrace.filters.SourceCodeEntity;
 import edu.ysu.itrace.filters.NewRawGaze;
+import edu.ysu.itrace.filters.RawGaze;
 
 public class JSONBasicFixationFilter extends BasicFixationFilter {
 	//log file header variables
@@ -53,7 +55,7 @@ public class JSONBasicFixationFilter extends BasicFixationFilter {
 			fileDir = new String(file.getParent());
 			String[] parts = file.getName().split("-");
 			devUsername = parts[2];
-			sessionID = parts[3] + "-" + parts[4].split(Pattern.quote("."))[0];
+			sessionID = parts[3] + "-" + parts[4] + "-" + parts[5].split(Pattern.quote("."))[0];
 				
 			//Read from file
 			if(file.getName().lastIndexOf(".") > 0) {
@@ -134,18 +136,19 @@ public class JSONBasicFixationFilter extends BasicFixationFilter {
 		long trackerTime = -1;
 		long systemTime = -1;
 		long nanoTime = -1;
+		String path = new String();
+		int lineHeight = -1;
+		int fontHeight = -1;
 		int lineBaseX = -1;
 		int line = -1;
 		int col = -1;
-		String hows = new String();
-		String types = new String();
-		String fullyQualifiedNames = new String();
 		int lineBaseY = -1;
+		ArrayList<SourceCodeEntity> sces = new ArrayList<SourceCodeEntity>();
 		
 		reader.beginObject();
 		while (reader.hasNext()) {
 			String name = reader.nextName();
-			if (name.equals("file")) {
+			if (name.equals("name")) {
 				file = reader.nextString();
 			} else if (name.equals("type")) {
 				type = reader.nextString();
@@ -167,29 +170,74 @@ public class JSONBasicFixationFilter extends BasicFixationFilter {
 				systemTime = reader.nextLong();
 			} else if (name.equals("nano_time")) {
 				nanoTime = reader.nextLong();
+			} else if (name.equals("path")) {
+				path = reader.nextString();
+			} else if (name.equals("line_height")) {
+				lineHeight = reader.nextInt();
+			} else if (name.equals("font_height")) {
+				fontHeight = reader.nextInt();
 			} else if (name.equals("line_base_x")) {
 				lineBaseX = reader.nextInt();
 			} else if (name.equals("line")) {
 				line = reader.nextInt();
 			} else if (name.equals("col")) {
 				col = reader.nextInt();
-			} else if (name.equals("hows")) {
-				hows = reader.nextString();
-			} else if (name.equals("types")) {
-				types = reader.nextString();
-			} else if (name.equals("fullyQualifiedNames")) {
-				fullyQualifiedNames = reader.nextString();
 			} else if (name.equals("line_base_y")) {
 				lineBaseY = reader.nextInt();
+			} else if (name.equals("sces")) {
+				reader.beginArray();
+				while (reader.hasNext()) {
+					sces.add(getSce(reader));
+				}
+				reader.endArray();
 			} else {
 				reader.skipValue();
 			}
 		}
 		reader.endObject();
-		return new RawGaze(file, type, x, y, leftValidity, rightValidity,
+		return new NewRawGaze(file, type, x, y, leftValidity, rightValidity,
 				leftPupilDiam, rightPupilDiam, trackerTime, systemTime,
-				nanoTime, lineBaseX, line, col, hows, types, fullyQualifiedNames,
-				lineBaseY);
+				nanoTime, path, lineHeight, fontHeight, lineBaseX, line, col,
+				lineBaseY, sces);
+	}
+	
+	public SourceCodeEntity getSce(JsonReader reader) throws IOException {
+		String name = new String();
+		String type = new String();
+		String how = new String();
+		int length = -1;
+		int startLine = -1;
+		int endLine = -1;
+		int startCol = -1;
+		int endCol = -1;
+		
+		reader.beginObject();
+		while(reader.hasNext()) {
+			String Name = reader.nextName();
+			if (Name.equals("name")) {
+				name = reader.nextString();
+			} else if (Name.equals("type")) {
+				type = reader.nextString();
+			} else if (Name.equals("how")) {
+				how = reader.nextString();
+			} else if (Name.equals("total_length")) {
+				length = reader.nextInt();
+			} else if (Name.equals("start_line")) {
+				startLine = reader.nextInt();
+			} else if (Name.equals("end_line")) {
+				endLine = reader.nextInt();
+			} else if (Name.equals("start_col")) {
+				startCol = reader.nextInt();
+			} else if (Name.equals("end_col")) {
+				endCol = reader.nextInt();
+			} else {
+				reader.skipValue();
+			}
+		}
+		reader.endObject();
+		
+		return new SourceCodeEntity(name, type, how, length,
+				startLine, endLine, startCol, endCol);
 	}
 	
 	@Override
@@ -228,7 +276,7 @@ public class JSONBasicFixationFilter extends BasicFixationFilter {
 								.beginArray();
 						
 						//export processed gazes
-						for (Fixation fixation : getProcessedGazes()) {
+						for (final Fixation fixation : getProcessedGazes()) {
 							writer.beginObject()
 									.name("file")
 									.value(fixation.getRawGaze().getFile())
@@ -254,21 +302,45 @@ public class JSONBasicFixationFilter extends BasicFixationFilter {
 									.value(fixation.getRawGaze().getNanoTime())
 									.name("duration")
 									.value(fixation.getDuration())
-									.name("line_base_x")
-									.value(fixation.getRawGaze().getLineBaseX())
-									.name("line_base_y")
-									.value(fixation.getRawGaze().getLineBaseY())
+									.name("path")
+									.value(((NewRawGaze)fixation.getRawGaze()).getPath())
+									.name("line_height")
+									.value(((NewRawGaze)fixation.getRawGaze()).getLineHeight())
+									.name("font_height")
+									.value(((NewRawGaze)fixation.getRawGaze()).getFontHeight())
 									.name("line")
 									.value(fixation.getRawGaze().getLine())
 									.name("col")
 									.value(fixation.getRawGaze().getCol())
-									.name("hows")
-									.value(fixation.getRawGaze().getHows())
-									.name("types")
-									.value(fixation.getRawGaze().getTypes())
-									.name("fullyQualifiedNames")
-									.value(fixation.getRawGaze().getFullyQualifiedNames())
-								.endObject();
+									.name("line_base_x")
+									.value(fixation.getRawGaze().getLineBaseX())
+									.name("line_base_y")
+									.value(fixation.getRawGaze().getLineBaseY())
+									.name("sces")
+									.beginArray();
+							
+							for (final SourceCodeEntity sce : ((NewRawGaze)fixation.getRawGaze())
+									.getSces()) {
+								writer.beginObject()
+										.name("name")
+										.value(sce.getName())
+										.name("type")
+										.value(sce.getType())
+										.name("how")
+										.value(sce.getHow())
+										.name("total_length")
+										.value(sce.getTotalLength())
+										.name("start_line")
+										.value(sce.getStartLine())
+										.name("end_line")
+										.value(sce.getEndLine())
+										.name("start_col")
+										.value(sce.getStartCol())
+										.name("end_col")
+										.value(sce.getEndCol())
+										.endObject();
+							}
+								writer.endArray().endObject();
 						}
 					} catch ( IOException e) {
 						throw new IOException("Failed to write processed gazes to file.");
