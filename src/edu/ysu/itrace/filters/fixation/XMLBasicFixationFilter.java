@@ -122,7 +122,7 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 		
 		reader.next();
 		reader.next();
-		while(reader.getAttributeCount() == 8) {
+		while(!reader.isEndElement()) {
 			String name = reader.getAttributeValue(0);
 			String Type = reader.getAttributeValue(1);
 			String how = reader.getAttributeValue(2);
@@ -134,6 +134,7 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 			
 			sces.add(new SourceCodeEntity(name, Type, how, length,
 					startLine, endLine, startCol, endCol));
+			reader.next();
 			reader.next();
 		}
 		
