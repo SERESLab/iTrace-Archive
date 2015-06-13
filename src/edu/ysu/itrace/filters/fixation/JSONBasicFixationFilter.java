@@ -160,9 +160,9 @@ public class JSONBasicFixationFilter extends BasicFixationFilter {
 				leftValidity = reader.nextDouble();
 			} else if (name.equals("right_validation")) {
 				rightValidity = reader.nextDouble();
-			} else if (name.equals("left-pupil-diameter")) {
+			} else if (name.equals("left_pupil_diameter")) {
 				leftPupilDiam = reader.nextDouble();
-			} else if (name.equals("right-pupil-diameter")) {
+			} else if (name.equals("right_pupil_diameter")) {
 				rightPupilDiam = reader.nextDouble();
 			} else if (name.equals("tracker_time")) {
 				trackerTime = reader.nextLong();
@@ -290,9 +290,9 @@ public class JSONBasicFixationFilter extends BasicFixationFilter {
 									.value(fixation.getRawGaze().getLeftValid())
 									.name("right_validation")
 									.value(fixation.getRawGaze().getRightValid())
-									.name("left-pupil-diameter")
+									.name("left_pupil_diameter")
 									.value(fixation.getRawGaze().getLeftPupilDiam())
-									.name("right-pupil-diameter")
+									.name("right_pupil_diameter")
 									.value(fixation.getRawGaze().getRightPupilDiam())
 									.name("tracker_time")
 									.value(fixation.getRawGaze().getTrackerTime())

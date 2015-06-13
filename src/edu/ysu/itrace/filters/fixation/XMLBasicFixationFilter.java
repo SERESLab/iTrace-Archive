@@ -194,10 +194,10 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 			                        String.valueOf(fixation.getRawGaze().getLeftValid()));
 			                writer.writeAttribute("right-validation",
 			                        String.valueOf(fixation.getRawGaze().getRightValid()));
-			                writer.writeAttribute("left-pupil-diameter",
+			                writer.writeAttribute("left_pupil_diameter",
 			                        String.valueOf(fixation.getRawGaze()
 			                                       .getLeftPupilDiam()));
-			                writer.writeAttribute("right-pupil-diameter",
+			                writer.writeAttribute("right_pupil_diameter",
 			                        String.valueOf(fixation.getRawGaze()
 			                                       .getRightPupilDiam()));
 			                writer.writeAttribute(
