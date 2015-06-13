@@ -68,7 +68,7 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 			if(file.getName().lastIndexOf(".") > 0) {
 				int i = file.getName().lastIndexOf(".");
 				if (file.getName().substring(i+1).equals("xml")) {
-					if (file.exists()) { System.out.println("here");
+					if (file.exists()) {
 						try {
 							XMLInputFactory factory = XMLInputFactory.newInstance();
 							XMLStreamReader reader = factory.createXMLStreamReader(
@@ -185,7 +185,7 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 						
 						//export processed gazes
 						for (final Fixation fixation : getProcessedGazes()) {
-							writer.writeEmptyElement("response");
+							writer.writeStartElement("response");
 			                writer.writeAttribute("name", fixation.getRawGaze().getFile());
 			                writer.writeAttribute("type", fixation.getRawGaze().getType());
 			                writer.writeAttribute("x", String.valueOf(fixation.getRawGaze().getX()));
@@ -247,6 +247,8 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 			                			String.valueOf(sce.getEndCol()));
 			                	writer.writeEndElement();
 			                }
+			                writer.writeEndElement();
+			                writer.writeEndElement();
 			                writer.writeCharacters(EOL);
 						}
 					} catch ( XMLStreamException e) {
