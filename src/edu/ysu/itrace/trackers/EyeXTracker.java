@@ -13,6 +13,8 @@ import edu.ysu.itrace.exceptions.CalibrationException;
  * Provides an interface for the EyeX eye tracker.
  *
  */
+//NOTICED ISSUES TO ADDRESS
+//possibly doesn't reset eyeTrackingStarted boolean when stoptracking is called/other things that need reset
 public class EyeXTracker implements IEyeTracker {
 
 	private double xDrift = 0;
@@ -28,8 +30,8 @@ public class EyeXTracker implements IEyeTracker {
      * EyeXTracker library.
      */
     static {
-    	System.loadLibrary("Tobii.EyeX.Client");
-        System.loadLibrary("edu_ysu_itrace_trackers_EyeXTracker");
+    	//System.loadLibrary("Tobii.EyeX.Client");
+        System.loadLibrary("EyeXTracker");
     }
 
     /**
