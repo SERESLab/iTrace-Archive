@@ -13,8 +13,9 @@ Here are the instructions for building the EyeX Tracker extension.
 ### Download the Tobii EyeX Engine v1.4 and the Tobii EyeX Controller Drivers 
  - Download from: http://developer.tobii.com/downloads/
  - Use the 32bit version
+ - Turn off the EyeX Engine in the EyeX Controller settings
 
-### Download the Tobii EyeX Tracker SDK v1.5
+### Download the Tobii Gaze SDK v4.1
  - Download from: http://developer.tobii.com/downloads/
  - Extract all libs in CPP to your MinGW lib/ directory and all includes in CPP
    to your MinGW include/ directory

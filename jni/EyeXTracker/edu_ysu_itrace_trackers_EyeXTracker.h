@@ -9,27 +9,35 @@ extern "C" {
 #endif
 /*
  * Class:     edu_ysu_itrace_trackers_EyeXTracker
- * Method:    disconnectEyeTracker
+ * Method:    jniConnectEyeXTracker
+ * Signature: (I)Z
+ */
+JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_jniConnectEyeXTracker
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     edu_ysu_itrace_trackers_EyeXTracker
+ * Method:    close
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_disconnectEyeTracker
+JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_close
   (JNIEnv *, jobject);
 
 /*
  * Class:     edu_ysu_itrace_trackers_EyeXTracker
- * Method:    connectEyeTracker
- * Signature: ()Z
+ * Method:    startTracking
+ * Signature: ()V
  */
-JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_connectEyeTracker
+JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_startTracking
   (JNIEnv *, jobject);
 
 /*
-* Class:     edu_ysu_itrace_trackers_EyeXTracker
-* Method:    register
-* Signature: ()Z
-*/
-JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_register
-(JNIEnv *, jobject);
+ * Class:     edu_ysu_itrace_trackers_EyeXTracker
+ * Method:    stopTracking
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_stopTracking
+  (JNIEnv *, jobject);
 
 #ifdef __cplusplus
 }
