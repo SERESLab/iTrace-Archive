@@ -4,6 +4,7 @@
 #include "TobiiGazeSDK/tobiigaze_discovery.h"
 #include "TobiiGazeSDK/tobiigaze_calibration.h"
 #include "edu_ysu_itrace_trackers_EyeXTracker.h"
+#include <iostream>
 
 /*
  * This is a simple example that demonstrates the asynchronous TobiiGazeCore calls.
@@ -18,8 +19,11 @@ char url[urlSize];
 tobiigaze_error_code error_code;
 xthread_handle hThread;
 
+JNIEnv* global_env; //rough fix for on_gaze_data call back function
+jobject global_obj; //rough fix for on_gaze_data call back function
+
 // Prints gaze information, or "-" if gaze position could not be determined.
-void on_gaze_data(const tobiigaze_gaze_data* gazedata, const tobiigaze_gaze_data_extensions* extensions, void *user_data, JNIEnv* env, jobject obj) {
+void on_gaze_data(const tobiigaze_gaze_data* gazedata, const tobiigaze_gaze_data_extensions* extensions, void *user_data) {
 	int leftValidity;
 	int rightValidity;
 
@@ -39,17 +43,17 @@ void on_gaze_data(const tobiigaze_gaze_data* gazedata, const tobiigaze_gaze_data
 	    rightValidity = 0;
 	}
 
-	jclass tobii_tracker_class = env->GetObjectClass(obj);
+	jclass tobii_tracker_class = global_env->GetObjectClass(global_obj);
 	if (tobii_tracker_class == NULL)
 	    return;
-	jmethodID jmid_new_gaze_point = env->GetMethodID(tobii_tracker_class,
+	jmethodID jmid_new_gaze_point = global_env->GetMethodID(tobii_tracker_class,
 	    "newGazePoint", "(JDDDDIIDD)V");
 	//Just pretend nothing happened.
 	if (jmid_new_gaze_point == NULL)
 	    return;
 
 	//Call newGazePoint.
-	env->CallVoidMethod(obj, jmid_new_gaze_point, (jlong) gazedata->timestamp,
+	global_env->CallVoidMethod(global_obj, jmid_new_gaze_point, (jlong) gazedata->timestamp,
 	    gazedata->left.gaze_point_on_display_normalized.x, gazedata->left.gaze_point_on_display_normalized.y,
 		gazedata->right.gaze_point_on_display_normalized.x, gazedata->right.gaze_point_on_display_normalized.y,
 	    leftValidity, rightValidity,
@@ -114,7 +118,7 @@ JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Backgro
 	    }
 
 	    // Create an eye tracker instance.
-	    eyex_tracker = tobiigaze_create(url, &error_code);
+	    eye_tracker = tobiigaze_create(url, &error_code);
 	    report_and_exit_on_error(error_code, "tobiigaze_create");
 
 	    // Enable diagnostic error reporting.
@@ -155,11 +159,12 @@ JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_close
 
 JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_startTracking
   (JNIEnv *env, jobject obj) {
-
+	 global_env = env;
+	 global_obj = obj;
 	 // Now that a connection is established, retreive some device information
 	 // and start tracking.
 	 tobiigaze_get_device_info_async(eye_tracker, &get_deviceinfo_callback, 0);
-	 tobiigaze_start_tracking_async(eye_tracker, &start_tracking_callback, &on_gaze_data(env,obj), 0);
+	 tobiigaze_start_tracking_async(eye_tracker, &start_tracking_callback, &on_gaze_data, 0);
 }
 
 JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_stopTracking
@@ -170,8 +175,8 @@ JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_stopTracking
 
 //CALIBRATION
 
-uint8_t calibration_data = NULL;
-uint32_t calibration_size = NULL;
+const uint8_t* calibration_data; //to retrieve the calib data
+uint32_t calibration_size; //to retrieve the calib data size
 
 // forward declarations
 void add_calibration_point_handler(tobiigaze_error_code error_code, void *user_data);
@@ -232,7 +237,9 @@ void get_calibration_handler(const struct tobiigaze_calibration *calibration, to
 JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Calibrator_jniAddPoint
   (JNIEnv *, jobject, jdouble x, jdouble y) {
 
-	tobiigaze_point_2d point = {x,y};
+	tobiigaze_point_2d* point;
+	point->x = x;
+	point->y = y;
 	// The call to tobiigaze_calibration_add_point_async starts collecting calibration data at the specified point.
 	// Make sure to keep the stimulus (i.e., the calibration dot) on the screen until the tracker is finished, that
 	// is, until the callback function is invoked.
@@ -241,7 +248,7 @@ JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Calibrator_
 
 JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Calibrator_jniStartCalibration
   (JNIEnv *, jobject) {
-
+	
 	// calibration
 	tobiigaze_calibration_start_async(eye_tracker, add_calibration_point_handler, eye_tracker);
 
@@ -261,7 +268,7 @@ JNIEXPORT jdoubleArray JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Cal
 	tobiigaze_get_calibration_async(eye_tracker, get_calibration_handler, eye_tracker);
 
 	for (int i = 0; i < calibration_size; i++) {
-		cout << calibration_data[i] << endl;
+		std::cout << calibration_data[i] << std::endl;
 	}
 	/*jdoubleArray calibrationPoints = env->NewDoubleArray(4 * calibration_size);  // allocate
 
