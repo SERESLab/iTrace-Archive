@@ -6,7 +6,6 @@ import java.awt.FlowLayout;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.Date;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -112,7 +111,7 @@ public class EyeXTracker implements IEyeTracker {
     private Calibrator calibrator;
     private double xDrift = 0, yDrift = 0;
 
-    static { System.loadLibrary("EyeXTracker"); }
+    static { System.loadLibrary("libEyeXTracker"); }
 
     public EyeXTracker() throws EyeTrackerConnectException,
                                  IOException {

@@ -10,10 +10,10 @@ extern "C" {
 /*
  * Class:     edu_ysu_itrace_trackers_EyeXTracker
  * Method:    jniConnectEyeXTracker
- * Signature: (I)Z
+ * Signature: ()V
  */
-JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_jniConnectEyeXTracker
-  (JNIEnv *, jobject, jint);
+JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_jniConnectEyeXTracker
+  (JNIEnv *, jobject);
 
 /*
  * Class:     edu_ysu_itrace_trackers_EyeXTracker

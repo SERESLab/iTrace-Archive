@@ -4,6 +4,8 @@
 #include "TobiiGazeSDK/tobiigaze_discovery.h"
 #include "TobiiGazeSDK/tobiigaze_calibration.h"
 #include "edu_ysu_itrace_trackers_EyeXTracker.h"
+#include "edu_ysu_itrace_trackers_EyeXTracker_BackgroundThread.h"
+#include "edu_ysu_itrace_trackers_EyeXTracker_Calibrator.h"
 #include <iostream>
 
 /*
@@ -116,7 +118,7 @@ JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Backgro
 	    	printf("No eye tracker found.\n");
 	    	exit(-1);
 	    }
-
+		
 	    // Create an eye tracker instance.
 	    eye_tracker = tobiigaze_create(url, &error_code);
 	    report_and_exit_on_error(error_code, "tobiigaze_create");
@@ -126,6 +128,7 @@ JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Backgro
 
 	    // Start the event loop. This must be done before connecting.
 	    hThread = xthread_create(event_loop_thread_proc, eye_tracker);
+	    
 }
 
 //TRACKER FUNCTIONS
