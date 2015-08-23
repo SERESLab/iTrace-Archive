@@ -6,6 +6,7 @@ import java.awt.FlowLayout;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Date;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -104,6 +105,7 @@ public class EyeXTracker implements IEyeTracker {
 	 }
 
     private BackgroundThread bg_thread = null;
+    private volatile ByteBuffer native_data = null;
     private LinkedBlockingQueue<Gaze> gaze_points =
             new LinkedBlockingQueue<Gaze>();
     private LinkedBlockingQueue<Gaze> recentGazes =
@@ -120,6 +122,7 @@ public class EyeXTracker implements IEyeTracker {
         //the Gaze SDK.
         bg_thread = new BackgroundThread(this);
         bg_thread.start();
+        while (native_data == null); //Wait until background thread sets native_data
         jniConnectEyeXTracker();
     }
 
