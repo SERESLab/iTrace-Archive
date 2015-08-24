@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <chrono>
-#include <thread>
+#include <unistd.h>
 #include "TobiiGazeSDK/Common.h"
 #include "TobiiGazeSDK/tobiigaze_discovery.h"
 #include "TobiiGazeSDK/tobiigaze_calibration.h"
@@ -18,7 +17,7 @@ struct EyeXNativeData
 	tobiigaze_eye_tracker* eye_tracker;
 };
 
-TobiiNativeData* g_native_data_current = NULL;
+EyeXNativeData* g_native_data_current = NULL;
 
 void throwJException(JNIEnv* env, const char* jclass_name, const char* msg)
 {
@@ -54,7 +53,7 @@ void on_gaze_data(const tobiigaze_gaze_data* gazedata, const tobiigaze_gaze_data
 	jint rs = g_native_data_current->jvm->GetEnv((void**) &env, JNI_VERSION_1_6);
 	if (rs != JNI_OK || env == NULL)
 		return;
-	jobject obj = g_native_data_current->j_tobii_tracker;
+	jobject obj = g_native_data_current->j_eye_tracker;
 
 	int leftValidity;
 	int rightValidity;
@@ -75,72 +74,30 @@ void on_gaze_data(const tobiigaze_gaze_data* gazedata, const tobiigaze_gaze_data
 	    rightValidity = 0;
 	}
 
-	jclass eyex_tracker_class = global_env->GetObjectClass(global_obj);
+	jclass eyex_tracker_class = env->GetObjectClass(obj);
 	if (eyex_tracker_class == NULL)
 	    return;
-	jmethodID jmid_new_gaze_point = global_env->GetMethodID(eyex_tracker_class,
+	jmethodID jmid_new_gaze_point = env->GetMethodID(eyex_tracker_class,
 	    "newGazePoint", "(JDDDDIIDD)V");
 	//Just pretend nothing happened.
 	if (jmid_new_gaze_point == NULL)
 	    return;
 
 	//Call newGazePoint.
-	global_env->CallVoidMethod(global_obj, jmid_new_gaze_point, (jlong) gazedata->timestamp,
+	env->CallVoidMethod(obj, jmid_new_gaze_point, (jlong) gazedata->timestamp,
 	    gazedata->left.gaze_point_on_display_normalized.x, gazedata->left.gaze_point_on_display_normalized.y,
 		gazedata->right.gaze_point_on_display_normalized.x, gazedata->right.gaze_point_on_display_normalized.y,
 	    leftValidity, rightValidity,
 	    -1, -1); //no pupil diameters for recording
 }
 
-void on_disconnect_callback(void *user_data) {
-	printf("Disconnected.\n");
-}
-
-void stop_tracking_callback(tobiigaze_error_code error_code, void *user_data) {
-	if (error_code) {
-		throwJException(env, "java/lang/IOException",
-				tobiigaze_get_error_message(error_code));
-		return;
-	}
-	printf("Tracking stopped.\n");
-}
-
-void start_tracking_callback(tobiigaze_error_code error_code, void *user_data) {
-	if (error_code) {
-		throwJException(env, "java/lang/IOException",
-				tobiigaze_get_error_message(error_code));
-		return;
-	}
-	printf("Tracking started.\n");
-}
-
-void on_connect_callback(tobiigaze_error_code error_code, void *user_data) {
-	if (error_code) {
-		throwJException(env, "java/lang/IOException",
-				tobiigaze_get_error_message(error_code));
-		return;
-	}
-    printf("Connected.\n");
-}
-
 //JNI FUNCTIONS
 
 //THREADING
 JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024BackgroundThread_jniBeginMainloop
-  (JNIEnv *, jobject) {
+  (JNIEnv *env, jobject obj) {
 
-		tobiigaze_error_code error_code;
-
-		const int urlSize = 256;
-		char url[urlSize];
-
-	    tobiigaze_get_connected_eye_tracker(url, urlSize, &error_code);
-	    if (error_code) {
-	    	printf("No eye tracker found.\n");
-	    	return JNI_FALSE;
-	    }
-
-	    //Get native data ByteBuffer field in EyeXTracker object.
+		//Get native data ByteBuffer field in EyeXTracker object.
 	    jfieldID jfid_parent = getFieldID(env, obj, "parent",
 	    	"Ledu/ysu/itrace/trackers/EyeXTracker;");
 	    if (jfid_parent == NULL)
@@ -159,6 +116,17 @@ JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Backgro
 	    native_data->j_background_thread = env->NewGlobalRef(obj);
 	    //Store structure reference in Java object.
 	    env->SetObjectField(parent_eyex_tracker, jfid_native_data, native_data_bb);
+		
+		tobiigaze_error_code error_code;
+
+		const int urlSize = 256;
+		char url[urlSize];
+
+	    tobiigaze_get_connected_eye_tracker(url, urlSize, &error_code);
+	    if (error_code) {
+	    	printf("No eye tracker found.\n");
+	    	return JNI_FALSE;
+	    }
 		
 	    // Create an eye tracker instance.
 	    native_data->eye_tracker = tobiigaze_create(url, &error_code);
@@ -181,7 +149,7 @@ JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Backgro
 
 //TRACKER FUNCTIONS
 JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_jniConnectEyeXTracker
-  (JNIEnv *, jobject) {
+  (JNIEnv *env, jobject obj) {
 
 	//Get native data from object.
 	EyeXNativeData* native_data = getEyeXNativeData(env, obj);
@@ -191,15 +159,22 @@ JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_jniConnectEyeXTr
 		return;
 	}
 	//Set EyeXTracker reference.
-	native_data->j_eyex_tracker = env->NewGlobalRef(obj);
+	native_data->j_eye_tracker = env->NewGlobalRef(obj);
 
-	// Connect to the tracker. The callback function is invoked when the
-	// operation finishes, successfully or unsuccessfully.
-	tobiigaze_connect_async(native_data->eye_tracker, &on_connect_callback, 0);
+	tobiigaze_error_code error_code; //should be added to EyeXNativeData struc
+
+	// Connect to the tracker.
+	tobiigaze_connect(native_data->eye_tracker, &error_code);
+	if (error_code) {
+		throwJException(env, "java/lang/IOException",
+				tobiigaze_get_error_message(error_code));
+		return;
+	}
+    printf("Connected.\n");
 }
 
 JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_close
-  (JNIEnv *, jobject) {
+  (JNIEnv *env, jobject obj) {
 
 	//Get native data from object.
 	EyeXNativeData* native_data = getEyeXNativeData(env, obj);
@@ -211,7 +186,7 @@ JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_close
 	}
 
 	// Disconnect.
-	tobiigaze_disconnect_async(native_data->eye_tracker, &on_disconnect_callback, 0);
+	tobiigaze_disconnect(native_data->eye_tracker);
 
 	// Break the event loop
 	tobiigaze_break_event_loop(native_data->eye_tracker);
@@ -243,21 +218,45 @@ JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_startTracking
 	//Set native data for current tracking TobiiTracker.
 	g_native_data_current = native_data;
 
+	tobiigaze_error_code error_code;
+
 	// Now that a connection is established,
 	// start tracking.
-	tobiigaze_start_tracking_async(native_data->eye_tracker, &start_tracking_callback, &on_gaze_data, 0);
+	tobiigaze_start_tracking(native_data->eye_tracker, &on_gaze_data, &error_code, 0);
+	if (error_code) {
+		throwJException(env, "java/lang/IOException",
+				tobiigaze_get_error_message(error_code));
+		return;
+	}
+	printf("Tracking started.\n");
 }
 
 JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_stopTracking
-  (JNIEnv *, jobject) {
+  (JNIEnv *env, jobject obj) {
+	
+	tobiigaze_error_code error_code;
 
-	tobiigaze_stop_tracking_async(g_native_data_current->eye_tracker, &stop_tracking_callback, 0);
+	tobiigaze_stop_tracking(g_native_data_current->eye_tracker, &error_code);
+	if (error_code) {
+		throwJException(env, "java/lang/IOException",
+				tobiigaze_get_error_message(error_code));
+		return;
+	}
+	printf("Tracking stopped.\n");
 	g_native_data_current = NULL;
 }
 
 //CALIBRATION
 
+//forward declaration
+void stop_calibration_handler(tobiigaze_error_code error_code, void *user_data);
+
 void handle_calibration_error(tobiigaze_error_code error_code, void *user_data, const char *error_message) {
+    JNIEnv* env = NULL;
+	jint rs = g_native_data_current->jvm->GetEnv((void**) &env, JNI_VERSION_1_6);
+	if (rs != JNI_OK || env == NULL)
+		return;
+		
     if (error_code) {
     	throwJException(env, "java/lang/IOException",
     			tobiigaze_get_error_message(error_code));
@@ -286,7 +285,7 @@ void add_calibration_point_handler(tobiigaze_error_code error_code, void *user_d
         return;
     }
 
-	std::this_thread::sleep_for(std::chrono::milliseconds(2000)); // Give the user some time to move the gaze and focus on the object
+	usleep(2000); // Give the user some time to move the gaze and focus on the object
 }
 
 void stop_calibration_handler(tobiigaze_error_code error_code, void *user_data) {
@@ -300,7 +299,7 @@ void stop_calibration_handler(tobiigaze_error_code error_code, void *user_data) 
 }
 
 JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Calibrator_jniAddPoint
-  (JNIEnv *, jobject, jdouble x, jdouble y) {
+  (JNIEnv *env, jobject obj, jdouble x, jdouble y) {
 
 	//Get native data from parent EyeXTracker
 	jfieldID jfid_parent = getFieldID(env, obj, "parent",
@@ -324,7 +323,8 @@ JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Calibrator_
 }
 
 JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Calibrator_jniStartCalibration
-  (JNIEnv *, jobject) {
+  (JNIEnv *env, jobject obj) {
+	
 	//Get native data from parent EyeXTracker
 	jfieldID jfid_parent = getFieldID(env, obj, "parent",
 		"Ledu/ysu/itrace/trackers/EyeXTracker;");
@@ -337,15 +337,18 @@ JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Calibrator_
 	jobject parent_eyex_tracker = env->GetObjectField(obj, jfid_parent);
 	EyeXNativeData* native_data = getEyeXNativeData(env, parent_eyex_tracker);
 
+	//Set native data for current tracking TobiiTracker.
+	g_native_data_current = native_data;
+	
 	// calibration
 	tobiigaze_calibration_start_async(native_data->eye_tracker, add_calibration_point_handler, native_data->eye_tracker);
 
 }
 
 JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Calibrator_jniStopCalibration
-  (JNIEnv *, jobject) {
+  (JNIEnv *env, jobject obj) {
 
-	//Get native data from parent EyeXTracker
+	/*//Get native data from parent EyeXTracker
 	jfieldID jfid_parent = getFieldID(env, obj, "parent",
 		"Ledu/ysu/itrace/trackers/EyeXTracker;");
 	if (jfid_parent == NULL)
@@ -355,15 +358,16 @@ JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Calibrator_
 		return;
 	}
 	jobject parent_eyex_tracker = env->GetObjectField(obj, jfid_parent);
-	EyeXNativeData* native_data = getEyeXNativeData(env, parent_eyex_tracker);
+	EyeXNativeData* native_data = getEyeXNativeData(env, parent_eyex_tracker);*/
 
 	printf("Computing calibration...\n");
-	tobiigaze_calibration_compute_and_set_async(native_data->eye_tracker, compute_calibration_handler, native_data->eye_tracker);
-	tobiigaze_calibration_stop_async(native_data->eye_tracker, stop_calibration_handler, native_data->eye_tracker);
+	tobiigaze_calibration_compute_and_set_async(g_native_data_current->eye_tracker, compute_calibration_handler, g_native_data_current->eye_tracker);
+	tobiigaze_calibration_stop_async(g_native_data_current->eye_tracker, stop_calibration_handler, g_native_data_current->eye_tracker);
+	g_native_data_current = NULL;
 }
 
 JNIEXPORT jdoubleArray JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Calibrator_jniGetCalibration
-  (JNIEnv *, jobject) {
+  (JNIEnv *env, jobject obj) {
 
 	//Get native data from parent EyeXTracker
 	jfieldID jfid_parent = getFieldID(env, obj, "parent",
@@ -372,7 +376,7 @@ JNIEXPORT jdoubleArray JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Cal
 	{
 		throwJException(env, "java/lang/RuntimeException",
 			"Parent EyeXTracker not found.");
-		return;
+		return NULL;
 	}
 	jobject parent_eyex_tracker = env->GetObjectField(obj, jfid_parent);
 	EyeXNativeData* native_data = getEyeXNativeData(env, parent_eyex_tracker);
@@ -380,17 +384,17 @@ JNIEXPORT jdoubleArray JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Cal
 	//TODO: Finish this function!!!
 	tobiigaze_calibration* calibration;
 	tobiigaze_error_code error_code;
-	tobiigaze_get_calibration(native_data->eye_tracker, calibration, error_code);
+	tobiigaze_get_calibration(native_data->eye_tracker, calibration, &error_code);
 
 	if (error_code) {
 		throwJException(env, "java/lang/IOException",
 			tobiigaze_get_error_message(error_code));
-		return;
+		return NULL;
 	}
 
-	for (int i = 0; i < calibration_size; i++) {
-		std::cout << calibration_data[i] << std::endl;
-	}
+	//for (int i = 0; i < calibration_size; i++) {
+		//std::cout << calibration_data[i] << std::endl;
+	//}
 	/*jdoubleArray calibrationPoints = env->NewDoubleArray(4 * calibration_size);  // allocate
 
 	if (NULL == calibrationPoints) return NULL;
