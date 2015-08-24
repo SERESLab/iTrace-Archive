@@ -286,7 +286,7 @@ public class EyeXTracker implements IEyeTracker {
         calibrator.moveCrosshair(screen_x, screen_y);
     }
 
-    private native void jniConnectEyeXTracker();
+    private native void jniConnectEyeXTracker() throws IOException;
     public native void close();
     public native void startTracking() throws RuntimeException, IOException;
     public native void stopTracking() throws RuntimeException, IOException;
