@@ -98,6 +98,26 @@ void on_gaze_data(const tobiigaze_gaze_data* gazedata, const tobiigaze_gaze_data
 JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024BackgroundThread_jniBeginMainloop
   (JNIEnv *env, jobject obj) {
 
+		const int urlSize = 256;
+		char url[urlSize];
+
+		tobiigaze_eye_tracker* eye_tracker;
+		tobiigaze_error_code error_code;
+		
+	    tobiigaze_get_connected_eye_tracker(url, urlSize, &error_code);
+	    if (error_code) {
+	    	printf("No eye tracker found.\n");
+	    } else {
+	    	// Create an eye tracker instance.
+	    	eye_tracker = tobiigaze_create(url, &error_code);
+	    	if (error_code) {
+	    		printf(tobiigaze_get_error_message(error_code));
+	    	} else {
+	    		// Start the event loop. This must be done before connecting.
+	    		tobiigaze_run_event_loop(eye_tracker, &error_code);
+	    	}
+	    }
+
 		//Get native data ByteBuffer field in EyeXTracker object.
 	    jfieldID jfid_parent = getFieldID(env, obj, "parent",
 	    	"Ledu/ysu/itrace/trackers/EyeXTracker;");
@@ -117,28 +137,10 @@ JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Backgro
 	    native_data->j_background_thread = env->NewGlobalRef(obj);
 	    //Store structure reference in Java object.
 	    env->SetObjectField(parent_eyex_tracker, jfid_native_data, native_data_bb);
-
-		const int urlSize = 256;
-		char url[urlSize];
-
-	    tobiigaze_get_connected_eye_tracker(url, urlSize, &native_data->error_code);
-	    if (native_data->error_code) {
-	    	printf("No eye tracker found.\n");
-	    	return JNI_FALSE;
-	    }
-		
-	    // Create an eye tracker instance.
-	    native_data->eye_tracker = tobiigaze_create(url, &native_data->error_code);
-	    if (native_data->error_code) {
-	    	return JNI_FALSE;
-	    }
-
-	    // Start the event loop. This must be done before connecting.
-	    tobiigaze_run_event_loop(native_data->eye_tracker, &native_data->error_code);
-	    if (native_data->error_code) {
-	       	return JNI_FALSE;
-	    }
-
+	    
+	    native_data->error_code = error_code;
+	    native_data->eye_tracker = eye_tracker;
+	    
 	    return JNI_TRUE;
 }
 
