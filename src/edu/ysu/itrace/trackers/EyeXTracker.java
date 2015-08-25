@@ -124,7 +124,7 @@ public class EyeXTracker implements IEyeTracker {
         bg_thread.start();
         while (native_data == null); //Wait until background thread sets native_data
         try {
-        	Thread.sleep(2000); //wait a little bit to set up event loop
+        	Thread.sleep(4000); //wait a little bit to set up event loop
         } catch(InterruptedException e) {
         	System.out.println("Can't sleep before connection.");
         }

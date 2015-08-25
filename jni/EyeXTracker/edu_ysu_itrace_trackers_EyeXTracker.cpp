@@ -122,20 +122,20 @@ JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Backgro
 		char url[urlSize];
 
 	    tobiigaze_get_connected_eye_tracker(url, urlSize, &native_data->error_code);
-	    if (error_code) {
+	    if (native_data->error_code) {
 	    	printf("No eye tracker found.\n");
 	    	return JNI_FALSE;
 	    }
 		
 	    // Create an eye tracker instance.
 	    native_data->eye_tracker = tobiigaze_create(url, &native_data->error_code);
-	    if (error_code) {
+	    if (native_data->error_code) {
 	    	return JNI_FALSE;
 	    }
 
 	    // Start the event loop. This must be done before connecting.
 	    tobiigaze_run_event_loop(native_data->eye_tracker, &native_data->error_code);
-	    if (error_code) {
+	    if (native_data->error_code) {
 	       	return JNI_FALSE;
 	    }
 
@@ -156,17 +156,19 @@ JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_jniConnectEyeXTr
 	//Set EyeXTracker reference.
 	native_data->j_eye_tracker = env->NewGlobalRef(obj);
 
+	//If error occured when creating the main loop
+	//do no continue
 	if (native_data->error_code) {
 		throwJException(env, "java/lang/IOException",
-				tobiigaze_get_error_message(error_code));
+				tobiigaze_get_error_message(native_data->error_code));
 		return;
 	}
 
 	// Connect to the tracker.
-	tobiigaze_connect(native_data->eye_tracker, &error_code);
-	if (error_code) {
+	tobiigaze_connect(native_data->eye_tracker, &native_data->error_code);
+	if (native_data->error_code) {
 		throwJException(env, "java/lang/IOException",
-				tobiigaze_get_error_message(error_code));
+				tobiigaze_get_error_message(native_data->error_code));
 		return;
 	}
     printf("Connected.\n");
