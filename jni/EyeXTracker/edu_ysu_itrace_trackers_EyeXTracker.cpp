@@ -15,7 +15,7 @@ struct EyeXNativeData
 	jobject j_eye_tracker;
 	jobject j_background_thread;
 	tobiigaze_eye_tracker* eye_tracker;
-	tobiigaze_error_code connect_error_code;
+	tobiigaze_error_code create_error_code;
 };
 
 EyeXNativeData* g_native_data_current = NULL;
@@ -106,15 +106,42 @@ JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Backgro
 		
 	    tobiigaze_get_connected_eye_tracker(url, urlSize, &error_code);
 	    if (error_code) {
-	    	printf("No eye tracker found.\n");
+	    	std::cout << "No eye tracker found." << std::endl;
 	    } else {
 	    	// Create an eye tracker instance.
 	    	eye_tracker = tobiigaze_create(url, &error_code);
 	    	if (error_code) {
-	    		printf(tobiigaze_get_error_message(error_code));
+	    		std::cout << tobiigaze_get_error_message(error_code) << std::endl;
 	    	} else {
+	    		//Get native data ByteBuffer field in EyeXTracker object.
+	    		jfieldID jfid_parent = getFieldID(env, obj, "parent",
+	    			"Ledu/ysu/itrace/trackers/EyeXTracker;");
+	    		if (jfid_parent == NULL)
+	    			return JNI_FALSE;
+	   			jobject parent_eyex_tracker = env->GetObjectField(obj, jfid_parent);
+	    		jfieldID jfid_native_data = getFieldID(env, parent_eyex_tracker,
+	    			"native_data", "Ljava/nio/ByteBuffer;");
+	    		if (jfid_native_data == NULL)
+	    			return JNI_FALSE;
+	    		//Create structure to hold instance-specific data.
+	    		EyeXNativeData* native_data = new EyeXNativeData();
+	    		jobject native_data_bb = env->NewDirectByteBuffer((void*) native_data,
+	    			sizeof(EyeXNativeData));
+	    		//Set java virtual machine and BackgroundThread reference.
+	    		env->GetJavaVM(&native_data->jvm);
+	   			native_data->j_background_thread = env->NewGlobalRef(obj);
+	    		native_data->create_error_code = error_code;
+	    		native_data->eye_tracker = eye_tracker;
+	    		//Store structure reference in Java object.
+	    		env->SetObjectField(parent_eyex_tracker, jfid_native_data, native_data_bb); 
+	    		
+	    		std::cout << "Starting event loop." << std::endl;
 	    		// Start the event loop. This must be done before connecting.
 	    		tobiigaze_run_event_loop(eye_tracker, &error_code);
+	    		std::cout << "Event loop over." << std::endl;
+	    		if (error_code) return JNI_FALSE;
+	    		
+	    		return JNI_TRUE;
 	    	}
 	    }
 
@@ -135,11 +162,10 @@ JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Backgro
 	    //Set java virtual machine and BackgroundThread reference.
 	    env->GetJavaVM(&native_data->jvm);
 	    native_data->j_background_thread = env->NewGlobalRef(obj);
+	    native_data->create_error_code = error_code;
+	    native_data->eye_tracker = eye_tracker;
 	    //Store structure reference in Java object.
 	    env->SetObjectField(parent_eyex_tracker, jfid_native_data, native_data_bb);
-	    
-	    native_data->connect_error_code = error_code;
-	    native_data->eye_tracker = eye_tracker;
 	    
 	    return JNI_TRUE;
 }
@@ -148,6 +174,8 @@ JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Backgro
 JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_jniConnectEyeXTracker
   (JNIEnv *env, jobject obj) {
 
+	tobiigaze_error_code error_code;
+	
 	//Get native data from object.
 	EyeXNativeData* native_data = getEyeXNativeData(env, obj);
 	if (native_data == NULL) {
@@ -158,13 +186,13 @@ JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_jniConnectEy
 
 	//If error occured when creating the main loop
 	//do no continue
-	if (native_data->connect_error_code) {
+	if (native_data->create_error_code) {
 		return JNI_FALSE;
 	}
 
 	// Connect to the tracker.
-	tobiigaze_connect(native_data->eye_tracker, &native_data->connect_error_code);
-	if (native_data->connect_error_code) {
+	tobiigaze_connect(native_data->eye_tracker, &error_code);
+	if (error_code) {
 		return JNI_FALSE;
 	}
     printf("Connected.\n");
@@ -183,7 +211,7 @@ JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_close
 		return;
 	}
 	
-	if (native_data->connect_error_code) { //eye_tracker is not set so get out of here
+	if (native_data->create_error_code) { //eye_tracker is not set so get out of here
 		return;
 	}
 	
