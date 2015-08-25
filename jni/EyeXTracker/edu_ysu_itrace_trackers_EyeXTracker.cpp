@@ -15,7 +15,7 @@ struct EyeXNativeData
 	jobject j_eye_tracker;
 	jobject j_background_thread;
 	tobiigaze_eye_tracker* eye_tracker;
-	tobiigaze_error_code error_code;
+	tobiigaze_error_code connect_error_code;
 };
 
 EyeXNativeData* g_native_data_current = NULL;
@@ -138,42 +138,37 @@ JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Backgro
 	    //Store structure reference in Java object.
 	    env->SetObjectField(parent_eyex_tracker, jfid_native_data, native_data_bb);
 	    
-	    native_data->error_code = error_code;
+	    native_data->connect_error_code = error_code;
 	    native_data->eye_tracker = eye_tracker;
 	    
 	    return JNI_TRUE;
 }
 
 //TRACKER FUNCTIONS
-JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_jniConnectEyeXTracker
+JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_jniConnectEyeXTracker
   (JNIEnv *env, jobject obj) {
 
 	//Get native data from object.
 	EyeXNativeData* native_data = getEyeXNativeData(env, obj);
 	if (native_data == NULL) {
-		throwJException(env, "java/lang/RuntimeException",
-				"Cannot find native data.");
-		return;
+		return JNI_FALSE;
 	}
 	//Set EyeXTracker reference.
 	native_data->j_eye_tracker = env->NewGlobalRef(obj);
 
 	//If error occured when creating the main loop
 	//do no continue
-	if (native_data->error_code) {
-		throwJException(env, "java/lang/IOException",
-				tobiigaze_get_error_message(native_data->error_code));
-		return;
+	if (native_data->connect_error_code) {
+		return JNI_FALSE;
 	}
 
 	// Connect to the tracker.
-	tobiigaze_connect(native_data->eye_tracker, &native_data->error_code);
-	if (native_data->error_code) {
-		throwJException(env, "java/lang/IOException",
-				tobiigaze_get_error_message(native_data->error_code));
-		return;
+	tobiigaze_connect(native_data->eye_tracker, &native_data->connect_error_code);
+	if (native_data->connect_error_code) {
+		return JNI_FALSE;
 	}
     printf("Connected.\n");
+    return JNI_TRUE;
 }
 
 JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_close
@@ -187,7 +182,11 @@ JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_close
 			"Cannot find native data.");
 		return;
 	}
-
+	
+	if (native_data->connect_error_code) { //eye_tracker is not set so get out of here
+		return;
+	}
+	
 	// Disconnect.
 	tobiigaze_disconnect(native_data->eye_tracker);
 

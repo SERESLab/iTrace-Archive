@@ -122,8 +122,11 @@ public class EyeXTracker implements IEyeTracker {
         //the Gaze SDK.
         bg_thread = new BackgroundThread(this);
         bg_thread.start();
-        while (native_data == null); //Wait until background thread sets native_data
-        jniConnectEyeXTracker();
+        while (native_data == null); //Wait until background thread sets native_data        
+        if (!jniConnectEyeXTracker()) {
+            this.close();
+            throw new EyeTrackerConnectException();
+        }
     }
 
     public static void main(String[] args) {
@@ -286,7 +289,7 @@ public class EyeXTracker implements IEyeTracker {
         calibrator.moveCrosshair(screen_x, screen_y);
     }
 
-    private native void jniConnectEyeXTracker() throws IOException;
+    private native boolean jniConnectEyeXTracker();
     public native void close();
     public native void startTracking() throws RuntimeException, IOException;
     public native void stopTracking() throws RuntimeException, IOException;
