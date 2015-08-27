@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "TobiiGazeSDK/Common.h"
+#include "TobiiGazeSDK/tobiigaze_error_codes.h"
+#include "TobiiGazeSDK/tobiigaze.h"
 #include "TobiiGazeSDK/tobiigaze_discovery.h"
 #include "TobiiGazeSDK/tobiigaze_calibration.h"
 #include "edu_ysu_itrace_trackers_EyeXTracker.h"

@@ -19,7 +19,6 @@ Here are the instructions for building the EyeX Tracker extension.
  - Download from: http://developer.tobii.com/downloads/
  - Extract all libs in CPP to your MinGW lib/ directory and all includes in CPP
    to your MinGW include/ directory
- - Move the Common.h file from the jni/EyeXTracker folder to your MinGW include/ directory
  - Use the 32bit version
 
 ### Building EyeXTracker
