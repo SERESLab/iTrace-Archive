@@ -91,7 +91,7 @@ void on_gaze_data(const tobiigaze_gaze_data* gazedata, const tobiigaze_gaze_data
 	    gazedata->left.gaze_point_on_display_normalized.x, gazedata->left.gaze_point_on_display_normalized.y,
 		gazedata->right.gaze_point_on_display_normalized.x, gazedata->right.gaze_point_on_display_normalized.y,
 	    leftValidity, rightValidity,
-	    -1, -1); //no pupil diameters for recording
+	    0, 0); //no pupil diameters for recording
 }
 
 //JNI FUNCTIONS
