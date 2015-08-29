@@ -20,6 +20,7 @@ struct EyeXNativeData
 };
 
 EyeXNativeData* g_native_data_current = NULL;
+bool add_point_callback = false;
 
 void throwJException(JNIEnv* env, const char* jclass_name, const char* msg)
 {
@@ -283,40 +284,34 @@ JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_stopTracking
 void stop_calibration_handler(tobiigaze_error_code error_code, void *user_data);
 
 void handle_calibration_error(tobiigaze_error_code error_code, void *user_data, const char *error_message) {
-    JNIEnv* env = NULL;
-	jint rs = g_native_data_current->jvm->GetEnv((void**) &env, JNI_VERSION_1_6);
-	if (rs != JNI_OK || env == NULL)
-		return;
-		
     if (error_code) {
-    	throwJException(env, "java/lang/IOException",
-    			tobiigaze_get_error_message(error_code));
         tobiigaze_calibration_stop_async((tobiigaze_eye_tracker*) user_data, stop_calibration_handler, user_data);
+        std::cout << tobiigaze_get_error_message(error_code) << std::endl;
     }
 }
 
 void compute_calibration_handler(tobiigaze_error_code error_code, void *user_data) {
     if (error_code) {
         if (error_code == TOBIIGAZE_FW_ERROR_OPERATION_FAILED) {
-            fprintf(stderr, "Compute calibration FAILED due to insufficient gaze data.\n");
+            std::cout << "Compute calibration FAILED due to insufficient gaze data.\n" << std::endl;
         }
 
         handle_calibration_error(error_code, user_data, "compute_calibration_handler");
         return;
     }
 
-    printf("compute_calibration_handler: OK\n");
+    std::cout << "compute_calibration_handler: OK\n" << std::endl;
 
 }
 
 void add_calibration_point_handler(tobiigaze_error_code error_code, void *user_data) {
-
+	std::cout << "calibration point callback function." << std::endl;
+	add_point_callback = true;
 	if (error_code) {
         handle_calibration_error(error_code, user_data, "add_calibration_point_handler");
         return;
     }
-
-	usleep(2000); // Give the user some time to move the gaze and focus on the object
+	std::cout << "Added calibration point successfully." << std::endl;
 }
 
 void stop_calibration_handler(tobiigaze_error_code error_code, void *user_data) {
@@ -326,11 +321,12 @@ void stop_calibration_handler(tobiigaze_error_code error_code, void *user_data) 
         return;
     }
 
-    printf("stop_calibration_handler: OK\n");
+    std::cout << "stop_calibration_handler: OK\n" << std::endl;
 }
 
 JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Calibrator_jniAddPoint
   (JNIEnv *env, jobject obj, jdouble x, jdouble y) {
+	add_point_callback = false;
 
 	//Get native data from parent EyeXTracker
 	jfieldID jfid_parent = getFieldID(env, obj, "parent",
@@ -343,14 +339,20 @@ JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Calibrator_
 	}
 	jobject parent_eyex_tracker = env->GetObjectField(obj, jfid_parent);
 	EyeXNativeData* native_data = getEyeXNativeData(env, parent_eyex_tracker);
-
+	
+	std::cout << "In add point function." << std::endl;
+	
 	tobiigaze_point_2d* point;
-	point->x = x;
-	point->y = y;
+	point->x = x; std::cout << x << std::endl;
+	point->y = y; std::cout << y << std::endl;
+	
 	// The call to tobiigaze_calibration_add_point_async starts collecting calibration data at the specified point.
 	// Make sure to keep the stimulus (i.e., the calibration dot) on the screen until the tracker is finished, that
 	// is, until the callback function is invoked.
 	tobiigaze_calibration_add_point_async(native_data->eye_tracker, point, add_calibration_point_handler, native_data->eye_tracker);
+	
+	while(add_point_callback != true);
+	std::cout << "after add point function." << std::endl;
 }
 
 JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Calibrator_jniStartCalibration
@@ -367,9 +369,6 @@ JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Calibrator_
 	}
 	jobject parent_eyex_tracker = env->GetObjectField(obj, jfid_parent);
 	EyeXNativeData* native_data = getEyeXNativeData(env, parent_eyex_tracker);
-
-	//Set native data for current tracking TobiiTracker.
-	g_native_data_current = native_data;
 	
 	// calibration
 	tobiigaze_calibration_start_async(native_data->eye_tracker, add_calibration_point_handler, native_data->eye_tracker);
@@ -379,7 +378,7 @@ JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Calibrator_
 JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Calibrator_jniStopCalibration
   (JNIEnv *env, jobject obj) {
 
-	/*//Get native data from parent EyeXTracker
+	//Get native data from parent EyeXTracker
 	jfieldID jfid_parent = getFieldID(env, obj, "parent",
 		"Ledu/ysu/itrace/trackers/EyeXTracker;");
 	if (jfid_parent == NULL)
@@ -389,12 +388,11 @@ JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Calibrator_
 		return;
 	}
 	jobject parent_eyex_tracker = env->GetObjectField(obj, jfid_parent);
-	EyeXNativeData* native_data = getEyeXNativeData(env, parent_eyex_tracker);*/
+	EyeXNativeData* native_data = getEyeXNativeData(env, parent_eyex_tracker);
 
-	printf("Computing calibration...\n");
-	tobiigaze_calibration_compute_and_set_async(g_native_data_current->eye_tracker, compute_calibration_handler, g_native_data_current->eye_tracker);
-	tobiigaze_calibration_stop_async(g_native_data_current->eye_tracker, stop_calibration_handler, g_native_data_current->eye_tracker);
-	g_native_data_current = NULL;
+	std::cout << "Computing calibration...\n" << std::endl;
+	tobiigaze_calibration_compute_and_set_async(native_data->eye_tracker, compute_calibration_handler, native_data->eye_tracker);
+	tobiigaze_calibration_stop_async(native_data->eye_tracker, stop_calibration_handler, native_data->eye_tracker);
 }
 
 JNIEXPORT jdoubleArray JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Calibrator_jniGetCalibration
@@ -412,36 +410,7 @@ JNIEXPORT jdoubleArray JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Cal
 	jobject parent_eyex_tracker = env->GetObjectField(obj, jfid_parent);
 	EyeXNativeData* native_data = getEyeXNativeData(env, parent_eyex_tracker);
 
-	//TODO: Finish this function!!!
-	tobiigaze_calibration* calibration;
-	tobiigaze_error_code error_code;
-	tobiigaze_get_calibration(native_data->eye_tracker, calibration, &error_code);
 
-	if (error_code) {
-		throwJException(env, "java/lang/IOException",
-			tobiigaze_get_error_message(error_code));
-		return NULL;
-	}
-
-	//for (int i = 0; i < calibration_size; i++) {
-		//std::cout << calibration_data[i] << std::endl;
-	//}
-	/*jdoubleArray calibrationPoints = env->NewDoubleArray(4 * calibration_size);  // allocate
-
-	if (NULL == calibrationPoints) return NULL;
-
-	jdouble *points = env->GetDoubleArrayElements(calibrationPoints, 0);
-
-	CalibrationPlotItem item;
-	for (int i = 0; i < itemCount; i++) {
-	     item = calibrationPlotData->at(i);
-	     points[i] = item.leftMapPosition.x;
-	     points[itemCount+i] = item.leftMapPosition.y;
-	     points[2*itemCount+i] = item.rightMapPosition.x;
-	     points[3*itemCount+i] = item.rightMapPosition.y;
-	}
-	env->ReleaseDoubleArrayElements(calibrationPoints, points, 0);*/
-
-	return NULL;//calibrationPoints;
+	return NULL;
 }
 
