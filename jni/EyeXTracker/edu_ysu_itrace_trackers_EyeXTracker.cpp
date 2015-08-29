@@ -306,12 +306,13 @@ void compute_calibration_handler(tobiigaze_error_code error_code, void *user_dat
 
 void add_calibration_point_handler(tobiigaze_error_code error_code, void *user_data) {
 	std::cout << "calibration point callback function." << std::endl;
-	add_point_callback = true;
+	
 	if (error_code) {
-        handle_calibration_error(error_code, user_data, "add_calibration_point_handler");
-        return;
-    }
-	std::cout << "Added calibration point successfully." << std::endl;
+		handle_calibration_error(error_code, user_data, "add_calibration_point_handler");
+	}
+	
+	add_point_callback = true;
+	std::cout << "done in callback." << std::endl;
 }
 
 void stop_calibration_handler(tobiigaze_error_code error_code, void *user_data) {
