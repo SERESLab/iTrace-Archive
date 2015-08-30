@@ -305,14 +305,12 @@ void compute_calibration_handler(tobiigaze_error_code error_code, void *user_dat
 }
 
 void add_calibration_point_handler(tobiigaze_error_code error_code, void *user_data) {
-	std::cout << "calibration point callback function." << std::endl;
 	
 	if (error_code) {
 		handle_calibration_error(error_code, user_data, "add_calibration_point_handler");
 	}
 	
 	add_point_callback = true;
-	std::cout << "done in callback." << std::endl;
 }
 
 void stop_calibration_handler(tobiigaze_error_code error_code, void *user_data) {
@@ -341,19 +339,16 @@ JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Calibrator_
 	jobject parent_eyex_tracker = env->GetObjectField(obj, jfid_parent);
 	EyeXNativeData* native_data = getEyeXNativeData(env, parent_eyex_tracker);
 	
-	std::cout << "In add point function." << std::endl;
-	
-	tobiigaze_point_2d* point;
-	point->x = x; std::cout << x << std::endl;
-	point->y = y; std::cout << y << std::endl;
+	tobiigaze_point_2d point;
+	point.x = x;
+	point.y = y;
 	
 	// The call to tobiigaze_calibration_add_point_async starts collecting calibration data at the specified point.
 	// Make sure to keep the stimulus (i.e., the calibration dot) on the screen until the tracker is finished, that
 	// is, until the callback function is invoked.
-	tobiigaze_calibration_add_point_async(native_data->eye_tracker, point, add_calibration_point_handler, native_data->eye_tracker);
+	tobiigaze_calibration_add_point_async(native_data->eye_tracker, &point, add_calibration_point_handler, native_data->eye_tracker);
 	
 	while(add_point_callback != true);
-	std::cout << "after add point function." << std::endl;
 }
 
 JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Calibrator_jniStartCalibration
@@ -398,7 +393,7 @@ JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Calibrator_
 
 JNIEXPORT jdoubleArray JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Calibrator_jniGetCalibration
   (JNIEnv *env, jobject obj) {
-
+	std::cout << "here" << std::endl;
 	//Get native data from parent EyeXTracker
 	jfieldID jfid_parent = getFieldID(env, obj, "parent",
 		"Ledu/ysu/itrace/trackers/EyeXTracker;");
@@ -410,8 +405,47 @@ JNIEXPORT jdoubleArray JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Cal
 	}
 	jobject parent_eyex_tracker = env->GetObjectField(obj, jfid_parent);
 	EyeXNativeData* native_data = getEyeXNativeData(env, parent_eyex_tracker);
-
-
-	return NULL;
+	
+	tobiigaze_calibration calibration;
+	tobiigaze_calibration_point_data point_data_items;
+	uint32_t point_data_items_capacity;
+	uint32_t point_data_items_size;
+	tobiigaze_error_code error_code;
+	
+	/*//Get calibration
+	tobiigaze_get_calibration(native_data->eye_tracker, &calibration, &error_code);
+	if (error_code) {
+		std::cout << "Cannot retrieve calibration data." << std::endl;
+		throwJException(env, "java/lang/IOException",
+			tobiigaze_get_error_message(error_code));
+		return NULL;
+	}
+	
+	tobiigaze_get_calibration_point_data_items(&calibration, &point_data_items,
+			point_data_items_capacity, &point_data_items_size, &error_code);
+	if (error_code) {
+		std::cout << "Cannot retrieve calibration point data items." << std::endl;
+		throwJException(env, "java/lang/IOException",
+			tobiigaze_get_error_message(error_code));
+		return NULL;
+	}
+	
+	jdoubleArray calibrationPoints = env->NewDoubleArray(4 * point_data_items_size);  // allocate
+		
+   	if (NULL == calibrationPoints) return NULL;
+   	jdouble *points = env->GetDoubleArrayElements(calibrationPoints, 0);
+   		
+   	tobiigaze_calibration_point_data item;
+   	for (int i = 0; i < point_data_items_size; i++) {
+   		//item = point_data_items;
+        //points[i] = item.left_map_position.x;
+        //points[point_data_items_size+i] = item.left_map_position.y;
+        //points[2*point_data_items_size+i] = item.right_map_position.x;
+        //points[3*point_data_items_size+i] = item.right_map_position.y;
+        //point_data_items++;
+    }
+    env->ReleaseDoubleArrayElements(calibrationPoints, points, 0);
+        
+    return calibrationPoints;*/
+    return NULL;
 }
-
