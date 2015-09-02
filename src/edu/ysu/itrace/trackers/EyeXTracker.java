@@ -59,7 +59,9 @@ public class EyeXTracker implements IEyeTracker {
 	     }
 	        
 	     protected void displayCalibrationStatus() throws Exception {
-	    	 /*double[] pointsNormalized = jniGetCalibration();
+	    	 double[] pointsNormalized = jniGetCalibration();
+	    	 if (pointsNormalized == null)
+	    		 throw new IOException("Can't get calibration data!");
 	    	 int itemCount = pointsNormalized.length/4;
 
 	    	 for (int i = 0; i < pointsNormalized.length; i++) {
@@ -91,7 +93,7 @@ public class EyeXTracker implements IEyeTracker {
 	    	 calibFrame.pack();
 	    	 calibFrame.setVisible(true);
 	        	
-	    	 JOptionPane.showMessageDialog(calibFrame, "Calibration Status");*/
+	    	 JOptionPane.showMessageDialog(calibFrame, "Calibration Status");
 	    }
 
 	    private native void jniAddPoint(double x, double y)
@@ -188,11 +190,11 @@ public class EyeXTracker implements IEyeTracker {
 
     public void calibrate() throws CalibrationException {
         calibrator.calibrate();
-        try {
+       /* try {
         	calibrator.displayCalibrationStatus();
         } catch (Exception e) {
         	throw new CalibrationException("Cannot display calibration status!");
-        }
+        } */
     }
 
     public Gaze getGaze() {
