@@ -86,12 +86,14 @@ void on_gaze_data(const tobiigaze_gaze_data* gazedata, const tobiigaze_gaze_data
 	if (jmid_new_gaze_point == NULL)
 	    return;
 
+	int pupilDiameter = 0; //EyeX does not record pupil diameter
+							//jni doesn't like sending straight numbers not stored in a variable.
 	//Call newGazePoint.
 	env->CallVoidMethod(obj, jmid_new_gaze_point, (jlong) gazedata->timestamp,
 	    gazedata->left.gaze_point_on_display_normalized.x, gazedata->left.gaze_point_on_display_normalized.y,
 		gazedata->right.gaze_point_on_display_normalized.x, gazedata->right.gaze_point_on_display_normalized.y,
 	    leftValidity, rightValidity,
-	    0, 0); //no pupil diameters for recording
+	    pupilDiameter, pupilDiameter); //no pupil diameters for recording
 }
 
 //JNI FUNCTIONS

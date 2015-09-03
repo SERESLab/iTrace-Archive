@@ -245,8 +245,8 @@ public class EyeXTracker implements IEyeTracker {
         else if (right_y <= 0.0)
             right_y = 0.0;
 
-        double gaze_left_validity = 1.0 - ((double) left_validity / 4.0);
-        double gaze_right_validity = 1.0 - ((double) right_validity / 4.0);
+        double gaze_left_validity = left_validity; //0 if left eye bad and 1 if left eye good
+        double gaze_right_validity = right_validity; //same for right eye
 
         double left_x_mod = left_x,
                right_x_mod = right_x,
