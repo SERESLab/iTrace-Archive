@@ -44,6 +44,8 @@ import edu.ysu.itrace.exceptions.CalibrationException;
 import edu.ysu.itrace.exceptions.EyeTrackerConnectException;
 import edu.ysu.itrace.filters.IFilter;
 import edu.ysu.itrace.filters.fixation.JSONBasicFixationFilter;
+import edu.ysu.itrace.filters.fixation.OldJSONBasicFixationFilter;
+import edu.ysu.itrace.filters.fixation.OldXMLBasicFixationFilter;
 import edu.ysu.itrace.filters.fixation.XMLBasicFixationFilter;
 import edu.ysu.itrace.gaze.IGazeHandler;
 import edu.ysu.itrace.gaze.IGazeResponse;
@@ -190,7 +192,7 @@ public class ControlView extends ViewPart implements IPartListener2,
         parent.setLayout(new RowLayout());
 
         final Composite buttonComposite = new Composite(parent, SWT.NONE);
-        buttonComposite.setLayout(new GridLayout(3, false));
+        buttonComposite.setLayout(new GridLayout(2, false));
 
         Button calibrateButton = new Button(buttonComposite, SWT.PUSH);
         calibrateButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true,
@@ -222,17 +224,6 @@ public class ControlView extends ViewPart implements IPartListener2,
             @Override
             public void widgetSelected(SelectionEvent e) {
                 startTracking();
-            }
-        });
-
-        final Button stopButton = new Button(buttonComposite, SWT.PUSH);
-        stopButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true,
-                1, 1));
-        stopButton.setText("Stop Tracking");
-        stopButton.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                stopTracking();
             }
         });
         
@@ -407,16 +398,34 @@ public class ControlView extends ViewPart implements IPartListener2,
         });  
         grayedControls.add(infoButton);
         
+        //Stop Tracking Button
+        final Button stopButton = new Button(buttonComposite, SWT.PUSH);
+        stopButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true,
+                1, 1));
+        stopButton.setText("Stop Tracking");
+        stopButton.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                stopTracking();
+            }
+        });
+        
         //Configure Filters Here
+        OldJSONBasicFixationFilter oldjsonBFFilter =
+        		new OldJSONBasicFixationFilter();
+        OldXMLBasicFixationFilter oldxmlBFFilter =
+        		new OldXMLBasicFixationFilter();
         JSONBasicFixationFilter jsonBFFilter =
         		new JSONBasicFixationFilter();
-        availableFilters.add(jsonBFFilter);
         XMLBasicFixationFilter xmlBFFilter =
         		new XMLBasicFixationFilter();
+        availableFilters.add(oldjsonBFFilter);
+        availableFilters.add(jsonBFFilter);
+        availableFilters.add(oldxmlBFFilter);
         availableFilters.add(xmlBFFilter);
         
         final Composite filterComposite = new Composite(parent, SWT.NONE);
-        filterComposite.setLayout(new GridLayout(1, false));
+        filterComposite.setLayout(new GridLayout(2, false));
         
         for (final IFilter filter: availableFilters) {
         	final Button filterButton =
@@ -559,7 +568,7 @@ public class ControlView extends ViewPart implements IPartListener2,
             styledText.setData(KEY_AST, new AstManager(editor, styledText));
     }
 
-    /*
+    /**
      * Finds the control under the specified screen coordinates and calls its
      * gaze handler on the localized point. Returns the gaze response or null if
      * the gaze is not handled.

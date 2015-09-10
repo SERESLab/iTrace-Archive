@@ -1,7 +1,5 @@
 package edu.ysu.itrace.gaze;
 
-import java.util.Map;
-
 import edu.ysu.itrace.Gaze;
 
 /**
@@ -18,12 +16,7 @@ public interface IGazeResponse {
     /**
      * Returns the type of artifact.
      */
-    public String getType();
-
-    /**
-     * Returns a name,value pair of properties specific to the artifact type.
-     */
-    public Map<String,String> getProperties();
+    public String getGazeType();
 
     /**
      * Returns the gaze object from which the response originated.
