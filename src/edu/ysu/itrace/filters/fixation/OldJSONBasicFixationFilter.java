@@ -17,7 +17,7 @@ import edu.ysu.itrace.filters.OldRawGaze;
 import edu.ysu.itrace.filters.RawGaze;
 
 
-public class OldJSONBasicFixationFilter extends BasicFixationFilter {
+public class OldJSONBasicFixationFilter extends BasicFixationFilter { //for the ABB study files
 	
 	//log file header variables
 	private int width;

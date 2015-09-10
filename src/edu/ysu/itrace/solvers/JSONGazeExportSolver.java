@@ -54,9 +54,9 @@ public class JSONGazeExportSolver implements IFileExportSolver {
 
             responseWriter = new JsonWriter(new FileWriter(outFile));
 
-            responseWriter.setIndent("");
+            //responseWriter.setIndent("");
             // to pretty print, use this one instead
-            //responseWriter.setIndent("  ");
+            responseWriter.setIndent("  ");
         } catch (IOException e) {
             throw new RuntimeException("Log files could not be created: "
                     + e.getMessage());

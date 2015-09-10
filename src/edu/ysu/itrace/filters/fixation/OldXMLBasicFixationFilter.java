@@ -19,7 +19,7 @@ import javax.xml.stream.XMLStreamWriter;
 import edu.ysu.itrace.filters.OldRawGaze;
 import edu.ysu.itrace.filters.RawGaze;
 
-public class OldXMLBasicFixationFilter extends BasicFixationFilter {
+public class OldXMLBasicFixationFilter extends BasicFixationFilter { //for the ABB Study files
 	
 	//log file header variables
 	private int width;
