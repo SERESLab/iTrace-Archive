@@ -57,6 +57,7 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 	
 	@Override
 	public void read(File file) throws IOException {
+		rawGazes.clear(); //make sure rawGazes is empty
 		if (file != null) {
 			//Set up needed export data
 			fileDir = new String(file.getParent());
