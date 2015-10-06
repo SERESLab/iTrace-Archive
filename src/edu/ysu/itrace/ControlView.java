@@ -551,7 +551,9 @@ public class ControlView extends ViewPart implements IPartListener2,
         for (IEditorReference editor : editors) {
             IEditorPart editorPart = editor.getEditor(true);
             StyledText text = (StyledText) editorPart.getAdapter(Control.class);
-            setupStyledText(editorPart, text);
+            if (text != null) { //make sure editorPart contains an instance of StyledText
+            	setupStyledText(editorPart, text);
+            }
         }
     }
 
