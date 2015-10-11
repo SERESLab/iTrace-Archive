@@ -19,7 +19,9 @@ import javax.xml.stream.XMLStreamWriter;
 import org.eclipse.core.resources.ResourcesPlugin;
 
 import edu.ysu.itrace.AstManager.SourceCodeEntity;
+import edu.ysu.itrace.SOManager.StackOverflowEntity;
 import edu.ysu.itrace.gaze.IGazeResponse;
+import edu.ysu.itrace.gaze.IStackOverflowGazeResponse;
 import edu.ysu.itrace.gaze.IStyledTextGazeResponse;
 
 /**
@@ -123,7 +125,7 @@ public class XMLGazeExportSolver implements IFileExportSolver {
                         "nano_time",
                         String.valueOf(response.getGaze().getNanoTime()));
 
-                try {
+                if (response instanceof IStyledTextGazeResponse) {
                     IStyledTextGazeResponse styledResponse =
                             (IStyledTextGazeResponse) response;
                     responseWriter.writeAttribute("path", styledResponse.getPath());
@@ -159,8 +161,20 @@ public class XMLGazeExportSolver implements IFileExportSolver {
                     }
                     responseWriter.writeEndElement();
 
-                } catch (ClassCastException e) {
-                    // not styled text, oh well
+                } else if (response instanceof IStackOverflowGazeResponse) {
+                	IStackOverflowGazeResponse stackOverflowResponse =
+                            (IStackOverflowGazeResponse) response;
+                	StackOverflowEntity soe = stackOverflowResponse.getSOE();
+                    responseWriter.writeAttribute("url", stackOverflowResponse.getURL());
+                    responseWriter.writeAttribute("Id", stackOverflowResponse.getID());
+                    responseWriter.writeStartElement("soe");
+                    responseWriter.writeAttribute("part", soe.part.toString());
+                    responseWriter.writeAttribute("part_number", String.valueOf(soe.partNum));
+                    responseWriter.writeAttribute("type", soe.type.toString());
+                    responseWriter.writeAttribute("type_number", String.valueOf(soe.typeNum));
+                    responseWriter.writeEndElement();
+                } else {
+                	//ignore anything else
                 }
                 responseWriter.writeEndElement();
                 responseWriter.writeCharacters(EOL);
