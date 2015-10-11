@@ -1,6 +1,8 @@
 package edu.ysu.itrace;
 
 import org.eclipse.swt.browser.Browser;
+import org.eclipse.swt.browser.ProgressEvent;
+import org.eclipse.swt.browser.ProgressListener;
 
 /**
  * Keeps updated information about the stack overflow document viewed in one Browser.
@@ -38,12 +40,17 @@ public class SOManager {
     
 
     /**
-     * Constructor. Loads the SO DOM and sets up the Browser to automatically
-     * reload after certain events.
+     * Constructor. Sets up the Browser with a progress listener.
      * @param browser Browser to which this SO DOM pertains.
      */
     public SOManager(Browser browser) {
         this.browser = browser;
+        
+        /*
+         * add the progress listener with a JavaScript function
+         * to find the SOE at a specified location
+         */
+        addSOEFinder();
     }
 
     /**
@@ -64,83 +71,7 @@ public class SOManager {
         StackOverflowEntity entity = new StackOverflowEntity();
         
         //call JavaScript with relativeX and relativeY to map the x,y position to its SOE
-        String soe = (String) browser.evaluate(
-    			"if (document.readyState === 'interactive') {"
-    			+ "function foundGaze(x, y, bounds) {"
-    			+ 	"return (y < bounds.bottom || y > bounds.top || x < bounds.left || x > bounds.right) ? false:true;"
-    			+ "}"
-    			
-    			+ "var question = document.getElementById('question');"
-    			+ "var qPostText = question.getElementsByClassName('post-text');"
-    			
-    			+ "var qText = qPostText[0].getElementsByTagName('p');"
-    			+ "var i;"
-    			+ "for (i = 0; i < qText.length; i++) {"
-    			+ 	"var found = foundGaze(" + relativeX + "," + relativeY + ", qText[i].getBoundingClientRect());"
-    			+ 	"if (found == true) return 'question text' + i;"
-    			+ "}"
-    			
-    			+ "var qCode = qPostText[0].getElementsByTagName('code');"
-    			+ "for (i = 0; i < qCode.length; i++) {"
-    			+ 	"var found = foundGaze(" + relativeX + "," + relativeY + ", qCode[i].getBoundingClientRect());"
-    			+ 	"if (found == true) return 'question code' + i;"
-    			+ "}"
-    			
-    			+ "var qTags = question.getElementsByClassName('post-tag');"
-    			+ "for (i = 0; i < qTags.length; i++) {"
-    			+ 	"var found = foundGaze(" + relativeX + "," + relativeY + ", qTags[i].getBoundingClientRect());"
-    			+ 	"if (found == true) return 'question tag' + i;"
-    			+ "}"
-    			
-    			+ "var qVote = question.getElementsByClassName('vote');"
-    			+ "found = foundGaze(" + relativeX + "," + relativeY + ", qVote[0].getBoundingClientRect());"
-    			+ "if (found == true) return 'question vote';"
-    			
-    			+ "var qTitle = document.getElementsByTagName('title');"
-    			+ "found = foundGaze(" + relativeX + "," + relativeY + ", qTitle[0].getBoundingClientRect());"
-    			+ "if (found == true) return 'question title';"
-    			
-    			+ "var qComment = question.getElementsByClassName('comment-text');"
-    			+ "for (i = 0; i < qComment.length; i++) {"
-    			+ 	"var found = foundGaze(" + relativeX + "," + relativeY + ", qComment[i].getBoundingClientRect());"
-    			+ 	"if (found == true) return 'question comment' + i;"
-    			+ "}"
-    			
-    			+ "var answers = document.getElementById('answers');"
-    			+ "if (answers == null) return null;"
-    			+ "var aVotes = answers.getElementsByClassName('vote');"
-    			+ "for (i = 0; i < aVotes.length; i++) {"
-    			+ 	"var found = foundGaze(" + relativeX + "," + relativeY + ", aVotes[i].getBoundingClientRect());"
-    			+ 	"if (found == true) return 'answer vote' + i;"
-    			+ "}"
-    			
-    			+ "var aPostText = answers.getElementsByClassName('post-text');"
-    			+ "for (i = 0; i < aPostText.length; i++) {"
-    			+ 	"var aText = aPostText[i].getElementsByTagName('p');"
-    			+ 	"var aCode = aPostText[i].getElementsByTagName('code');"
-    			+	"var j;"
-    			+ 	"for (j = 0; j < aText.length; j++) {"
-    			+		"var found = foundGaze(" + relativeX + "," + relativeY + ", aText[j].getBoundingClientRect());"
-    			+ 		"if (found == true) return 'answer text' + i + j;"
-    			+ 	"}"
-    			+	"for (j = 0; j < aCode.length; j++) {"
-    			+		"var found = foundGaze(" + relativeX + "," + relativeY + ", aCode[j].getBoundingClientRect());"
-    			+ 		"if (found == true) return 'answer code' + i + j;"
-    			+ 	"}"
-    			+ "}"
-    			
-    			+ "var answerCells = answers.getElementsByClassName('answercell');"
-    			+ "for (i = 0; i < answerCells.length; i++) {"
-    			+ 	"var aComments = answerCells[i].getElementsByClassName('comment-text');"
-    			+	"for (var j = 0; j < aComments.length; j++) {"
-    			+ 		"var found = foundGaze(" + relativeX + "," + relativeY + ", aComments[j].getBoundingClientRect());"
-    			+ 		"if (found == true) return 'answer comment' + i + j;"
-    			+ 	"}"
-    			+ "}"
-    			
-    			+ "} else {"
-    			+ "return null;"
-    			+ "}");
+        String soe = (String) browser.evaluate( "return findGaze(" + relativeX + "," + relativeY +");");
         
         //create the soe based on the returned string soe
         if (soe != null) {
@@ -199,5 +130,94 @@ public class SOManager {
         	}
         }
     	return entity;
+    }
+    
+    /**
+     * Set up a page load listener to declare a JavaScript function for finding the SOE
+     * at a specified position on every new page load
+     */
+    private void addSOEFinder() {
+    	browser.addProgressListener(new ProgressListener() {
+			@Override
+			public void changed(ProgressEvent event) {
+			}
+			@Override
+			public void completed(ProgressEvent event) {
+				browser.execute(
+		    			"function foundGaze(x, y, bounds) {"
+		    			+ 	"return (y < bounds.bottom || y > bounds.top || x < bounds.left || x > bounds.right) ? false:true;"
+		    			+ "}"
+		    			+ "function findGaze(x,y) {"
+		    			+ "var question = document.getElementById('question');"
+		    			+ "var qPostText = question.getElementsByClassName('post-text');"
+		    			
+		    			+ "var qText = qPostText[0].getElementsByTagName('p');"
+		    			+ "var i;"
+		    			+ "for (i = 0; i < qText.length; i++) {"
+		    			+ 	"var found = foundGaze(x, y, qText[i].getBoundingClientRect());"
+		    			+ 	"if (found == true) return 'question text' + i;"
+		    			+ "}"
+		    			
+		    			+ "var qCode = qPostText[0].getElementsByTagName('code');"
+		    			+ "for (i = 0; i < qCode.length; i++) {"
+		    			+ 	"var found = foundGaze(x, y, qCode[i].getBoundingClientRect());"
+		    			+ 	"if (found == true) return 'question code' + i;"
+		    			+ "}"
+		    			
+		    			+ "var qTags = question.getElementsByClassName('post-tag');"
+		    			+ "for (i = 0; i < qTags.length; i++) {"
+		    			+ 	"var found = foundGaze(x, y, qTags[i].getBoundingClientRect());"
+		    			+ 	"if (found == true) return 'question tag' + i;"
+		    			+ "}"
+		    			
+		    			+ "var qVote = question.getElementsByClassName('vote');"
+		    			+ "found = foundGaze(x, y, qVote[0].getBoundingClientRect());"
+		    			+ "if (found == true) return 'question vote';"
+		    			
+		    			+ "var qTitle = document.getElementsByTagName('title');"
+		    			+ "found = foundGaze(x, y, qTitle[0].getBoundingClientRect());"
+		    			+ "if (found == true) return 'question title';"
+		    			
+		    			+ "var qComment = question.getElementsByClassName('comment-text');"
+		    			+ "for (i = 0; i < qComment.length; i++) {"
+		    			+ 	"var found = foundGaze(x, y, qComment[i].getBoundingClientRect());"
+		    			+ 	"if (found == true) return 'question comment' + i;"
+		    			+ "}"
+		    			
+		    			+ "var answers = document.getElementById('answers');"
+		    			+ "if (answers == null) return null;"
+		    			+ "var aVotes = answers.getElementsByClassName('vote');"
+		    			+ "for (i = 0; i < aVotes.length; i++) {"
+		    			+ 	"var found = foundGaze(x, y, aVotes[i].getBoundingClientRect());"
+		    			+ 	"if (found == true) return 'answer vote' + i;"
+		    			+ "}"
+		    			
+		    			+ "var aPostText = answers.getElementsByClassName('post-text');"
+		    			+ "for (i = 0; i < aPostText.length; i++) {"
+		    			+ 	"var aText = aPostText[i].getElementsByTagName('p');"
+		    			+ 	"var aCode = aPostText[i].getElementsByTagName('code');"
+		    			+	"var j;"
+		    			+ 	"for (j = 0; j < aText.length; j++) {"
+		    			+		"var found = foundGaze(x, y, aText[j].getBoundingClientRect());"
+		    			+ 		"if (found == true) return 'answer text' + i + j;"
+		    			+ 	"}"
+		    			+	"for (j = 0; j < aCode.length; j++) {"
+		    			+		"var found = foundGaze(x, y, aCode[j].getBoundingClientRect());"
+		    			+ 		"if (found == true) return 'answer code' + i + j;"
+		    			+ 	"}"
+		    			+ "}"
+		    			
+		    			+ "var answerCells = answers.getElementsByClassName('answercell');"
+		    			+ "for (i = 0; i < answerCells.length; i++) {"
+		    			+ 	"var aComments = answerCells[i].getElementsByClassName('comment-text');"
+		    			+	"for (var j = 0; j < aComments.length; j++) {"
+		    			+ 		"var found = foundGaze(x, y, aComments[j].getBoundingClientRect());"
+		    			+ 		"if (found == true) return 'answer comment' + i + j;"
+		    			+ 	"}"
+		    			+ "}"
+		    			
+		    			+ "}");
+			}
+		});
     }
 }
