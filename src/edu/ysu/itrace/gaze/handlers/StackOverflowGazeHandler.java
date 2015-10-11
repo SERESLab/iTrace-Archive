@@ -36,65 +36,67 @@ public class StackOverflowGazeHandler implements IGazeHandler {
 	        final SOManager.StackOverflowEntity entity;
 	        final String url;
 	        final String id;
-
+	        
 	        /*
 	         * If the browser is viewing a stack overflow question and answer page continue
 	         * Otherwise the gaze is invalid, drop it
 	         */
-	        if (!targetBrowser.getUrl().contains("stackoverflow.com/questions/")) {
-	            SOManager soManager = (SOManager) targetBrowser
-	                    .getData(ControlView.KEY_SO_DOM);
-	            
-	            name = partRef.getPartName();
-	            entity = soManager.getSOE(relativeX, relativeY);
-	            /* If entity is null the gaze fell
-	             * outside the valid text area, so just drop this one.
-	             */
-	            if (entity == null)
-	            	return null;
-	            url = soManager.getURL();
-	            id = url.split(Pattern.quote("/"))[4];
-
-	            /*
-	             * This anonymous class just grabs the variables marked final
-	             * in the enclosing method and returns them.
-	             */
-	            return new IStackOverflowGazeResponse() {
-	            	@Override
-	            	public String getName() {
-	            		return name;
-	            	}
-	            	
-	            	@Override
-	            	public String getGazeType() {
-	            		return "browser";
-	            	}
-
-	            	@Override
-	            	public Gaze getGaze() {
-	            		return gaze;
-	            	}
-	            	
-	            	public IGazeHandler getGazeHandler() {
-	            		return StackOverflowGazeHandler.this;
-	            	}
-	            	
-	            	@Override
-	            	public StackOverflowEntity getSOE() {
-	            		return entity;
-	            	}
-	            	
-	            	@Override
-	            	public String getURL() {
-	            		return url;
-	            	}
-	            	
-	            	@Override
-	            	public String getID() {
-	            		return id;
-	            	}
-	            	
-	            };
+	        if (targetBrowser.getUrl().contains("stackoverflow.com/questions/") &&
+	        		 Character.isDigit(targetBrowser.getUrl().split(Pattern.quote("/"))[4].toCharArray()[0])) {
+	        	
+	        	SOManager soManager = (SOManager) targetBrowser
+        				.getData(ControlView.KEY_SO_DOM);
+        		
+        		name = partRef.getPartName();
+        		entity = soManager.getSOE(relativeX, relativeY);
+        		/* If entity is null the gaze fell
+        		 * outside the valid text area, so just drop this one.
+        		 */
+        		if (entity == null)
+        			return null;
+        		url = soManager.getURL();
+        		id = url.split(Pattern.quote("/"))[4];
+        		/*
+        		 * This anonymous class just grabs the variables marked final
+        		 * in the enclosing method and returns them.
+        		 */
+        		return new IStackOverflowGazeResponse() {
+        			@Override
+        			public String getName() {
+        				return name;
+        			}
+        			
+        			@Override
+        			public String getGazeType() {
+        				return "browser";
+        			}
+        			
+        			@Override
+        			public Gaze getGaze() {
+        				return gaze;
+        			}
+        			
+        			public IGazeHandler getGazeHandler() {
+        				return StackOverflowGazeHandler.this;
+        			}
+        			
+        			@Override
+        			public StackOverflowEntity getSOE() {
+        				return entity;
+        			}
+        			
+        			@Override
+        			public String getURL() {
+        				return url;
+        			}
+        			
+        			@Override
+        			public String getID() {
+        				return id;
+        			}
+        			
+        		};		
+	        
 	        } else {
 		    	return null;
 	        } 

@@ -1,8 +1,6 @@
 package edu.ysu.itrace.gaze;
 
 import org.eclipse.swt.browser.Browser;
-import org.eclipse.swt.browser.ProgressEvent;
-import org.eclipse.swt.browser.ProgressListener;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.IWorkbenchPartReference;
@@ -24,7 +22,7 @@ public class GazeHandlerFactory {
         // create gaze handler for a StyledText widget within an EditorPart
         if (target instanceof StyledText &&
                 partRef instanceof IEditorReference) {
-            return new StyledTextGazeHandler(target, partRef);
+            return new StyledTextGazeHandler(target, partRef); 
         }
         
         if (target instanceof Browser &&

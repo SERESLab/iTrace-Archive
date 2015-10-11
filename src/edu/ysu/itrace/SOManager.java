@@ -80,56 +80,73 @@ public class SOManager {
         		entity.type = SOEType.TEXT;
         		entity.partNum = 1;
         		entity.typeNum = Character.getNumericValue(soe.charAt(soe.length()-1));
-        	} else if (soe.contains("question code")) {
+        		return entity;
+        	}
+        	if (soe.contains("question code")) {
         		entity.part = SOEPart.QUESTION;
         		entity.type = SOEType.CODE;
         		entity.partNum = 1;
         		entity.typeNum = Character.getNumericValue(soe.charAt(soe.length()-1));
-        	} else if (soe.contains("question title")) {
+        		return entity;
+        	}
+        	if (soe.contains("question title")) {
         		entity.part = SOEPart.QUESTION;
         		entity.type = SOEType.TITLE;
         		entity.partNum = 1;
         		entity.typeNum = 1;
-        	} else if (soe.contains("question tag")) {
+        		return entity;
+        	} 
+        	if (soe.contains("question tag")) {
         		entity.part = SOEPart.QUESTION;
         		entity.type = SOEType.TAG;
         		entity.partNum = 1;
         		entity.typeNum = Character.getNumericValue(soe.charAt(soe.length()-1));
-        	} else if (soe.contains("question vote")) {
+        		return entity;
+        	}
+        	if (soe.contains("question vote")) {
         		entity.part = SOEPart.QUESTION;
         		entity.type = SOEType.VOTE;
         		entity.partNum = 1;
         		entity.typeNum = 1;
-        	} else if (soe.contains("question comment")) {
+        		return entity;
+        	}
+        	if (soe.contains("question comment")) {
         		entity.part = SOEPart.QUESTION;
         		entity.type = SOEType.COMMENT;
         		entity.partNum = 1;
         		entity.typeNum = Character.getNumericValue(soe.charAt(soe.length()-1));
-        	} else if (soe.contains("answer text")) {
+        		return entity;
+        	}
+        	if (soe.contains("answer text")) {
         		entity.part = SOEPart.ANSWER;
         		entity.type = SOEType.TEXT;
         		entity.partNum = Character.getNumericValue(soe.charAt(soe.length()-2));
         		entity.typeNum = Character.getNumericValue(soe.charAt(soe.length()-1));
-        	} else if (soe.contains("answer code")) {
+        		return entity;
+        	}
+        	if (soe.contains("answer code")) {
         		entity.part = SOEPart.ANSWER;
         		entity.type = SOEType.CODE;
         		entity.partNum = Character.getNumericValue(soe.charAt(soe.length()-2));
         		entity.typeNum = Character.getNumericValue(soe.charAt(soe.length()-1));
-        	} else if (soe.contains("answer comment")) {
+        		return entity;
+        	}
+        	if (soe.contains("answer comment")) {
         		entity.part = SOEPart.ANSWER;
         		entity.type = SOEType.COMMENT;
         		entity.partNum = Character.getNumericValue(soe.charAt(soe.length()-2));
         		entity.typeNum = Character.getNumericValue(soe.charAt(soe.length()-1));
-        	} else if (soe.contains("answer vote")) {
+        		return entity;
+        	}
+        	if (soe.contains("answer vote")) {
         		entity.part = SOEPart.ANSWER;
         		entity.type = SOEType.VOTE;
         		entity.partNum = Character.getNumericValue(soe.charAt(soe.length()-1));
         		entity.typeNum = 1;
-        	} else { 
-        		//ignore
+        		return entity;
         	}
         }
-    	return entity;
+    	return null;
     }
     
     /**

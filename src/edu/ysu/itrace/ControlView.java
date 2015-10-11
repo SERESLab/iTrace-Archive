@@ -547,22 +547,53 @@ public class ControlView extends ViewPart implements IPartListener2,
      * @param partRef Highest-level part reference possible.
      */
     private void setupControls(IWorkbenchPartReference partRef) {
-        IEditorReference[] editors = PlatformUI.getWorkbench()
+        //set up styled text manager if there is one
+    	IEditorReference[] editors = PlatformUI.getWorkbench()
                 .getActiveWorkbenchWindow().getActivePage()
                 .getEditorReferences();
         for (IEditorReference editor : editors) {
             IEditorPart editorPart = editor.getEditor(true);
-            if (editorPart instanceof StyledText) { //make sure editorPart contains an instance of StyledText
-            	StyledText text = (StyledText) editorPart.getAdapter(Control.class);
+            if (editorPart.getAdapter(Control.class) instanceof StyledText) { //make sure editorPart contains an instance of StyledText
+            	StyledText text = (StyledText) editorPart.getAdapter(Control.class); 
             	setupStyledText(editorPart, text);
-            } else if (editorPart instanceof Browser) { //make sure editorPart contains an instance of Browser
-            	Browser browse = (Browser) editorPart.getAdapter(Control.class);
-            	setupBrowser(editorPart, browse);
             }
             //ignore anything else
         }
+        //set up browser manager if there is one
+        Shell workbenchShell = partRef.getPage().getWorkbenchWindow().
+                getShell();
+        for (Control control : workbenchShell.getChildren()) {
+        	setupBrowser(control);
+        }
     }
+    
+    
 
+    /**
+     * Find browser control, set it up to be used by iTrace,
+     * and extract meta-data from it.
+     * 
+     * @param control control that might be a Browser
+     */
+    private void setupBrowser(Control control) {
+        	//If composite
+            if (control instanceof Composite) {
+                Composite composite = (Composite) control;
+
+                Control[] children = composite.getChildren();
+                if (children.length > 0 && children[0] != null) {
+                   for (Control curControl : children) 
+                       setupBrowser(curControl);
+                }
+            }
+        	
+           if (control instanceof Browser){
+        	   Browser browse = (Browser) control;
+        	   setupBrowser(browse);
+           }
+				
+    }
+    
     /**
      * Recursive helper method for setupControls(IWorkbenchPartReference).
      * 
@@ -583,7 +614,7 @@ public class ControlView extends ViewPart implements IPartListener2,
      *               parameter.
      * @param control Browser to set up.
      */
-    private void setupBrowser(IEditorPart editor, Browser control) {
+    private void setupBrowser(Browser control) {
         Browser browser = (Browser) control;
         if (browser.getData(KEY_SO_DOM) == null)
             browser.setData(KEY_SO_DOM, new SOManager(browser));
