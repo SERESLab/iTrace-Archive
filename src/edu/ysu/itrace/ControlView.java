@@ -13,6 +13,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.ModifyEvent;
@@ -61,6 +62,7 @@ public class ControlView extends ViewPart implements IPartListener2,
         ShellListener {
     private static final int POLL_GAZES_MS = 5;
     public static final String KEY_AST = "itraceAST";
+    public static final String KEY_SO_DOM = "itraceSO";
     public static final String FATAL_ERROR_MSG = "A fatal error occurred. "
             + "Restart the plugin and try again. If "
             + "the problem persists, submit a bug report.";
@@ -504,7 +506,7 @@ public class ControlView extends ViewPart implements IPartListener2,
 
     @Override
     public void partVisible(IWorkbenchPartReference partRef) {
-        setupStyledText(partRef);
+        setupControls(partRef);
         HandlerBindManager.bind(partRef);
     }
 
@@ -539,26 +541,30 @@ public class ControlView extends ViewPart implements IPartListener2,
     }
 
     /**
-     * Find styled text controls within a part, set it up to be used by iTrace,
+     * Find styled text or browser controls within a part, set it up to be used by iTrace,
      * and extract meta-data from it.
      * 
      * @param partRef Highest-level part reference possible.
      */
-    private void setupStyledText(IWorkbenchPartReference partRef) {
+    private void setupControls(IWorkbenchPartReference partRef) {
         IEditorReference[] editors = PlatformUI.getWorkbench()
                 .getActiveWorkbenchWindow().getActivePage()
                 .getEditorReferences();
         for (IEditorReference editor : editors) {
             IEditorPart editorPart = editor.getEditor(true);
-            StyledText text = (StyledText) editorPart.getAdapter(Control.class);
-            if (text != null) { //make sure editorPart contains an instance of StyledText
+            if (editorPart instanceof StyledText) { //make sure editorPart contains an instance of StyledText
+            	StyledText text = (StyledText) editorPart.getAdapter(Control.class);
             	setupStyledText(editorPart, text);
+            } else if (editorPart instanceof Browser) { //make sure editorPart contains an instance of Browser
+            	Browser browse = (Browser) editorPart.getAdapter(Control.class);
+            	setupBrowser(editorPart, browse);
             }
+            //ignore anything else
         }
     }
 
     /**
-     * Recursive helper method for setupStyledText(IWorkbenchPartReference).
+     * Recursive helper method for setupControls(IWorkbenchPartReference).
      * 
      * @param editor IEditorPart which owns the StyledText in the next
      *               parameter.
@@ -570,6 +576,19 @@ public class ControlView extends ViewPart implements IPartListener2,
             styledText.setData(KEY_AST, new AstManager(editor, styledText));
     }
 
+    /**
+     * Recursive helper method for setupControls(IWorkbenchPartReference).
+     * 
+     * @param editor IEditorPart which owns the Browser in the next
+     *               parameter.
+     * @param control Browser to set up.
+     */
+    private void setupBrowser(IEditorPart editor, Browser control) {
+        Browser browser = (Browser) control;
+        if (browser.getData(KEY_SO_DOM) == null)
+            browser.setData(KEY_SO_DOM, new SOManager(browser));
+    }
+    
     /**
      * Finds the control under the specified screen coordinates and calls its
      * gaze handler on the localized point. Returns the gaze response or null if
