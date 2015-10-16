@@ -71,7 +71,8 @@ public class SOManager {
         StackOverflowEntity entity = new StackOverflowEntity();
         
         //call JavaScript with relativeX and relativeY to map the x,y position to its SOE
-        String soe = (String) browser.evaluate( "if (document.readyState === 'interactive') {"
+        String soe = (String) browser.evaluate( "if (typeof findGaze == 'function') {"
+        		+ "alert('ready');"
         		+ "return findGaze(" + relativeX + "," + relativeY +");"
         		+ "}");
         System.out.println(soe);
@@ -164,9 +165,16 @@ public class SOManager {
 			public void completed(ProgressEvent event) {
 				browser.execute(
 		    			"function foundGaze(x, y, bounds) {"
-		    			+ 	"return (y < bounds.bottom-10 || y > bounds.top+10 || x < bounds.left-10 || x > bounds.right+10) ? false:true;"
+		    			+ "alert(x);"
+		    			+ "alert(y);"
+		    			+ "alert(bounds.top);"
+		    			+ "alert(bounds.bottom);"
+		    			+ "alert(bounds.left);"
+		    			+ "alert(bounds.right);"
+		    			+ 	"return (y > bounds.bottom+10 || y < bounds.top-10 || x < bounds.left-10 || x > bounds.right+10) ? false:true;"
 		    			+ "}"
 		    			+ "function findGaze(x,y) {"
+		    			+ "try {"
 		    			+ "var question = document.getElementById('question');"
 		    			+ "var qPostText = question.getElementsByClassName('post-text');"
 		    			
@@ -234,7 +242,9 @@ public class SOManager {
 		    			+ 		"if (found == true) return 'answer comment' + i + j;"
 		    			+ 	"}"
 		    			+ "}"
-		    			
+		    			+  "}catch(err) {"
+		    			+ "return err.message;"
+		    			+ "}"
 		    			+ "}");
 			}
 		});
