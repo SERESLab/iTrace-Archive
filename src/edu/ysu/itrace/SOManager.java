@@ -72,24 +72,24 @@ public class SOManager {
         
         //call JavaScript with relativeX and relativeY to map the x,y position to its SOE
         String soe = (String) browser.evaluate( "if (typeof findGaze == 'function') {"
-        		+ "alert('ready');"
         		+ "return findGaze(" + relativeX + "," + relativeY +");"
         		+ "}");
         System.out.println(soe);
+        System.out.println(relativeX + " " + relativeY);
         //create the soe based on the returned string soe
         if (soe != null) {
         	if (soe.contains("question text")) {
         		entity.part = SOEPart.QUESTION;
         		entity.type = SOEType.TEXT;
         		entity.partNum = 1;
-        		entity.typeNum = Character.getNumericValue(soe.charAt(soe.length()-1));
+        		entity.typeNum = Character.getNumericValue(soe.charAt(soe.length()-1))+1;
         		return entity;
         	}
         	if (soe.contains("question code")) {
         		entity.part = SOEPart.QUESTION;
         		entity.type = SOEType.CODE;
         		entity.partNum = 1;
-        		entity.typeNum = Character.getNumericValue(soe.charAt(soe.length()-1));
+        		entity.typeNum = Character.getNumericValue(soe.charAt(soe.length()-1))+1;
         		return entity;
         	}
         	if (soe.contains("question title")) {
@@ -103,7 +103,7 @@ public class SOManager {
         		entity.part = SOEPart.QUESTION;
         		entity.type = SOEType.TAG;
         		entity.partNum = 1;
-        		entity.typeNum = Character.getNumericValue(soe.charAt(soe.length()-1));
+        		entity.typeNum = Character.getNumericValue(soe.charAt(soe.length()-1))+1;
         		return entity;
         	}
         	if (soe.contains("question vote")) {
@@ -117,34 +117,34 @@ public class SOManager {
         		entity.part = SOEPart.QUESTION;
         		entity.type = SOEType.COMMENT;
         		entity.partNum = 1;
-        		entity.typeNum = Character.getNumericValue(soe.charAt(soe.length()-1));
+        		entity.typeNum = Character.getNumericValue(soe.charAt(soe.length()-1))+1;
         		return entity;
         	}
         	if (soe.contains("answer text")) {
         		entity.part = SOEPart.ANSWER;
         		entity.type = SOEType.TEXT;
-        		entity.partNum = Character.getNumericValue(soe.charAt(soe.length()-2));
-        		entity.typeNum = Character.getNumericValue(soe.charAt(soe.length()-1));
+        		entity.partNum = Character.getNumericValue(soe.charAt(soe.length()-2))+1;
+        		entity.typeNum = Character.getNumericValue(soe.charAt(soe.length()-1))+1;
         		return entity;
         	}
         	if (soe.contains("answer code")) {
         		entity.part = SOEPart.ANSWER;
         		entity.type = SOEType.CODE;
-        		entity.partNum = Character.getNumericValue(soe.charAt(soe.length()-2));
-        		entity.typeNum = Character.getNumericValue(soe.charAt(soe.length()-1));
+        		entity.partNum = Character.getNumericValue(soe.charAt(soe.length()-2))+1;
+        		entity.typeNum = Character.getNumericValue(soe.charAt(soe.length()-1))+1;
         		return entity;
         	}
         	if (soe.contains("answer comment")) {
         		entity.part = SOEPart.ANSWER;
         		entity.type = SOEType.COMMENT;
-        		entity.partNum = Character.getNumericValue(soe.charAt(soe.length()-2));
-        		entity.typeNum = Character.getNumericValue(soe.charAt(soe.length()-1));
+        		entity.partNum = Character.getNumericValue(soe.charAt(soe.length()-2))+1;
+        		entity.typeNum = Character.getNumericValue(soe.charAt(soe.length()-1))+1;
         		return entity;
         	}
         	if (soe.contains("answer vote")) {
         		entity.part = SOEPart.ANSWER;
         		entity.type = SOEType.VOTE;
-        		entity.partNum = Character.getNumericValue(soe.charAt(soe.length()-1));
+        		entity.partNum = Character.getNumericValue(soe.charAt(soe.length()-1))+1;
         		entity.typeNum = 1;
         		return entity;
         	}
@@ -165,12 +165,6 @@ public class SOManager {
 			public void completed(ProgressEvent event) {
 				browser.execute(
 		    			"function foundGaze(x, y, bounds) {"
-		    			+ "alert(x);"
-		    			+ "alert(y);"
-		    			+ "alert(bounds.top);"
-		    			+ "alert(bounds.bottom);"
-		    			+ "alert(bounds.left);"
-		    			+ "alert(bounds.right);"
 		    			+ 	"return (y > bounds.bottom+10 || y < bounds.top-10 || x < bounds.left-10 || x > bounds.right+10) ? false:true;"
 		    			+ "}"
 		    			+ "function findGaze(x,y) {"
