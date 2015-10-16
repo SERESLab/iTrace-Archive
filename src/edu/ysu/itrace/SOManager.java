@@ -71,8 +71,10 @@ public class SOManager {
         StackOverflowEntity entity = new StackOverflowEntity();
         
         //call JavaScript with relativeX and relativeY to map the x,y position to its SOE
-        String soe = (String) browser.evaluate( "return findGaze(" + relativeX + "," + relativeY +");");
-        
+        String soe = (String) browser.evaluate( "if (document.readyState === 'interactive') {"
+        		+ "return findGaze(" + relativeX + "," + relativeY +");"
+        		+ "}");
+        System.out.println(soe);
         //create the soe based on the returned string soe
         if (soe != null) {
         	if (soe.contains("question text")) {
