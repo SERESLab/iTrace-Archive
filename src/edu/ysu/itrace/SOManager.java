@@ -164,7 +164,7 @@ public class SOManager {
 			public void completed(ProgressEvent event) {
 				browser.execute(
 		    			"function foundGaze(x, y, bounds) {"
-		    			+ 	"return (y < bounds.bottom || y > bounds.top || x < bounds.left || x > bounds.right) ? false:true;"
+		    			+ 	"return (y < bounds.bottom-10 || y > bounds.top+10 || x < bounds.left-10 || x > bounds.right+10) ? false:true;"
 		    			+ "}"
 		    			+ "function findGaze(x,y) {"
 		    			+ "var question = document.getElementById('question');"
