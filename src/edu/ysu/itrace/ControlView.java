@@ -572,6 +572,7 @@ public class ControlView extends ViewPart implements IPartListener2,
     /**
      * Find browser control, set it up to be used by iTrace,
      * and extract meta-data from it.
+     * Recursive helper method for setupControls(IWorkbenchPartReference).
      * 
      * @param control control that might be a Browser
      */
@@ -587,7 +588,7 @@ public class ControlView extends ViewPart implements IPartListener2,
                 }
             }
         	
-           if (control instanceof Browser){
+           if (control instanceof Browser) {
         	   Browser browse = (Browser) control;
         	   setupBrowser(browse);
            }

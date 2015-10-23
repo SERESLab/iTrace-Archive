@@ -195,7 +195,8 @@ public class SOManager {
 		    			+ "found = foundGaze(x, y, qVote[0].getBoundingClientRect());"
 		    			+ "if (found == true) return 'question vote';"
 		    			
-		    			+ "var qTitle = document.getElementsByTagName('title');"
+		    			+ "var qHeader = document.getElementById('question-header');"
+		    			+ "var qTitle = qHeader.getElementsByTagName('h1');"
 		    			+ "found = foundGaze(x, y, qTitle[0].getBoundingClientRect());"
 		    			+ "if (found == true) return 'question title';"
 		    			
