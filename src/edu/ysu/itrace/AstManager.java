@@ -164,7 +164,6 @@ public class AstManager {
             if (found)
                 entities.add(sce);
         }
-
         return entities.toArray(new SourceCodeEntity[0]);
     }
 

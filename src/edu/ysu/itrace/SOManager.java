@@ -172,6 +172,8 @@ public class SOManager {
 		    			+ "var question = document.getElementById('question');"
 		    			+ "var qPostText = question.getElementsByClassName('post-text');"
 		    			
+		    			//+ "var qList = "
+		    			
 		    			+ "var qText = qPostText[0].getElementsByTagName('p');"
 		    			+ "var i;"
 		    			+ "for (i = 0; i < qText.length; i++) {"
@@ -229,15 +231,15 @@ public class SOManager {
 		    			+ 	"}"
 		    			+ "}"
 		    			
-		    			+ "var answerCells = answers.getElementsByClassName('answercell');"
-		    			+ "for (i = 0; i < answerCells.length; i++) {"
-		    			+ 	"var aComments = answerCells[i].getElementsByClassName('comment-text');"
+		    			+ "var answerComments = answers.getElementsByClassName('comments');"
+		    			+ "for (i = 0; i < answerComments.length; i++) {"
+		    			+ 	"var aComments = answerComments[i].getElementsByClassName('comment-text');"
 		    			+	"for (var j = 0; j < aComments.length; j++) {"
 		    			+ 		"var found = foundGaze(x, y, aComments[j].getBoundingClientRect());"
 		    			+ 		"if (found == true) return 'answer comment' + i + j;"
 		    			+ 	"}"
 		    			+ "}"
-		    			+  "}catch(err) {"
+		    			+  "} catch(err) {"
 		    			+ "return err.message;"
 		    			+ "}"
 		    			+ "}");
