@@ -400,6 +400,7 @@ public class ControlView extends ViewPart implements IPartListener2,
             		for (final ISolver solver: availableSolvers) {
             			solver.config(sessionInfo.getSessionID(),
                 				sessionInfo.getDevUsername());
+            			activeSolvers.addIfAbsent(solver);
             		}
             	}
             }
@@ -419,6 +420,11 @@ public class ControlView extends ViewPart implements IPartListener2,
             		Button button = (Button) controls;
             		button.setSelection(false);
             	}
+                for (final ISolver solver: activeSolvers) {
+                	if(activeSolvers.contains(solver)) {
+        				activeSolvers.remove(solver);
+        			}
+                }
             }
         });
         
