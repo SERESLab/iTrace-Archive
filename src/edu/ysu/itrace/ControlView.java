@@ -63,6 +63,7 @@ public class ControlView extends ViewPart implements IPartListener2,
     private static final int POLL_GAZES_MS = 5;
     public static final String KEY_AST = "itraceAST";
     public static final String KEY_SO_DOM = "itraceSO";
+    public static final String KEY_BR_DOM = "itraceBR";
     public static final String FATAL_ERROR_MSG = "A fatal error occurred. "
             + "Restart the plugin and try again. If "
             + "the problem persists, submit a bug report.";
@@ -636,6 +637,8 @@ public class ControlView extends ViewPart implements IPartListener2,
         Browser browser = (Browser) control;
         if (browser.getData(KEY_SO_DOM) == null)
             browser.setData(KEY_SO_DOM, new SOManager(browser));
+        if (browser.getData(KEY_BR_DOM) == null)
+        	browser.setData(KEY_BR_DOM, new BRManager(browser));
     }
     
     /**
