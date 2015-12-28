@@ -36,9 +36,10 @@ public class StyledTextGazeHandler implements IGazeHandler {
         final String path;
 
         try {
+            if (targetStyledText.getData(ControlView.KEY_AST) == null)
+            		return null;
             AstManager astManager = (AstManager) targetStyledText
-                    .getData(ControlView.KEY_AST);
-
+            		.getData(ControlView.KEY_AST);
             lineIndex = targetStyledText.getLineIndex(relativeY);
             int lineOffset = targetStyledText.getOffsetAtLine(lineIndex);
             int offset = targetStyledText.getOffsetAtLocation(new Point(
