@@ -15,37 +15,34 @@ public class HandlerBindManager {
     public static final String KEY_HANDLER = "gazeHandler";
 
     /**
-     * Binds all controls in an IWorkbenchPartReference which can be bound to
+     * Binds all controls in the Workbench shell, which can be bound to
      * their appropriate gaze handlers.
-     * @param partRef Workbench part from which to get controls.
+     * @param partRef Workbench part from which to get the Workbench shell.
      */
     public static void bind(IWorkbenchPartReference partRef) {
-        Shell workbenchShell = partRef.getPage().getWorkbenchWindow().
-                               getShell();
+        Shell workbenchShell = partRef.getPage().getWorkbenchWindow().getShell();
         for (Control control : workbenchShell.getChildren())
-            bindControl(partRef, control, false);
+        	bindControl(control, false);
     }
 
     /**
-     * Unbinds all controls in an IWorkbenchPartReference which are currently
+     * Unbinds all controls in an Workbench shell, which are currently
      * bound to a gaze handler.
-     * @param partRef Workbench part from which to get controls.
+     * @param partRef Workbench part from which to get the Workbench shell.
      */
     public static void unbind(IWorkbenchPartReference partRef) {
-        Shell workbenchShell = partRef.getPage().getWorkbenchWindow().
-                               getShell();
-        for (Control control : workbenchShell.getChildren())
-            bindControl(partRef, control, true);
+    	Shell workbenchShell = partRef.getPage().getWorkbenchWindow()
+    			.getShell();
+    	for (Control control : workbenchShell.getChildren())
+    		bindControl(control, true);
     }
 
     /**
      * Bind a control. If it is a composite, also bind all of its children.
-     * @param partRef Same partRef parameter passed to bind()/unbind().
      * @param control Highest level control.
      * @param unbind If true, unbind instead of bind.
      */
-    private static void bindControl(IWorkbenchPartReference partRef,
-            Control control, boolean unbind) {
+    private static void bindControl(Control control, boolean unbind) {
         //If composite, bind children.
         if (control instanceof Composite) {
             Composite composite = (Composite) control;
@@ -53,16 +50,16 @@ public class HandlerBindManager {
             Control[] children = composite.getChildren();
             if (children.length > 0 && children[0] != null) {
                for (Control curControl : children)
-                   bindControl(partRef, curControl, unbind);
+                   bindControl(curControl, unbind);
             }
         }
-
+        
         //If key handler already set, the rest of this function is irrelevant.
         if (control.getData(KEY_HANDLER) != null)
             return;
 
         IGazeHandler handler = GazeHandlerFactory.
-                               createHandler(control, partRef);
+                               createHandler(control);
         if (handler != null && !unbind)
             control.setData(KEY_HANDLER, handler);
         else
