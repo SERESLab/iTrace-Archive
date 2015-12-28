@@ -2,7 +2,6 @@ package edu.ysu.itrace.gaze.handlers;
 
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.ui.IWorkbenchPartReference;
 
 import edu.ysu.itrace.AstManager;
 import edu.ysu.itrace.AstManager.SourceCodeEntity;
@@ -15,16 +14,13 @@ import edu.ysu.itrace.gaze.IStyledTextGazeResponse;
  * Implements the gaze handler interface for a StyledText widget.
  */
 public class StyledTextGazeHandler implements IGazeHandler {
-    private IWorkbenchPartReference partRef;
     private StyledText targetStyledText;
 
     /**
-     * Constructs a new gaze handler for the target StyledText object within the
-     * workbench part specified by partRef.
+     * Constructs a new gaze handler for the target StyledText object
      */
-    public StyledTextGazeHandler(Object target, IWorkbenchPartReference partRef) {
+    public StyledTextGazeHandler(Object target) {
         this.targetStyledText = (StyledText) target;
-        this.partRef = partRef;
     }
 
     @Override
@@ -62,12 +58,13 @@ public class StyledTextGazeHandler implements IGazeHandler {
             absoluteLineAnchorPosition = new Point(lineAnchorPosition.x
                     + relativeRoot.x, lineAnchorPosition.y + relativeRoot.y);
 
-            name = partRef.getPartName();
             lineHeight = targetStyledText.getLineHeight();
             fontHeight = targetStyledText.getFont().getFontData()[0]
                     .getHeight();
             entities = astManager.getSCEs(lineIndex + 1, col);
             path = astManager.getPath();
+            int splitLength = path.split("\\\\").length;
+            name = path.split("\\\\")[splitLength-1];
         } catch (IllegalArgumentException e) {
             /* An IllegalArgumentException SHOULD mean that the gaze fell
              * outside the valid text area, so just drop this one.
