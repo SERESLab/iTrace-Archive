@@ -25,7 +25,7 @@ public class BrowserGazeHandler implements IGazeHandler {
 	private Browser targetBrowser;
 
 	    /**e
-	     * Constructs a new gaze handler for the target Browser stack overflow page object within the
+	     * Constructs a new gaze handler for the target Browser SO/BR page object within the
 	     * workbench part specified by partRef.
 	     */
 	    public BrowserGazeHandler(Object target, IWorkbenchPartReference partRef) {
@@ -44,6 +44,7 @@ public class BrowserGazeHandler implements IGazeHandler {
 	        
 	        /*
 	         * If the browser is viewing a stack overflow question and answer page continue
+	         * If not, check if it is on a Bug Reports question
 	         * Otherwise the gaze is invalid, drop it
 	         */
 	        if (targetBrowser.getUrl().contains("stackoverflow.com/questions/") &&
@@ -162,6 +163,7 @@ public class BrowserGazeHandler implements IGazeHandler {
 	        }
 	        
 	        else {
+	        	System.out.println("nope");
 		    	return null;
 	        } 
 	    }

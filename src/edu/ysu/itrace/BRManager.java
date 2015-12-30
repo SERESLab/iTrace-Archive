@@ -5,11 +5,11 @@ import org.eclipse.swt.browser.ProgressEvent;
 import org.eclipse.swt.browser.ProgressListener;
 
 /**
- * Keeps updated information about the stack overflow document viewed in one Browser.
+ * Keeps updated information about the Bug Report document viewed in one Browser.
  */
 public class BRManager {
     /**
-     * Types of stack overflow entities.
+     * Types of Bug Report entities.
      */
     public enum BREType {
         INFO,
@@ -60,10 +60,10 @@ public class BRManager {
     }
 
     /**
-     * Gets the stack overflow entity found at a location on the page.
+     * Gets the Bug Report entity found at a location on the page.
      * @param relativeX x gaze coordinate relative to the control browser.
      * @param relativeY y gaze coordinate relative to the control browser.
-     * @return the stack overflow entity
+     * @return the Bug Report entity
      */
     public BugReportEntity getBRE(int relativeX, int relativeY) {
         BugReportEntity entity = new BugReportEntity();
@@ -104,24 +104,6 @@ public class BRManager {
         		entity.typeNum = Character.getNumericValue(bre.charAt(bre.length()-1))+1;
         		return entity;
         	}
-
-			
-			/*
-        	if (bre.contains("question vote")) {
-        		entity.part = BREPart.QUESTION;
-        		entity.type = BREType.VOTE;
-        		entity.partNum = 1;
-        		entity.typeNum = 1;
-        		return entity;
-        	}
-			if (bre.contains("question comment")) {
-        		entity.part = BREPart.QUESTION;
-        		entity.type = BREType.COMMENT;
-        		entity.partNum = 1;
-        		entity.typeNum = Character.getNumericValue(bre.charAt(bre.length()-1))+1;
-        		return entity;
-        	}
-			*/
 			
         	if (bre.contains("answer info")) {
         		entity.part = BREPart.ANSWER;
@@ -130,30 +112,6 @@ public class BRManager {
         		entity.typeNum = Character.getNumericValue(bre.charAt(bre.length()-1))+1;
         		return entity;
         	}
-			
-			/*
-        	if (bre.contains("answer code")) {
-        		entity.part = BREPart.ANSWER;
-        		entity.type = BREType.CODE;
-        		entity.partNum = Character.getNumericValue(bre.charAt(bre.length()-2))+1;
-        		entity.typeNum = Character.getNumericValue(bre.charAt(bre.length()-1))+1;
-        		return entity;
-        	}
-        	if (bre.contains("answer comment")) {
-        		entity.part = BREPart.ANSWER;
-        		entity.type = BREType.COMMENT;
-        		entity.partNum = Character.getNumericValue(bre.charAt(bre.length()-2))+1;
-        		entity.typeNum = Character.getNumericValue(bre.charAt(bre.length()-1))+1;
-        		return entity;
-        	}
-        	if (bre.contains("answer vote")) {
-        		entity.part = BREPart.ANSWER;
-        		entity.type = BREType.VOTE;
-        		entity.partNum = Character.getNumericValue(bre.charAt(bre.length()-1))+1;
-        		entity.typeNum = 1;
-        		return entity;
-        	}
-			*/
 			
         }
     	return null;
@@ -177,71 +135,33 @@ public class BRManager {
 		    			+ "function findGaze(x,y) {"
 		    			+ "try {"
 		    			+ "var question = document.getElementById('bz_show_bug_column_1')+document.getElementById('bz_show_bug_column_2');"
-		    			+ "var qBzShowBugColumn = question.getElementsByClassName('bz_show_bug_column');"
-		    			
+		    			+ "var qBzShowBugColumn = question.getElementsByClassName('bz_show_bug_column');"		    			
 		    			+ "var qInfo = qBzShowBugColumn[0].getElementsByTagName('a');"
 		    			+ "var i;"
 		    			+ "for (i = 0; i < qBzShowBugColumn.length; i++) {"
 		    			+ 	"var found = foundGaze(x, y, qBzShowBugColumn[i].getBoundingClientRect());"
 		    			+ 	"if (found == true) return 'question info' + i;"
 		    			+ "}"
-		    			
-						/*
-		    			+ "var qCode = qPostText[0].getElementsByTagName('code');"
-		    			+ "for (i = 0; i < qCode.length; i++) {"
-		    			+ 	"var found = foundGaze(x, y, qCode[i].getBoundingClientRect());"
-		    			+ 	"if (found == true) return 'question code' + i;"
-		    			+ "}"
-						*/
 						+ "var attachment = document.getElementById('attachment_table');"
 		    			+ "var attInfo = attachment.getElementsByClassName('bz_contenttype_text_html');"
 		    			+ "for (i = 0; i < attInfo.length; i++) {"
 		    			+ 	"var found = foundGaze(x, y, attInfo[i].getBoundingClientRect());"
 		    			+ 	"if (found == true) return 'attachment info' + i;"
 		    			+ "}"
-		    			
 		    			+ "var qTitle = document.getElementsById('short_desc_nonedit_display');"
 		    			+ "found = foundGaze(x, y, qTitle[0].getBoundingClientRect());"
 		    			+ "if (found == true) return 'question title';"
-		    			
-		    			/*+ "var qComment = question.getElementsByClassName('comment-text');"
-		    			+ "for (i = 0; i < qComment.length; i++) {"
-		    			+ 	"var found = foundGaze(x, y, qComment[i].getBoundingClientRect());"
-		    			+ 	"if (found == true) return 'question comment' + i;"
-		    			+ "}" */
-		    			
 		    			+ "var answers = document.getElementById('comments');"
-		    			+ "if (answers == null) return null;"
-								/*
-		    			+ "var aVotes = answers.getElementsByClassName('vote');"
-		    			+ "for (i = 0; i < aVotes.length; i++) {"
-		    			+ 	"var found = foundGaze(x, y, aVotes[i].getBoundingClientRect());"
-		    			+ 	"if (found == true) return 'answer vote' + i;"
-		    			+ "}" */
-		    			
+		    			+ "if (answers == null) return null;"						    			
 		    			+ "var aInfo = answers.getElementsByClassName('bz_comment_table');"
 		    			+ "for (i = 0; i < aInfo.length; i++) {"
 		    			+ 	"var aText = aInfo[i].getElementsByTagName('pre');"
-		    			//+ 	"var aCode = aInfo[i].getElementsByTagName('code');"
 		    			+	"var j;"
 		    			+ 	"for (j = 0; j < aText.length; j++) {"
 		    			+		"var found = foundGaze(x, y, aText[j].getBoundingClientRect());"
 		    			+ 		"if (found == true) return 'answer info' + i + j;"
-		    			+ 	"}" /*
-		    			+	/*"for (j = 0; j < aCode.length; j++) {"
-		    			+		"var found = foundGaze(x, y, aCode[j].getBoundingClientRect());"
-		    			+ 		"if (found == true) return 'answer code' + i + j;"
-		    			+ 	"}"*/
-		    			+ "}"
-		    			/*
-		    			+ "var answerCells = answers.getElementsByClassName('answercell');"
-		    			+ "for (i = 0; i < answerCells.length; i++) {"
-		    			+ 	"var aComments = answerCells[i].getElementsByClassName('comment-text');"
-		    			+	"for (var j = 0; j < aComments.length; j++) {"
-		    			+ 		"var found = foundGaze(x, y, aComments[j].getBoundingClientRect());"
-		    			+ 		"if (found == true) return 'answer comment' + i + j;"
 		    			+ 	"}"
-		    			+ "}"*/
+		    			+ "}"
 		    			+  "}catch(err) {"
 		    			+ "return err.message;"
 		    			+ "}"
