@@ -13,8 +13,8 @@ public class BRManager {
      */
     public enum BREType {
         INFO,
-		BUGNUM, // for Question part only
-        TITLE, //for Question part only
+        BUGNUM,
+        TITLE,
     }
     
     public enum BREPart {
@@ -24,14 +24,13 @@ public class BRManager {
     }
 
     /**
-     * Information extracted about a stack overflow entity.
+     * Information extracted about a bug report entity.
      */
     public class BugReportEntity {
         public BREPart part;
         public BREType type;
-        public int partNum; //number of part (ie. Answer number 1, Answer number 2), Question part is always 1
-        public int typeNum; //number of type (ie. Comment number 1, Comment number 2), Vote, and Title will always be 1
-        //numbering is by the first element to be seen in the html code
+        public int partNum;
+        public int typeNum;
     }
     
     private Browser browser;
@@ -53,7 +52,7 @@ public class BRManager {
 
     /**
      * Returns a string representation of the URL to the
-     * Stack Overflow question page associated with the current browser.
+     * Bug report page associated with the current browser.
      */
     public String getURL() {
         return browser.getUrl();
@@ -162,7 +161,7 @@ public class BRManager {
 		    			+ 		"if (found == true) return 'answer info' + i + j;"
 		    			+ 	"}"
 		    			+ "}"
-		    			+  "}catch(err) {"
+		    			+  "} catch(err) {"
 		    			+ "return err.message;"
 		    			+ "}"
 		    			+ "}");

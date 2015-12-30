@@ -104,12 +104,11 @@ public class BrowserGazeHandler implements IGazeHandler {
 	        
 	        }
 	        
-	        else if (targetBrowser.getUrl().contains("bugzilla.mozilla.org/show_bug.cgi?id=") &&
-	        		 Character.isDigit(targetBrowser.getUrl().split(Pattern.quote("/"))[4].toCharArray()[0])) {
+	        else if (targetBrowser.getUrl().contains("bugzilla.mozilla.org/show_bug.cgi?id=")) {
 	        	
 	        	BRManager brManager = (BRManager) targetBrowser
        				.getData(ControlView.KEY_BR_DOM);
-       		
+	        	
        		name = partRef.getPartName();
        		BRentity = brManager.getBRE(relativeX, relativeY);
        		/* If entity is null the gaze fell
@@ -118,7 +117,7 @@ public class BrowserGazeHandler implements IGazeHandler {
        		if (BRentity == null)
        			return null;
        		url = brManager.getURL();
-       		id = url.split(Pattern.quote("/"))[4];
+       		id = url.split(Pattern.quote("="))[1];
        		/*
        		 * This anonymous class just grabs the variables marked final
        		 * in the enclosing method and returns them.
@@ -163,7 +162,6 @@ public class BrowserGazeHandler implements IGazeHandler {
 	        }
 	        
 	        else {
-	        	System.out.println("nope");
 		    	return null;
 	        } 
 	    }
