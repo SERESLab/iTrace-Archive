@@ -5,7 +5,7 @@ import org.eclipse.swt.custom.StyledText;
 import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.IWorkbenchPartReference;
 
-import edu.ysu.itrace.gaze.handlers.StackOverflowGazeHandler;
+import edu.ysu.itrace.gaze.handlers.BrowserGazeHandler;
 import edu.ysu.itrace.gaze.handlers.StyledTextGazeHandler;
 
 /**
@@ -27,8 +27,8 @@ public class GazeHandlerFactory {
         
         if (target instanceof Browser &&
         		partRef instanceof IEditorReference) {
-        //create gaze handler for a Browser Stack overflow widget within an EditorPart
-        	return new StackOverflowGazeHandler(target, partRef);
+        //create gaze handler for a Browser Stack overflow and Bug Report widget within an EditorPart
+        	return new BrowserGazeHandler(target, partRef);
         }
 
         return null;
