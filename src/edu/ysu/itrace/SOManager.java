@@ -1,5 +1,7 @@
 package edu.ysu.itrace;
 
+import java.util.regex.Pattern;
+
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.browser.ProgressEvent;
 import org.eclipse.swt.browser.ProgressListener;
@@ -81,21 +83,21 @@ public class SOManager {
         		entity.part = SOEPart.QUESTION;
         		entity.type = SOEType.IMAGE;
         		entity.partNum = 1;
-        		entity.typeNum = Character.getNumericValue(soe.charAt(soe.length()-1))+1;
+        		entity.typeNum = Integer.parseInt(soe.split("-")[1])+1;
         		return entity;
         	}
         	if (soe.contains("question text")) {
         		entity.part = SOEPart.QUESTION;
         		entity.type = SOEType.TEXT;
         		entity.partNum = 1;
-        		entity.typeNum = Character.getNumericValue(soe.charAt(soe.length()-1))+1;
+        		entity.typeNum = Integer.parseInt(soe.split("-")[1])+1;
         		return entity;
         	}
         	if (soe.contains("question code")) {
         		entity.part = SOEPart.QUESTION;
         		entity.type = SOEType.CODE;
         		entity.partNum = 1;
-        		entity.typeNum = Character.getNumericValue(soe.charAt(soe.length()-1))+1;
+        		entity.typeNum = Integer.parseInt(soe.split("-")[1])+1;
         		return entity;
         	}
         	if (soe.contains("question title")) {
@@ -109,7 +111,7 @@ public class SOManager {
         		entity.part = SOEPart.QUESTION;
         		entity.type = SOEType.TAG;
         		entity.partNum = 1;
-        		entity.typeNum = Character.getNumericValue(soe.charAt(soe.length()-1))+1;
+        		entity.typeNum = Integer.parseInt(soe.split("-")[1])+1;
         		return entity;
         	}
         	if (soe.contains("question vote")) {
@@ -123,41 +125,41 @@ public class SOManager {
         		entity.part = SOEPart.QUESTION;
         		entity.type = SOEType.COMMENT;
         		entity.partNum = 1;
-        		entity.typeNum = Character.getNumericValue(soe.charAt(soe.length()-1))+1;
+        		entity.typeNum = Integer.parseInt(soe.split("-")[1])+1;
         		return entity;
         	}
         	if (soe.contains("answer image")) {
         		entity.part = SOEPart.ANSWER;
         		entity.type = SOEType.IMAGE;
-        		entity.partNum = Character.getNumericValue(soe.charAt(soe.length()-2))+1;
-        		entity.typeNum = Character.getNumericValue(soe.charAt(soe.length()-1))+1;
+        		entity.partNum = Integer.parseInt(soe.split("-")[1])+1;
+        		entity.typeNum = Integer.parseInt(soe.split("-")[2])+1;
         		return entity;
         	}
         	if (soe.contains("answer text")) {
         		entity.part = SOEPart.ANSWER;
         		entity.type = SOEType.TEXT;
-        		entity.partNum = Character.getNumericValue(soe.charAt(soe.length()-2))+1;
-        		entity.typeNum = Character.getNumericValue(soe.charAt(soe.length()-1))+1;
+        		entity.partNum = Integer.parseInt(soe.split("-")[1])+1;
+        		entity.typeNum = Integer.parseInt(soe.split("-")[2])+1;
         		return entity;
         	}
         	if (soe.contains("answer code")) {
         		entity.part = SOEPart.ANSWER;
         		entity.type = SOEType.CODE;
-        		entity.partNum = Character.getNumericValue(soe.charAt(soe.length()-2))+1;
-        		entity.typeNum = Character.getNumericValue(soe.charAt(soe.length()-1))+1;
+        		entity.partNum = Integer.parseInt(soe.split("-")[1])+1;
+        		entity.typeNum = Integer.parseInt(soe.split("-")[2])+1;
         		return entity;
         	}
         	if (soe.contains("answer comment")) {
         		entity.part = SOEPart.ANSWER;
         		entity.type = SOEType.COMMENT;
-        		entity.partNum = Character.getNumericValue(soe.charAt(soe.length()-2))+1;
-        		entity.typeNum = Character.getNumericValue(soe.charAt(soe.length()-1))+1;
+        		entity.partNum = Integer.parseInt(soe.split("-")[1])+1;
+        		entity.typeNum = Integer.parseInt(soe.split("-")[2])+1;
         		return entity;
         	}
         	if (soe.contains("answer vote")) {
         		entity.part = SOEPart.ANSWER;
         		entity.type = SOEType.VOTE;
-        		entity.partNum = Character.getNumericValue(soe.charAt(soe.length()-1))+1;
+        		entity.partNum = Integer.parseInt(soe.split("-")[1])+1;
         		entity.typeNum = 1;
         		return entity;
         	}
@@ -189,25 +191,25 @@ public class SOManager {
 		    			+ "var qCode = qPostText[0].getElementsByTagName('code');"
 		    			+ "for (i = 0; i < qCode.length; i++) {"
 		    			+ 	"var found = foundGaze(x, y, qCode[i].getBoundingClientRect());"
-		    			+ 	"if (found == true) return 'question code' + i;"
+		    			+ 	"if (found == true) return 'question code' + '-' + i;"
 		    			+ "}"
 		    			
 		    			+ "var qImage = qPostText[0].getElementsByTagName('img');"
 		    			+ "for (i = 0; i < qImage.length; i++) {"
 		    			+ 	"var found = foundGaze(x, y, qImage[i].getBoundingClientRect());"
-		    			+ 	"if (found == true) return 'question image' + i;"
+		    			+ 	"if (found == true) return 'question image' + '-' + i;"
 		    			+ "}"
 		    			
 		    			+ "var qText = qPostText[0].querySelectorAll('p, ol, ul, dl, h1, h2, h3, h4, h5, h6');"
 		    			+ "for (i = 0; i < qText.length; i++) {"
 		    			+ 	"var found = foundGaze(x, y, qText[i].getBoundingClientRect());"
-		    			+ 	"if (found == true) return 'question text' + i;"
+		    			+ 	"if (found == true) return 'question text' + '-' + i;"
 		    			+ "}"
 		    			
 		    			+ "var qTags = question.getElementsByClassName('post-tag');"
 		    			+ "for (i = 0; i < qTags.length; i++) {"
 		    			+ 	"var found = foundGaze(x, y, qTags[i].getBoundingClientRect());"
-		    			+ 	"if (found == true) return 'question tag' + i;"
+		    			+ 	"if (found == true) return 'question tag' + '-' + i;"
 		    			+ "}"
 		    			
 		    			+ "var qVote = question.getElementsByClassName('vote');"
@@ -222,7 +224,7 @@ public class SOManager {
 		    			+ "var qComment = question.getElementsByClassName('comment-text');"
 		    			+ "for (i = 0; i < qComment.length; i++) {"
 		    			+ 	"var found = foundGaze(x, y, qComment[i].getBoundingClientRect());"
-		    			+ 	"if (found == true) return 'question comment' + i;"
+		    			+ 	"if (found == true) return 'question comment' + '-' + i;"
 		    			+ "}"
 		    			
 		    			+ "var answers = document.getElementById('answers');"
@@ -230,7 +232,7 @@ public class SOManager {
 		    			+ "var aVotes = answers.getElementsByClassName('vote');"
 		    			+ "for (i = 0; i < aVotes.length; i++) {"
 		    			+ 	"var found = foundGaze(x, y, aVotes[i].getBoundingClientRect());"
-		    			+ 	"if (found == true) return 'answer vote' + i;"
+		    			+ 	"if (found == true) return 'answer vote' + '-' + i;"
 		    			+ "}"
 		    			
 		    			+ "var aPostText = answers.getElementsByClassName('post-text');"
@@ -241,15 +243,15 @@ public class SOManager {
 		    			+	"var j;"
 		    			+	"for (j = 0; j < aCode.length; j++) {"
 		    			+		"var found = foundGaze(x, y, aCode[j].getBoundingClientRect());"
-		    			+ 		"if (found == true) return 'answer code' + i + j;"
+		    			+ 		"if (found == true) return 'answer code' + '-' + i + '-' + j;"
 		    			+ 	"}"
 		    			+	"for (j = 0; j < aImage.length; j++) {"
 		    			+		"var found = foundGaze(x, y, aImage[j].getBoundingClientRect());"
-		    			+ 		"if (found == true) return 'answer image' + i + j;"
+		    			+ 		"if (found == true) return 'answer image' + '-' + i + '-' + j;"
 		    			+ 	"}"
 		    			+ 	"for (j = 0; j < aText.length; j++) {"
 		    			+		"var found = foundGaze(x, y, aText[j].getBoundingClientRect());"
-		    			+ 		"if (found == true) return 'answer text' + i + j;"
+		    			+ 		"if (found == true) return 'answer text' + '-' + i + '-' + j;"
 		    			+ 	"}"
 		    			+ "}"
 		    			
@@ -258,7 +260,7 @@ public class SOManager {
 		    			+ 	"var aComments = answerComments[i].getElementsByClassName('comment-text');"
 		    			+	"for (var j = 0; j < aComments.length; j++) {"
 		    			+ 		"var found = foundGaze(x, y, aComments[j].getBoundingClientRect());"
-		    			+ 		"if (found == true) return 'answer comment' + i + j;"
+		    			+ 		"if (found == true) return 'answer comment' + '-' + i + '-' + j;"
 		    			+ 	"}"
 		    			+ "}"
 		    			+  "} catch(err) {"
