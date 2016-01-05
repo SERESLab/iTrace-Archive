@@ -78,7 +78,7 @@ public class BRManager {
         		entity.part = BREPart.QUESTION;
         		entity.type = BREType.INFO;
         		entity.partNum = 1;
-        		entity.typeNum = Character.getNumericValue(bre.charAt(bre.length()-1))+1;
+        		entity.typeNum = Integer.parseInt(bre.split("-")[1])+1;
         		return entity;
         	}
 			if (bre.contains("question title")) {
@@ -92,14 +92,14 @@ public class BRManager {
         		entity.part = BREPart.ATTACHMENT;
         		entity.type = BREType.INFO;
         		entity.partNum = 1;
-        		entity.typeNum = Character.getNumericValue(bre.charAt(bre.length()-1))+1;
+        		entity.typeNum = Integer.parseInt(bre.split("-")[1])+1;
         		return entity;
         	}
 			
         	if (bre.contains("answer info")) {
         		entity.part = BREPart.ANSWER;
         		entity.type = BREType.INFO;
-        		entity.partNum = Character.getNumericValue(bre.charAt(bre.length()-1))+1;
+        		entity.partNum = Integer.parseInt(bre.split("-")[1])+1;
         		entity.typeNum = 1; //comment info/text is in <pre> format so we cannot determine multiple type nums accurately
         		return entity;
         	}
@@ -137,7 +137,7 @@ public class BRManager {
 		    			+ "var q1Info = question1.getElementsByTagName('tr');"
 		    			+ "for (i = 0; i < q1Info.length; i++) {"
 		    			+ 	"var found = foundGaze(x, y, q1Info[i].getBoundingClientRect());"
-		    			+ 	"if (found == true) return 'question info' + i;"
+		    			+ 	"if (found == true) return 'question info' + '-' + i;"
 		    			+ "}"
 		    			
 		    			+ "var question2 = document.getElementById('bz_show_bug_column_2');"
@@ -151,7 +151,7 @@ public class BRManager {
 		    			+ "for (i = 0; i < q2Info.length; i++) {"
 		    			+ 	"var found = foundGaze(x, y, q2Info[i].getBoundingClientRect());"
 		    			+ 	"var num = i + q1Info.length;"
-		    			+ 	"if (found == true) return 'question info' + num;"
+		    			+ 	"if (found == true) return 'question info' + '-' + num;"
 		    			+ "}"
 		    			
 						+ "var attachment = document.getElementById('attachment_table');"
@@ -164,7 +164,7 @@ public class BRManager {
 		    			+ "for (i = 1; i < attInfo.length; i++) {"
 		    			+ 	"var found = foundGaze(x, y, attInfo[i].getBoundingClientRect());"
 		    			+ 	"var num = i-1;"
-		    			+ 	"if (found == true) return 'attachment info' + num;"
+		    			+ 	"if (found == true) return 'attachment info' + '-' + num;"
 		    			+ "}"
 		    			
 		    			+ "var qTitle = document.getElementsByClassName('bz_alias_short_desc_container');"
@@ -175,7 +175,7 @@ public class BRManager {
 		    			+ "var answersText = document.getElementsByClassName('bz_comment_text');"
 		    			+ "for (i = 0; i < answersText.length; i++) {"
 		    			+	"var found = foundGaze(x, y, answersText[i].getBoundingClientRect());"
-		    			+ 	"if (found == true) return 'answer info' + i;"
+		    			+ 	"if (found == true) return 'answer info' + '-' + i;"
 		    			+ "}"
 		    			
 		    			+ "} catch(err) {"
