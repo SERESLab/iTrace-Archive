@@ -17,7 +17,8 @@ public class SOManager {
         COMMENT,
         TITLE, //for Question part only
         TAG, //for Question part only
-        VOTE
+        VOTE,
+        IMAGE
     }
     
     public enum SOEPart {
@@ -74,10 +75,15 @@ public class SOManager {
         String soe = (String) browser.evaluate( "if (typeof findGaze == 'function') {"
         		+ "return findGaze(" + relativeX + "," + relativeY +");"
         		+ "}");
-        System.out.println(soe);
-        System.out.println(relativeX + " " + relativeY);
         //create the soe based on the returned string soe
         if (soe != null) {
+        	if (soe.contains("question image")) {
+        		entity.part = SOEPart.QUESTION;
+        		entity.type = SOEType.IMAGE;
+        		entity.partNum = 1;
+        		entity.typeNum = Character.getNumericValue(soe.charAt(soe.length()-1))+1;
+        		return entity;
+        	}
         	if (soe.contains("question text")) {
         		entity.part = SOEPart.QUESTION;
         		entity.type = SOEType.TEXT;
@@ -117,6 +123,13 @@ public class SOManager {
         		entity.part = SOEPart.QUESTION;
         		entity.type = SOEType.COMMENT;
         		entity.partNum = 1;
+        		entity.typeNum = Character.getNumericValue(soe.charAt(soe.length()-1))+1;
+        		return entity;
+        	}
+        	if (soe.contains("answer image")) {
+        		entity.part = SOEPart.ANSWER;
+        		entity.type = SOEType.IMAGE;
+        		entity.partNum = Character.getNumericValue(soe.charAt(soe.length()-2))+1;
         		entity.typeNum = Character.getNumericValue(soe.charAt(soe.length()-1))+1;
         		return entity;
         	}
@@ -172,17 +185,23 @@ public class SOManager {
 		    			+ "var question = document.getElementById('question');"
 		    			+ "var qPostText = question.getElementsByClassName('post-text');"
 		    			
-		    			+ "var qText = qPostText[0].getElementsByTagName('p');"
 		    			+ "var i;"
-		    			+ "for (i = 0; i < qText.length; i++) {"
-		    			+ 	"var found = foundGaze(x, y, qText[i].getBoundingClientRect());"
-		    			+ 	"if (found == true) return 'question text' + i;"
-		    			+ "}"
-		    			
 		    			+ "var qCode = qPostText[0].getElementsByTagName('code');"
 		    			+ "for (i = 0; i < qCode.length; i++) {"
 		    			+ 	"var found = foundGaze(x, y, qCode[i].getBoundingClientRect());"
 		    			+ 	"if (found == true) return 'question code' + i;"
+		    			+ "}"
+		    			
+		    			+ "var qImage = qPostText[0].getElementsByTagName('img');"
+		    			+ "for (i = 0; i < qImage.length; i++) {"
+		    			+ 	"var found = foundGaze(x, y, qImage[i].getBoundingClientRect());"
+		    			+ 	"if (found == true) return 'question image' + i;"
+		    			+ "}"
+		    			
+		    			+ "var qText = qPostText[0].querySelectorAll('p, ol, ul, dl, h1, h2, h3, h4, h5, h6');"
+		    			+ "for (i = 0; i < qText.length; i++) {"
+		    			+ 	"var found = foundGaze(x, y, qText[i].getBoundingClientRect());"
+		    			+ 	"if (found == true) return 'question text' + i;"
 		    			+ "}"
 		    			
 		    			+ "var qTags = question.getElementsByClassName('post-tag');"
@@ -195,7 +214,8 @@ public class SOManager {
 		    			+ "found = foundGaze(x, y, qVote[0].getBoundingClientRect());"
 		    			+ "if (found == true) return 'question vote';"
 		    			
-		    			+ "var qTitle = document.getElementsByTagName('title');"
+		    			+ "var qHeader = document.getElementById('question-header');"
+		    			+ "var qTitle = qHeader.getElementsByTagName('h1');"
 		    			+ "found = foundGaze(x, y, qTitle[0].getBoundingClientRect());"
 		    			+ "if (found == true) return 'question title';"
 		    			
@@ -215,28 +235,33 @@ public class SOManager {
 		    			
 		    			+ "var aPostText = answers.getElementsByClassName('post-text');"
 		    			+ "for (i = 0; i < aPostText.length; i++) {"
-		    			+ 	"var aText = aPostText[i].getElementsByTagName('p');"
+		    			+ 	"var aImage = aPostText[i].getElementsByTagName('img');"
+		    			+ 	"var aText = aPostText[i].querySelectorAll('p, ol, ul, dl, h1, h2, h3, h4, h5, h6');"
 		    			+ 	"var aCode = aPostText[i].getElementsByTagName('code');"
 		    			+	"var j;"
-		    			+ 	"for (j = 0; j < aText.length; j++) {"
-		    			+		"var found = foundGaze(x, y, aText[j].getBoundingClientRect());"
-		    			+ 		"if (found == true) return 'answer text' + i + j;"
-		    			+ 	"}"
 		    			+	"for (j = 0; j < aCode.length; j++) {"
 		    			+		"var found = foundGaze(x, y, aCode[j].getBoundingClientRect());"
 		    			+ 		"if (found == true) return 'answer code' + i + j;"
 		    			+ 	"}"
+		    			+	"for (j = 0; j < aImage.length; j++) {"
+		    			+		"var found = foundGaze(x, y, aImage[j].getBoundingClientRect());"
+		    			+ 		"if (found == true) return 'answer image' + i + j;"
+		    			+ 	"}"
+		    			+ 	"for (j = 0; j < aText.length; j++) {"
+		    			+		"var found = foundGaze(x, y, aText[j].getBoundingClientRect());"
+		    			+ 		"if (found == true) return 'answer text' + i + j;"
+		    			+ 	"}"
 		    			+ "}"
 		    			
-		    			+ "var answerCells = answers.getElementsByClassName('answercell');"
-		    			+ "for (i = 0; i < answerCells.length; i++) {"
-		    			+ 	"var aComments = answerCells[i].getElementsByClassName('comment-text');"
+		    			+ "var answerComments = answers.getElementsByClassName('comments');"
+		    			+ "for (i = 0; i < answerComments.length; i++) {"
+		    			+ 	"var aComments = answerComments[i].getElementsByClassName('comment-text');"
 		    			+	"for (var j = 0; j < aComments.length; j++) {"
 		    			+ 		"var found = foundGaze(x, y, aComments[j].getBoundingClientRect());"
 		    			+ 		"if (found == true) return 'answer comment' + i + j;"
 		    			+ 	"}"
 		    			+ "}"
-		    			+  "}catch(err) {"
+		    			+  "} catch(err) {"
 		    			+ "return err.message;"
 		    			+ "}"
 		    			+ "}");
