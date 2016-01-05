@@ -350,8 +350,6 @@ public class ControlView extends ViewPart implements IPartListener2,
                 @Override
                 public void widgetSelected(SelectionEvent e) {
                 	if (sessionInfo.isConfigured()) {
-                		solver.config(sessionInfo.getSessionID(),
-                				sessionInfo.getDevUsername());
                 		if (solverEnabled.getSelection()) {
                 			activeSolvers.addIfAbsent(solver);
                 		} else {
@@ -360,6 +358,9 @@ public class ControlView extends ViewPart implements IPartListener2,
                 			}
                 		}
                 	} else {
+                		while (activeSolvers.contains(solver)) {
+                			activeSolvers.remove(solver);
+                		}
                 		solverEnabled.setSelection(false);
                 		displayError("You must configure your Sesssion "
                 				+ "Info. first.");
@@ -373,11 +374,9 @@ public class ControlView extends ViewPart implements IPartListener2,
                 @Override
                 public void widgetSelected(SelectionEvent e) {
                 	if (sessionInfo.isConfigured()) {
-                		solver.config(sessionInfo.getSessionID(),
-                				sessionInfo.getDevUsername());
                 		solver.displayExportFile();
                 	} else {
-                		displayError("You must configure you Session Info. "
+                		displayError("You must configure your Session Info. "
                 				+ "first.");
                 	}
                 }
@@ -391,14 +390,24 @@ public class ControlView extends ViewPart implements IPartListener2,
         infoButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-            	for (final Control controls : solversComposite.getChildren()) {
-            		Button button = (Button) controls;
-            		button.setSelection(false);
-            	}
             	sessionInfo.config();
+            	if (sessionInfo.isConfigured()) {
+            		// set all solver check buttons to checked
+            		for (final Control controls : solversComposite.getChildren()) {
+            			Button button = (Button) controls;
+            			button.setSelection(true);
+            		}
+            		
+            		// Configure all available solvers
+            		for (final ISolver solver: availableSolvers) {
+            			solver.config(sessionInfo.getSessionID(),
+                				sessionInfo.getDevUsername());
+            			activeSolvers.addIfAbsent(solver);
+            		}
+            	}
             }
         });  
-        grayedControls.add(infoButton);
+        grayedControls.addIfAbsent(infoButton);
         
         //Stop Tracking Button
         final Button stopButton = new Button(buttonComposite, SWT.PUSH);
@@ -409,6 +418,15 @@ public class ControlView extends ViewPart implements IPartListener2,
             @Override
             public void widgetSelected(SelectionEvent e) {
                 stopTracking();
+                for (final Control controls : solversComposite.getChildren()) {
+            		Button button = (Button) controls;
+            		button.setSelection(false);
+            	}
+                for (final ISolver solver: activeSolvers) {
+                	if(activeSolvers.contains(solver)) {
+        				activeSolvers.remove(solver);
+        			}
+                }
             }
         });
         
