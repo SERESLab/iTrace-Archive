@@ -70,15 +70,14 @@ public class BRManager {
         String bre = (String) browser.evaluate( "if (typeof findGaze == 'function') {"
         		+ "return findGaze(" + relativeX + "," + relativeY +");"
         		+ "}");
-        System.out.println(bre);
-        System.out.println(relativeX + " " + relativeY);
+        
         //create the bre based on the returned string bre
         if (bre != null) {
         	if (bre.contains("question info")) {
         		entity.part = BREPart.QUESTION;
         		entity.type = BREType.INFO;
         		entity.partNum = 1;
-        		entity.typeNum = Integer.parseInt(bre.split("-")[1])+1;
+        		entity.typeNum = Integer.parseInt(bre.split("-")[1]); //1 is left col and 2 is right col
         		return entity;
         	}
 			if (bre.contains("question title")) {
@@ -129,30 +128,36 @@ public class BRManager {
 		    			
 		    			+ "var question1 = document.getElementById('bz_show_bug_column_1');"
 		    			+ "if (question1 == null) return null;"
-		    			+ "var blankSpaces1 = question1.getElementsByClassName('bz_section_spacer');"
-						+ "for (i = 0; i < blankSpaces1.length; i++) {"
-						+ 	"var parent = blankSpaces1[i].parentNode;"
-						+ 	"parent.parentNode.removeChild(parent);"
-						+ "}"
-		    			+ "var q1Info = question1.getElementsByTagName('tr');"
-		    			+ "for (i = 0; i < q1Info.length; i++) {"
-		    			+ 	"var found = foundGaze(x, y, q1Info[i].getBoundingClientRect());"
+		    			+ "var found = foundGaze(x, y, question1.getBoundingClientRect());"
+		    			+ "if (found == true) return 'question info' + '-' + 1;"
+		    			/*+ "var q1Label = question1.getElementsByTagName('th');"
+		    			+ "var q1Value = question1.getElementsByTagName('td');"
+		    			+ "for (i = 0; i < q1Label.length; i++) {"
+		    			+ 	"var found = foundGaze(x, y, q1Label[i].getBoundingClientRect());"
 		    			+ 	"if (found == true) return 'question info' + '-' + i;"
 		    			+ "}"
+		    			+ "for (i = 0; i < q1Value.length; i++) {"
+		    			+ 	"var found = foundGaze(x, y, q1Value[i].getBoundingClientRect());"
+		    			+ 	"if (found == true) return 'question info' + '-' + i;"
+		    			+ "}"*/
 		    			
 		    			+ "var question2 = document.getElementById('bz_show_bug_column_2');"
 		    			+ "if (question2 == null) return null;"
-		    			+ "var blankSpaces2 = question2.getElementsByClassName('bz_section_spacer');"
-						+ "for (i = 0; i < blankSpaces2.length; i++) {"
-						+ 	"var parent = blankSpaces2[i].parentNode;"
-						+ 	"parent.parentNode.removeChild(parent);"
-						+ "}"
-		    			+ "var q2Info = question2.getElementsByTagName('tr');"
-		    			+ "for (i = 0; i < q2Info.length; i++) {"
-		    			+ 	"var found = foundGaze(x, y, q2Info[i].getBoundingClientRect());"
-		    			+ 	"var num = i + q1Info.length;"
+		    			+ "found = foundGaze(x, y, question2.getBoundingClientRect());"
+		    			+ "if (found == true) return 'question info' + '-' + 2;"
+		    			
+		    			/*+ "var q2Label = question2.getElementsByTagName('th');"
+		    			+ "var q2Value = question2.getElementsByTagName('td');"
+		    			+ "for (i = 0; i < q2Label.length; i++) {"
+		    			+ 	"var found = foundGaze(x, y, q2Label[i].getBoundingClientRect());"
+		    			+ 	"var num = i + q1Label.length;"
 		    			+ 	"if (found == true) return 'question info' + '-' + num;"
 		    			+ "}"
+		    			+ "for (i = 0; i < q2Value.length; i++) {"
+		    			+ 	"var found = foundGaze(x, y, q2Value[i].getBoundingClientRect());"
+		    			+ 	"var num2 = i + q1Value.length;"
+		    			+ 	"if (found == true) return 'question info' + '-' + num2;"
+		    			+ "}"*/
 		    			
 						+ "var attachment = document.getElementById('attachment_table');"
 						+ "if (attachment == null) return null;"
