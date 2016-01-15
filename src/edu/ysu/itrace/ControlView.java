@@ -428,6 +428,11 @@ public class ControlView extends ViewPart implements IPartListener2,
             }
         });
         
+        Button visualizeButton = new Button(buttonComposite, SWT.PUSH);
+        visualizeButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true,
+                true, 1, 1));
+        visualizeButton.setText("Visualize");
+        
         //Configure Filters Here
         OldJSONBasicFixationFilter oldjsonBFFilter =
         		new OldJSONBasicFixationFilter();
