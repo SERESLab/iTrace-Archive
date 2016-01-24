@@ -62,7 +62,7 @@ public class BRManager {
      * Bug report web page
      */
     public String getTitle() {
-    	return (String) browser.evaluate("if (typeof findGaze == 'function') {"
+    	return (String) browser.evaluate("if (typeof findBRGaze == 'function') {"
         		+ "try {"
     			+ 	"var title = document.getElementsByTagName('title');"
         		+ 	"return title[0].textContent;"
@@ -82,8 +82,8 @@ public class BRManager {
         BugReportEntity entity = new BugReportEntity();
         
         //call JavaScript with relativeX and relativeY to map the x,y position to its bre
-        String bre = (String) browser.evaluate( "if (typeof findGaze == 'function') {"
-        		+ "return findGaze(" + relativeX + "," + relativeY +");"
+        String bre = (String) browser.evaluate( "if (typeof findBRGaze == 'function') {"
+        		+ "return findBRGaze(" + relativeX + "," + relativeY +");"
         		+ "}");
         
         //create the bre based on the returned string bre
@@ -134,16 +134,16 @@ public class BRManager {
 			@Override
 			public void completed(ProgressEvent event) {
 				browser.execute(
-		    			"function foundGaze(x, y, bounds) {"
+		    			"function foundBRGaze(x, y, bounds) {"
 		    			+ 	"return (y > bounds.bottom+10 || y < bounds.top-10 || x < bounds.left-10 || x > bounds.right+10) ? false:true;"
 		    			+ "}"
-		    			+ "function findGaze(x,y) {"
+		    			+ "function findBRGaze(x,y) {"
 		    			+ "try {"
 		    			+ "var i;"
 		    			
 		    			+ "var question1 = document.getElementById('bz_show_bug_column_1');"
 		    			+ "if (question1 == null) return null;"
-		    			+ "var found = foundGaze(x, y, question1.getBoundingClientRect());"
+		    			+ "var found = foundBRGaze(x, y, question1.getBoundingClientRect());"
 		    			+ "if (found == true) return 'question info' + '-' + 1;"
 		    			/*+ "var q1Label = question1.getElementsByTagName('th');"
 		    			+ "var q1Value = question1.getElementsByTagName('td');"
@@ -158,7 +158,7 @@ public class BRManager {
 		    			
 		    			+ "var question2 = document.getElementById('bz_show_bug_column_2');"
 		    			+ "if (question2 == null) return null;"
-		    			+ "found = foundGaze(x, y, question2.getBoundingClientRect());"
+		    			+ "found = foundBRGaze(x, y, question2.getBoundingClientRect());"
 		    			+ "if (found == true) return 'question info' + '-' + 2;"
 		    			
 		    			/*+ "var q2Label = question2.getElementsByTagName('th');"
@@ -182,19 +182,19 @@ public class BRManager {
 						+ "}"
 		    			+ "var attInfo = attachment.getElementsByTagName('tr');"
 		    			+ "for (i = 1; i < attInfo.length; i++) {"
-		    			+ 	"var found = foundGaze(x, y, attInfo[i].getBoundingClientRect());"
+		    			+ 	"var found = foundBRGaze(x, y, attInfo[i].getBoundingClientRect());"
 		    			+ 	"var num = i-1;"
 		    			+ 	"if (found == true) return 'attachment info' + '-' + num;"
 		    			+ "}"
 		    			
 		    			+ "var qTitle = document.getElementsByClassName('bz_alias_short_desc_container');"
 		    			+ "if (qTitle[0] == null) return null;"
-		    			+ "found = foundGaze(x, y, qTitle[0].getBoundingClientRect());"
+		    			+ "found = foundBRGaze(x, y, qTitle[0].getBoundingClientRect());"
 		    			+ "if (found == true) return 'question title';"
 		    			
 		    			+ "var answersText = document.getElementsByClassName('bz_comment_text');"
 		    			+ "for (i = 0; i < answersText.length; i++) {"
-		    			+	"var found = foundGaze(x, y, answersText[i].getBoundingClientRect());"
+		    			+	"var found = foundBRGaze(x, y, answersText[i].getBoundingClientRect());"
 		    			+ 	"if (found == true) return 'answer info' + '-' + i;"
 		    			+ "}"
 		    			

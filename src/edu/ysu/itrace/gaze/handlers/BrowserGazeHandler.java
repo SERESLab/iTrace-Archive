@@ -40,14 +40,14 @@ public class BrowserGazeHandler implements IGazeHandler {
 	        
 	        /*
 	         * If the browser is viewing a stack overflow question and answer page continue
-	         * If not, check if it is on a Bug Reports question
+	         * If not, check if it is on a Bug Report question
 	         * Otherwise the gaze is invalid, drop it
 	         */
 	        if (targetBrowser.getUrl().contains("stackoverflow.com/questions/") &&
 	        		 Character.isDigit(targetBrowser.getUrl().split(Pattern.quote("/"))[4].toCharArray()[0])) {
 	        	SOManager soManager = (SOManager) targetBrowser
         				.getData(ControlView.KEY_SO_DOM);
-        		
+        	
         		name = soManager.getTitle();
         		SOentity = soManager.getSOE(relativeX, relativeY);
         		/* If entity is null the gaze fell

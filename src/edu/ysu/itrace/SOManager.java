@@ -67,7 +67,7 @@ public class SOManager {
      * Stack Overflow web page
      */
     public String getTitle() {
-    	return (String) browser.evaluate("if (typeof findGaze == 'function') {"
+    	return (String) browser.evaluate("if (typeof findSOGaze == 'function') {"
         		+ "try {"
     			+ 	"var title = document.getElementsByTagName('title');"
         		+ 	"return title[0].textContent;"
@@ -87,9 +87,10 @@ public class SOManager {
         StackOverflowEntity entity = new StackOverflowEntity();
         
         //call JavaScript with relativeX and relativeY to map the x,y position to its SOE
-        String soe = (String) browser.evaluate( "if (typeof findGaze == 'function') {"
-        		+ "return findGaze(" + relativeX + "," + relativeY +");"
+        String soe = (String) browser.evaluate( "if (typeof findSOGaze == 'function') {"
+        		+ "return findSOGaze(" + relativeX + "," + relativeY +");"
         		+ "}");
+        
         //create the soe based on the returned string soe
         if (soe != null) {
         	if (soe.contains("question image")) {
@@ -192,10 +193,10 @@ public class SOManager {
 			@Override
 			public void completed(ProgressEvent event) {
 				browser.execute(
-		    			"function foundGaze(x, y, bounds) {"
+		    			"function foundSOGaze(x, y, bounds) {"
 		    			+ 	"return (y > bounds.bottom+10 || y < bounds.top-10 || x < bounds.left-10 || x > bounds.right+10) ? false:true;"
 		    			+ "}"
-		    			+ "function findGaze(x,y) {"
+		    			+ "function findSOGaze(x,y) {"
 		    			+ "try {"
 		    			+ "var question = document.getElementById('question');"
 		    			+ "var qPostText = question.getElementsByClassName('post-text');"
@@ -203,40 +204,40 @@ public class SOManager {
 		    			+ "var i;"
 		    			+ "var qCode = qPostText[0].getElementsByTagName('code');"
 		    			+ "for (i = 0; i < qCode.length; i++) {"
-		    			+ 	"var found = foundGaze(x, y, qCode[i].getBoundingClientRect());"
+		    			+ 	"var found = foundSOGaze(x, y, qCode[i].getBoundingClientRect());"
 		    			+ 	"if (found == true) return 'question code' + '-' + i;"
 		    			+ "}"
 		    			
 		    			+ "var qImage = qPostText[0].getElementsByTagName('img');"
 		    			+ "for (i = 0; i < qImage.length; i++) {"
-		    			+ 	"var found = foundGaze(x, y, qImage[i].getBoundingClientRect());"
+		    			+ 	"var found = foundSOGaze(x, y, qImage[i].getBoundingClientRect());"
 		    			+ 	"if (found == true) return 'question image' + '-' + i;"
 		    			+ "}"
 		    			
 		    			+ "var qText = qPostText[0].querySelectorAll('p, ol, ul, dl, h1, h2, h3, h4, h5, h6');"
 		    			+ "for (i = 0; i < qText.length; i++) {"
-		    			+ 	"var found = foundGaze(x, y, qText[i].getBoundingClientRect());"
+		    			+ 	"var found = foundSOGaze(x, y, qText[i].getBoundingClientRect());"
 		    			+ 	"if (found == true) return 'question text' + '-' + i;"
 		    			+ "}"
 		    			
 		    			+ "var qTags = question.getElementsByClassName('post-tag');"
 		    			+ "for (i = 0; i < qTags.length; i++) {"
-		    			+ 	"var found = foundGaze(x, y, qTags[i].getBoundingClientRect());"
+		    			+ 	"var found = foundSOGaze(x, y, qTags[i].getBoundingClientRect());"
 		    			+ 	"if (found == true) return 'question tag' + '-' + i;"
 		    			+ "}"
 		    			
 		    			+ "var qVote = question.getElementsByClassName('vote');"
-		    			+ "found = foundGaze(x, y, qVote[0].getBoundingClientRect());"
+		    			+ "found = foundSOGaze(x, y, qVote[0].getBoundingClientRect());"
 		    			+ "if (found == true) return 'question vote';"
 		    			
 		    			+ "var qHeader = document.getElementById('question-header');"
 		    			+ "var qTitle = qHeader.getElementsByTagName('h1');"
-		    			+ "found = foundGaze(x, y, qTitle[0].getBoundingClientRect());"
+		    			+ "found = foundSOGaze(x, y, qTitle[0].getBoundingClientRect());"
 		    			+ "if (found == true) return 'question title';"
 		    			
 		    			+ "var qComment = question.getElementsByClassName('comment-text');"
 		    			+ "for (i = 0; i < qComment.length; i++) {"
-		    			+ 	"var found = foundGaze(x, y, qComment[i].getBoundingClientRect());"
+		    			+ 	"var found = foundSOGaze(x, y, qComment[i].getBoundingClientRect());"
 		    			+ 	"if (found == true) return 'question comment' + '-' + i;"
 		    			+ "}"
 		    			
@@ -244,7 +245,7 @@ public class SOManager {
 		    			+ "if (answers == null) return null;"
 		    			+ "var aVotes = answers.getElementsByClassName('vote');"
 		    			+ "for (i = 0; i < aVotes.length; i++) {"
-		    			+ 	"var found = foundGaze(x, y, aVotes[i].getBoundingClientRect());"
+		    			+ 	"var found = foundSOGaze(x, y, aVotes[i].getBoundingClientRect());"
 		    			+ 	"if (found == true) return 'answer vote' + '-' + i;"
 		    			+ "}"
 		    			
@@ -255,15 +256,15 @@ public class SOManager {
 		    			+ 	"var aCode = aPostText[i].getElementsByTagName('code');"
 		    			+	"var j;"
 		    			+	"for (j = 0; j < aCode.length; j++) {"
-		    			+		"var found = foundGaze(x, y, aCode[j].getBoundingClientRect());"
+		    			+		"var found = foundSOGaze(x, y, aCode[j].getBoundingClientRect());"
 		    			+ 		"if (found == true) return 'answer code' + '-' + i + '-' + j;"
 		    			+ 	"}"
 		    			+	"for (j = 0; j < aImage.length; j++) {"
-		    			+		"var found = foundGaze(x, y, aImage[j].getBoundingClientRect());"
+		    			+		"var found = foundSOGaze(x, y, aImage[j].getBoundingClientRect());"
 		    			+ 		"if (found == true) return 'answer image' + '-' + i + '-' + j;"
 		    			+ 	"}"
 		    			+ 	"for (j = 0; j < aText.length; j++) {"
-		    			+		"var found = foundGaze(x, y, aText[j].getBoundingClientRect());"
+		    			+		"var found = foundSOGaze(x, y, aText[j].getBoundingClientRect());"
 		    			+ 		"if (found == true) return 'answer text' + '-' + i + '-' + j;"
 		    			+ 	"}"
 		    			+ "}"
@@ -272,7 +273,7 @@ public class SOManager {
 		    			+ "for (i = 0; i < answerComments.length; i++) {"
 		    			+ 	"var aComments = answerComments[i].getElementsByClassName('comment-text');"
 		    			+	"for (var j = 0; j < aComments.length; j++) {"
-		    			+ 		"var found = foundGaze(x, y, aComments[j].getBoundingClientRect());"
+		    			+ 		"var found = foundSOGaze(x, y, aComments[j].getBoundingClientRect());"
 		    			+ 		"if (found == true) return 'answer comment' + '-' + i + '-' + j;"
 		    			+ 	"}"
 		    			+ "}"
