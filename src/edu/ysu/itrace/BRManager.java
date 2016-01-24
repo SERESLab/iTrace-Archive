@@ -56,6 +56,21 @@ public class BRManager {
     public String getURL() {
         return browser.getUrl();
     }
+    
+    /**
+     * Returns a string representation of the title of the 
+     * Bug report web page
+     */
+    public String getTitle() {
+    	return (String) browser.evaluate("if (typeof findGaze == 'function') {"
+        		+ "try {"
+    			+ 	"var title = document.getElementsByTagName('title');"
+        		+ 	"return title[0].textContent;"
+        		+ "} catch(err) {"
+        		+ 	"return err.message;"
+        		+ "}"
+        		+ "}");
+    }
 
     /**
      * Gets the Bug Report entity found at a location on the page.

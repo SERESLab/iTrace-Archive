@@ -1,7 +1,5 @@
 package edu.ysu.itrace;
 
-import java.util.regex.Pattern;
-
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.browser.ProgressEvent;
 import org.eclipse.swt.browser.ProgressListener;
@@ -62,6 +60,21 @@ public class SOManager {
      */
     public String getURL() {
         return browser.getUrl();
+    }
+    
+    /**
+     * Returns a string representation of the title of the 
+     * Stack Overflow web page
+     */
+    public String getTitle() {
+    	return (String) browser.evaluate("if (typeof findGaze == 'function') {"
+        		+ "try {"
+    			+ 	"var title = document.getElementsByTagName('title');"
+        		+ 	"return title[0].textContent;"
+        		+ "} catch(err) {"
+        		+ 	"return err.message;"
+        		+ "}"
+        		+ "}");
     }
 
     /**

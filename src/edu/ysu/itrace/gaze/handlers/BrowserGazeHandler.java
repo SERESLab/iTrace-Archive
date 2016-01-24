@@ -3,7 +3,6 @@ package edu.ysu.itrace.gaze.handlers;
 import java.util.regex.Pattern;
 
 import org.eclipse.swt.browser.Browser;
-import org.eclipse.ui.IWorkbenchPartReference;
 
 import edu.ysu.itrace.BRManager;
 import edu.ysu.itrace.ControlView;
@@ -21,16 +20,13 @@ import edu.ysu.itrace.gaze.IStackOverflowGazeResponse;
  * Implements the gaze handler interface for a Browser widget hosting a Stack Overflow question page.
  */
 public class BrowserGazeHandler implements IGazeHandler {
-	private IWorkbenchPartReference partRef;
 	private Browser targetBrowser;
 
 	    /**e
-	     * Constructs a new gaze handler for the target Browser SO/BR page object within the
-	     * workbench part specified by partRef.
+	     * Constructs a new gaze handler for the target Browser SO/BR page object
 	     */
-	    public BrowserGazeHandler(Object target, IWorkbenchPartReference partRef) {
+	    public BrowserGazeHandler(Object target) {
 	        this.targetBrowser = (Browser) target;
-	        this.partRef = partRef;
 	    }
 
 	    @Override
@@ -52,7 +48,7 @@ public class BrowserGazeHandler implements IGazeHandler {
 	        	SOManager soManager = (SOManager) targetBrowser
         				.getData(ControlView.KEY_SO_DOM);
         		
-        		name = partRef.getPartName();
+        		name = soManager.getTitle();
         		SOentity = soManager.getSOE(relativeX, relativeY);
         		/* If entity is null the gaze fell
         		 * outside the valid text area, so just drop this one.
@@ -109,7 +105,7 @@ public class BrowserGazeHandler implements IGazeHandler {
 	        	BRManager brManager = (BRManager) targetBrowser
        				.getData(ControlView.KEY_BR_DOM);
 	        	
-       		name = partRef.getPartName();
+       		name = brManager.getTitle();
        		BRentity = brManager.getBRE(relativeX, relativeY);
        		/* If entity is null the gaze fell
        		 * outside the valid text area, so just drop this one.
