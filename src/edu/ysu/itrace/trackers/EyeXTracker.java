@@ -135,7 +135,7 @@ public class EyeXTracker implements IEyeTracker {
         EyeXTracker eyex_tracker = null;
         try {
             eyex_tracker = new EyeXTracker();
-            //eyex_tracker.reigsterAssemblyHandler("location of compiled c# library"); //Tell native code where to look for .net DLLs.
+            //eyex_tracker.registerAssemblyHandler("location of compiled c# library"); //Tell native code where to look for .net DLLs.
             System.out.println("Connected successfully to eyetracker.");
 
             Dimension window_bounds = Toolkit.getDefaultToolkit()
@@ -296,7 +296,7 @@ public class EyeXTracker implements IEyeTracker {
     public native void close();
     public native void startTracking() throws RuntimeException, IOException;
     public native void stopTracking() throws RuntimeException, IOException;
-    //native int reigsterAssemblyHandler(String str); --will need this to load .Net assemblies dynamically from C++/CLI code
+    public native int registerAssemblyHandler(String str); //will need this to load .Net assemblies dynamically from C++/CLI code
 
     public void displayCrosshair(boolean enabled) {
         calibrator.displayCrosshair(enabled);

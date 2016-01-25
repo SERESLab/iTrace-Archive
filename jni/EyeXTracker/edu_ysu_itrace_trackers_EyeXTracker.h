@@ -39,6 +39,14 @@ JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_startTracking
 JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_stopTracking
   (JNIEnv *, jobject);
 
+/*
+ * Class:     edu_ysu_itrace_trackers_EyeXTracker
+ * Method:    registerAssemblyHandler
+ * Signature: (Ljava/lang/String;)I
+ */
+JNIEXPORT jint JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_registerAssemblyHandler
+  (JNIEnv *, jobject, jstring);
+
 #ifdef __cplusplus
 }
 #endif
