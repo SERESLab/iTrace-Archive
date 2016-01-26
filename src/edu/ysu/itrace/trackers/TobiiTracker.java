@@ -116,7 +116,7 @@ public class TobiiTracker implements IEyeTracker {
     public TobiiTracker() throws EyeTrackerConnectException,
                                  IOException {
         calibrator = new Calibrator(this);
-        //Initialise the background thread which functions as the main loop in
+        //Initialize the background thread which functions as the main loop in
         //the Tobii SDK.
         bg_thread = new BackgroundThread(this);
         bg_thread.start();
