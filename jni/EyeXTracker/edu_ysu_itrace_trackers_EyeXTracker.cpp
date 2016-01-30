@@ -8,16 +8,19 @@
 
 using namespace System::Reflection;
 using namespace System;
-//using namespace EyeXTrackerGaze;   -- once we have the C# library compiled and added as a reference
+using namespace EyeXTrackerGaze;   // once we have the C# library compiled and added as a reference
 using System::Runtime::InteropServices::Marshal;
 
 #pragma region iTrace Java Specific
+
+
 struct EyeXNativeData
 {
 	JavaVM* jvm;
 	jobject j_eye_tracker;
 	jobject j_background_thread;
-	//EyeTracker::pointer_t eye_tracker;  //this will represent our C# eye tracker, may need to change this line
+	
+	EyeXTracker^ *eye_tracker;  // This is a pointer to the C# eye tracker
 	//ErrorCode create_error_code;
 };
 
@@ -113,21 +116,44 @@ JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Backgro
 (JNIEnv * env, jobject obj)
 {
 	//Initialize SDK?
+
 	//Get native data ByteBuffer field in EyeXTracker object.
 	jfieldID jfid_parent = getFieldID(env, obj, "parent",
 		"Ledu/ysu/itrace/trackers/EyeXTracker;");
 	if (jfid_parent == NULL)
 		return JNI_FALSE;
+
+	//create c++ object with jfid_parent
 	jobject parent_eyex_tracker = env->GetObjectField(obj, jfid_parent);
+
+	//get obj field - "native_data" from TobiiTracker obj "parent"
 	jfieldID jfid_native_data = getFieldID(env, parent_eyex_tracker,
 		"native_data", "Ljava/nio/ByteBuffer;");
 	if (jfid_native_data == NULL)
 		return JNI_FALSE;
+
 	//Create structure to hold instance-specific data.
 	EyeXNativeData* native_data = new EyeXNativeData();
+
+	//create structure reference
 	jobject native_data_bb = env->NewDirectByteBuffer((void*)native_data,
 		sizeof(EyeXNativeData));
-	return true; // this is temporary
+
+	//Set java virtual machine and BackgroundThread reference.
+	env->GetJavaVM(&native_data->jvm);
+	native_data->j_background_thread = env->NewGlobalRef(obj);
+
+	//Store structure reference in Java object.
+	env->SetObjectField(parent_eyex_tracker, jfid_native_data, native_data_bb);
+
+	//Run!
+	//eye_tracker->jniBeginTobiiMainLoop();
+	//native_data->eye_tracker->gcnew EyeXTracker();
+
+	//This code does not execute until the main loop has been stopped.
+	delete native_data;
+
+	return JNI_TRUE;
 }
 
 /*
@@ -194,7 +220,8 @@ JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_jniConnectEy
 JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_close
 (JNIEnv * env, jobject obj)
 {
-
+	//close
+	//eye_tracker->close();
 }
 
 /*
