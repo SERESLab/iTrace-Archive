@@ -5,6 +5,7 @@
 #include "edu_ysu_itrace_trackers_EyeXTracker.h"
 #include "edu_ysu_itrace_trackers_EyeXTracker_BackgroundThread.h"
 #include "edu_ysu_itrace_trackers_EyeXTracker_Calibrator.h"
+#include <msclr/auto_gcroot.h>
 
 using namespace System::Reflection;
 using namespace System;
@@ -20,7 +21,8 @@ struct EyeXNativeData
 	jobject j_eye_tracker;
 	jobject j_background_thread;
 	
-	EyeXTracker^ *eye_tracker;  // This is a pointer to the C# eye tracker
+	//EyeXTracker^ *eye_tracker;  
+	gcroot<EyeXTracker^> eye_tracker; // This is a pointer to the C# eye tracker
 	//ErrorCode create_error_code;
 };
 
@@ -147,8 +149,7 @@ JNIEXPORT jboolean JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Backgro
 	env->SetObjectField(parent_eyex_tracker, jfid_native_data, native_data_bb);
 
 	//Run!
-	//eye_tracker->jniBeginTobiiMainLoop();
-	//native_data->eye_tracker->gcnew EyeXTracker();
+	native_data->eye_tracker->jniBeginTobiiMainLoop();
 
 	//This code does not execute until the main loop has been stopped.
 	delete native_data;
