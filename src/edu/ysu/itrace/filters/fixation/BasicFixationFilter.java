@@ -7,6 +7,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import edu.ysu.itrace.filters.IFilter;
+import edu.ysu.itrace.filters.NewRawGaze;
+import edu.ysu.itrace.filters.OldRawGaze;
 import edu.ysu.itrace.filters.RawGaze;
 
 /**
@@ -292,13 +294,24 @@ public abstract class BasicFixationFilter implements IFilter {
 				rawGazes.get(iStart).getSystemTime();
 		
 		//Create the new processed fixation
-		RawGaze rawGaze = rawGazes.get(iStart);
-		RawGaze processedGaze = new RawGaze(rawGaze.getFile(), rawGaze.getType(),
-				medianX, medianY, 1, 1, leftPupilDiam, rightPupilDiam,
-				rawGaze.getTrackerTime(), rawGaze.getSystemTime(),
-				rawGaze.getNanoTime(), rawGaze.getLineBaseX(), rawGaze.getLine(),
-				rawGaze.getCol(), rawGaze.getHows(), rawGaze.getTypes(),
-				rawGaze.getFullyQualifiedNames(), rawGaze.getLineBaseY());
+		RawGaze processedGaze = null;
+		if (rawGazes.get(iStart) instanceof OldRawGaze) {
+			OldRawGaze rawGaze = (OldRawGaze)rawGazes.get(iStart);
+			 processedGaze = new OldRawGaze(rawGaze.getFile(), rawGaze.getType(),
+					medianX, medianY, 1, 1, leftPupilDiam, rightPupilDiam,
+					rawGaze.getTrackerTime(), rawGaze.getSystemTime(),
+					rawGaze.getNanoTime(), rawGaze.getLineBaseX(), rawGaze.getLine(),
+					rawGaze.getCol(), rawGaze.getHows(), rawGaze.getTypes(),
+					rawGaze.getFullyQualifiedNames(), rawGaze.getLineBaseY());
+		} else {
+			NewRawGaze rawGaze = (NewRawGaze)rawGazes.get(iStart);
+			processedGaze = new NewRawGaze(rawGaze.getFile(), rawGaze.getType(),
+					medianX, medianY, 1, 1, leftPupilDiam, rightPupilDiam,
+					rawGaze.getTrackerTime(), rawGaze.getSystemTime(),
+					rawGaze.getNanoTime(), rawGaze.getPath(), rawGaze.getLineHeight(),
+					rawGaze.getFontHeight(), rawGaze.getLineBaseX(), rawGaze.getLine(),
+					rawGaze.getCol(), rawGaze.getLineBaseY(), rawGaze.getSces());
+		}
 		Fixation fixation = new Fixation(processedGaze, duration);
 		
 		return fixation;
@@ -324,6 +337,7 @@ public abstract class BasicFixationFilter implements IFilter {
 		processPeaks();
 		peakIndices();
 		spatialPos();
+		removeShortFixations();
 	}
 	
 }

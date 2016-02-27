@@ -4,7 +4,7 @@ package edu.ysu.itrace.filters;
  * Class that holds raw gaze data information. 
  * It may be re-inventing the wheel.
  */
-public class RawGaze {
+public abstract class RawGaze {
 	private String file;
 	private String type;
 	private double x;
@@ -16,21 +16,18 @@ public class RawGaze {
 	private long trackerTime;
 	private long systemTime;
 	private long nanoTime;
+	
 	private int lineBaseX;
 	private int line;
 	private int col;
-	private String hows;
-	private String types; 
-	private String fullyQualifiedNames;
 	private int lineBaseY;
 	
 	public RawGaze(String file, String type, double x, double y,
 			double leftValidity, double rightValidity,
 			double leftPupilDiam, double rightPupilDiam,
 			long trackerTime, long systemTime, long nanoTime,
-			int lineBaseX, int line, int col, String hows,
-			String types, String fullyQualifiedNames, int lineBaseY) {
-		
+			int lineBaseX, int line, int col, int lineBaseY) {
+
 		this.file = file;
 		this.type = type;
 		this.x = x;
@@ -46,9 +43,6 @@ public class RawGaze {
 		this.lineBaseY = lineBaseY;
 		this.line = line;
 		this.col = col;
-		this.hows = hows;
-		this.types = types;
-		this.fullyQualifiedNames = fullyQualifiedNames;	
 	}
 	
 	//Getters
@@ -106,18 +100,6 @@ public class RawGaze {
 	
 	public int getCol() {
 		return col;
-	}
-	
-	public String getHows() {
-		return hows;
-	}
-	
-	public String getTypes() {
-		return types;
-	}
-	
-	public String getFullyQualifiedNames() {
-		return fullyQualifiedNames;
 	}
 	
 	public int getLineBaseY() {

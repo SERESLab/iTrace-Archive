@@ -5,8 +5,6 @@ import java.awt.Toolkit;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.Map.Entry;
 
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
@@ -20,7 +18,9 @@ import javax.xml.stream.XMLStreamWriter;
 
 import org.eclipse.core.resources.ResourcesPlugin;
 
+import edu.ysu.itrace.AstManager.SourceCodeEntity;
 import edu.ysu.itrace.gaze.IGazeResponse;
+import edu.ysu.itrace.gaze.IStyledTextGazeResponse;
 
 /**
  * Solver that simply dumps gaze data to disk in XML format.
@@ -92,47 +92,78 @@ public class XMLGazeExportSolver implements IFileExportSolver {
     @Override
     public void process(IGazeResponse response) {
         try {
-            if (response.getProperties().size() > 0) {
                 int screenX =
                         (int) (screenRect.width * response.getGaze().getX());
                 int screenY =
                         (int) (screenRect.height * response.getGaze().getY());
 
-                responseWriter.writeEmptyElement("response");
-                responseWriter.writeAttribute("file", response.getName());
-                responseWriter.writeAttribute("type", response.getType());
+                responseWriter.writeStartElement("response");
+                responseWriter.writeAttribute("name", response.getName());
+                responseWriter.writeAttribute("type", response.getGazeType());
                 responseWriter.writeAttribute("x", String.valueOf(screenX));
                 responseWriter.writeAttribute("y", String.valueOf(screenY));
-                responseWriter.writeAttribute("left-validation",
+                responseWriter.writeAttribute("left_validation",
                         String.valueOf(response.getGaze().getLeftValidity()));
-                responseWriter.writeAttribute("right-validation",
+                responseWriter.writeAttribute("right_validation",
                         String.valueOf(response.getGaze().getRightValidity()));
-                responseWriter.writeAttribute("left-pupil-diameter",
+                responseWriter.writeAttribute("left_pupil_diameter",
                         String.valueOf(response.getGaze()
                                        .getLeftPupilDiameter()));
-                responseWriter.writeAttribute("right-pupil-diameter",
+                responseWriter.writeAttribute("right_pupil_diameter",
                         String.valueOf(response.getGaze()
                                        .getRightPupilDiameter()));
                 responseWriter.writeAttribute(
-                        "tracker-time",
+                        "tracker_time",
                         String.valueOf(response.getGaze().getTrackerTime()
                                 .getTime()));
                 responseWriter.writeAttribute(
-                        "system-time",
+                        "system_time",
                         String.valueOf(response.getGaze().getSystemTime()));
                 responseWriter.writeAttribute(
-                        "nano-time",
+                        "nano_time",
                         String.valueOf(response.getGaze().getNanoTime()));
 
-                for (Iterator<Entry<String, String>> entries =
-                        response.getProperties().entrySet().iterator(); entries
-                        .hasNext();) {
-                    Entry<String, String> pair = entries.next();
-                    responseWriter.writeAttribute(pair.getKey(),
-                            pair.getValue());
+                try {
+                    IStyledTextGazeResponse styledResponse =
+                            (IStyledTextGazeResponse) response;
+                    responseWriter.writeAttribute("path", styledResponse.getPath());
+                    responseWriter.writeAttribute("line_height",
+                            String.valueOf(styledResponse.getLineHeight()));
+                    responseWriter.writeAttribute("font_height",
+                            String.valueOf(styledResponse.getFontHeight()));
+                    responseWriter.writeAttribute("line",
+                            String.valueOf(styledResponse.getLine()));
+                    responseWriter.writeAttribute("col",
+                            String.valueOf(styledResponse.getCol()));
+                    responseWriter.writeAttribute("line_base_x",
+                            String.valueOf(styledResponse.getLineBaseX()));
+                    responseWriter.writeAttribute("line_base_y",
+                            String.valueOf(styledResponse.getLineBaseY()));
+                    responseWriter.writeStartElement("sces");
+                    for (SourceCodeEntity sce : styledResponse.getSCEs()) {
+                        responseWriter.writeStartElement("sce");
+                        responseWriter.writeAttribute("name", sce.name);
+                        responseWriter.writeAttribute("type", sce.type.toString());
+                        responseWriter.writeAttribute("how", sce.how.toString());
+                        responseWriter.writeAttribute("total_length",
+                                String.valueOf(sce.totalLength));
+                        responseWriter.writeAttribute("start_line",
+                                String.valueOf(sce.startLine));
+                        responseWriter.writeAttribute("end_line",
+                                String.valueOf(sce.endLine));
+                        responseWriter.writeAttribute("start_col",
+                                String.valueOf(sce.startCol));
+                        responseWriter.writeAttribute("end_col",
+                                String.valueOf(sce.endCol));
+                        responseWriter.writeEndElement();
+                    }
+                    responseWriter.writeEndElement();
+
+                } catch (ClassCastException e) {
+                    // not styled text, oh well
                 }
+                responseWriter.writeEndElement();
                 responseWriter.writeCharacters(EOL);
-            }
         } catch (XMLStreamException e) {
             // ignore write errors
         }
