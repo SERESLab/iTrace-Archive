@@ -18,9 +18,11 @@ import javax.xml.stream.XMLStreamWriter;
 
 import org.eclipse.core.resources.ResourcesPlugin;
 
+import edu.ysu.itrace.ClassMLManager.UMLEntity;
 import edu.ysu.itrace.AstManager.SourceCodeEntity;
 import edu.ysu.itrace.gaze.IGazeResponse;
 import edu.ysu.itrace.gaze.IStyledTextGazeResponse;
+import edu.ysu.itrace.gaze.IClassMLGazeResponse;
 
 /**
  * Solver that simply dumps gaze data to disk in XML format.
@@ -123,7 +125,7 @@ public class XMLGazeExportSolver implements IFileExportSolver {
                         "nano_time",
                         String.valueOf(response.getGaze().getNanoTime()));
 
-                try {
+                if (response instanceof IStyledTextGazeResponse) {
                     IStyledTextGazeResponse styledResponse =
                             (IStyledTextGazeResponse) response;
                     responseWriter.writeAttribute("path", styledResponse.getPath());
@@ -159,8 +161,25 @@ public class XMLGazeExportSolver implements IFileExportSolver {
                     }
                     responseWriter.writeEndElement();
 
-                } catch (ClassCastException e) {
-                    // not styled text, oh well
+                } else if (response instanceof IClassMLGazeResponse) {
+                	System.out.println("###################################GAZECLASSML");
+                	IClassMLGazeResponse classmlResponse =
+                            (IClassMLGazeResponse) response;
+                	UMLEntity umle = classmlResponse.getUMLE();
+                	System.out.println("got umle");
+                    responseWriter.writeStartElement("cd");
+                    responseWriter.writeAttribute("name", umle.entityName.toString());
+                    responseWriter.writeAttribute("umlPart", umle.umlPart.toString());
+                    responseWriter.writeAttribute("umlType", umle.umlType.toString());
+                    responseWriter.writeAttribute("visibility", umle.entityVisibility.toString());
+                    responseWriter.writeAttribute("type", umle.type.toString());
+                    responseWriter.writeAttribute("class", umle.entityClass.toString());
+                    responseWriter.writeAttribute("returnType", umle.returnType.toString());
+                    responseWriter.writeAttribute("sourceClass", umle.sourceClass.toString());
+                    responseWriter.writeAttribute("targetClass", umle.targetClass.toString());
+                    responseWriter.writeEndElement();
+                } else {
+                	//ignore anything else
                 }
                 responseWriter.writeEndElement();
                 responseWriter.writeCharacters(EOL);

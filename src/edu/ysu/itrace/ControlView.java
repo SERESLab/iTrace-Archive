@@ -13,6 +13,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.ModifyEvent;
@@ -39,6 +40,8 @@ import org.eclipse.ui.IWorkbenchPartReference;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
+import org.eclipse.gef.ui.parts.GraphicalEditor;
+import org.eclipse.gef.GraphicalViewer;
 
 import edu.ysu.itrace.exceptions.CalibrationException;
 import edu.ysu.itrace.exceptions.EyeTrackerConnectException;
@@ -61,6 +64,8 @@ public class ControlView extends ViewPart implements IPartListener2,
         ShellListener {
     private static final int POLL_GAZES_MS = 5;
     public static final String KEY_AST = "itraceAST";
+    public static final String KEY_CLASSML_DOM = "itraceCLASSML";
+   
     public static final String FATAL_ERROR_MSG = "A fatal error occurred. "
             + "Restart the plugin and try again. If "
             + "the problem persists, submit a bug report.";
@@ -522,7 +527,7 @@ public class ControlView extends ViewPart implements IPartListener2,
 
     @Override
     public void partVisible(IWorkbenchPartReference partRef) {
-        setupStyledText(partRef);
+    	setupControls(partRef);
         HandlerBindManager.bind(partRef);
     }
 
@@ -557,25 +562,34 @@ public class ControlView extends ViewPart implements IPartListener2,
     }
 
     /**
-     * Find styled text controls within a part, set it up to be used by iTrace,
+     * Find styled text or gef controls within a part, set it up to be used by iTrace,
      * and extract meta-data from it.
      * 
      * @param partRef Highest-level part reference possible.
      */
-    private void setupStyledText(IWorkbenchPartReference partRef) {
-        IEditorReference[] editors = PlatformUI.getWorkbench()
+    private void setupControls(IWorkbenchPartReference partRef) {
+        //set up styled text manager if there is one
+    	IEditorReference[] editors = PlatformUI.getWorkbench()
                 .getActiveWorkbenchWindow().getActivePage()
                 .getEditorReferences();
         for (IEditorReference editor : editors) {
             IEditorPart editorPart = editor.getEditor(true);
-            StyledText text = (StyledText) editorPart.getAdapter(Control.class);
-            if (text != null)
+            if (editorPart.getAdapter(Control.class) instanceof StyledText) { //make sure editorPart contains an instance of StyledText
+            	StyledText text = (StyledText) editorPart.getAdapter(Control.class); 
             	setupStyledText(editorPart, text);
+            }
+            else if(editorPart instanceof GraphicalEditor) { //make sure editorPart contains an instance of GraphicalEditor
+            	System.out.println("#Instance of GraphicalEditor"); //TESTING
+            	GraphicalViewer graphicalViewer = (GraphicalViewer) editorPart.getAdapter(GraphicalViewer.class);
+            	setupGraphicalViewer(editorPart, graphicalViewer);
+            }
+            //ignore anything else
         }
     }
-
+    
+    
     /**
-     * Recursive helper method for setupStyledText(IWorkbenchPartReference).
+     * Recursive helper method for setupControls(IWorkbenchPartReference).
      * 
      * @param editor IEditorPart which owns the StyledText in the next
      *               parameter.
@@ -587,6 +601,19 @@ public class ControlView extends ViewPart implements IPartListener2,
             styledText.setData(KEY_AST, new AstManager(editor, styledText));
     }
 
+    /**
+     * Recursive helper method for setupControls(IWorkbenchPartReference).
+     * 
+     * @param editor IEditorPart which owns the GraphicalEditor in the next
+     *               parameter.
+     * @param graphicalViewer GraphicalViewer to set up.
+     */
+    private void setupGraphicalViewer(IEditorPart editor, GraphicalViewer graphicalViewer) {
+    	System.out.println("GraphicalViewer Setup Begin"); //TESTING
+        if(graphicalViewer.getControl().getData(KEY_CLASSML_DOM) == null)
+        	graphicalViewer.getControl().setData(KEY_CLASSML_DOM, new ClassMLManager(graphicalViewer));
+    }
+    
     /**
      * Finds the control under the specified screen coordinates and calls its
      * gaze handler on the localized point. Returns the gaze response or null if

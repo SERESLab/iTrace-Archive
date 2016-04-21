@@ -8,6 +8,8 @@ import org.eclipse.swt.widgets.Shell;
 import edu.ysu.itrace.gaze.GazeHandlerFactory;
 import edu.ysu.itrace.gaze.IGazeHandler;
 
+import org.eclipse.draw2d.FigureCanvas;
+import org.eclipse.swt.custom.StyledText;
 /**
  * Binds on-screen elements to gaze handlers.
  */
@@ -20,9 +22,12 @@ public class HandlerBindManager {
      * @param partRef Workbench part from which to get the Workbench shell.
      */
     public static void bind(IWorkbenchPartReference partRef) {
-        Shell workbenchShell = partRef.getPage().getWorkbenchWindow().getShell();
-        for (Control control : workbenchShell.getChildren())
-        	bindControl(control, false);
+    	Shell workbenchShell = partRef.getPage().getWorkbenchWindow().getShell();
+    	System.out.println("#got shell"); //TESTING
+		for (Control control : workbenchShell.getChildren()){
+			System.out.println("#binding child");  //TESTING
+		bindControl(partRef, control, false);
+		}
     }
 
     /**
@@ -31,37 +36,48 @@ public class HandlerBindManager {
      * @param partRef Workbench part from which to get the Workbench shell.
      */
     public static void unbind(IWorkbenchPartReference partRef) {
-    	Shell workbenchShell = partRef.getPage().getWorkbenchWindow()
-    			.getShell();
-    	for (Control control : workbenchShell.getChildren())
-    		bindControl(control, true);
+    	Shell workbenchShell = partRef.getPage().getWorkbenchWindow().getShell();
+		for (Control control : workbenchShell.getChildren())
+		bindControl(partRef, control, true);
     }
 
     /**
      * Bind a control. If it is a composite, also bind all of its children.
+     * @param partRef Same partRef parameter passed to bind()/unbind().
      * @param control Highest level control.
      * @param unbind If true, unbind instead of bind.
      */
-    private static void bindControl(Control control, boolean unbind) {
-        //If composite, bind children.
+    private static void bindControl(IWorkbenchPartReference partRef,
+            Control control, boolean unbind){
+    	//If composite, bind children.
         if (control instanceof Composite) {
             Composite composite = (Composite) control;
 
             Control[] children = composite.getChildren();
             if (children.length > 0 && children[0] != null) {
                for (Control curControl : children)
-                   bindControl(curControl, unbind);
+                   bindControl(partRef, curControl, unbind);
             }
         }
         
+        //Testing
+        if (control instanceof FigureCanvas) {
+        	System.out.println("#Instance of FigureCanvas in bindControl()"); //TESTING
+        }
+        if (control instanceof StyledText) {
+        	System.out.println("#Instance of StyledText in bindControl()"); //TESTING
+        }
+
         //If key handler already set, the rest of this function is irrelevant.
         if (control.getData(KEY_HANDLER) != null)
             return;
 
         IGazeHandler handler = GazeHandlerFactory.
-                               createHandler(control);
-        if (handler != null && !unbind)
+                               createHandler(control, partRef);
+        if (handler != null && !unbind){
+        	System.out.println("#handler not null in bindControl()"); //TESTING
             control.setData(KEY_HANDLER, handler);
+        }
         else
             control.setData(KEY_HANDLER, null);
     }

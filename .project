@@ -3,6 +3,7 @@
 	<name>itrace</name>
 	<comment></comment>
 	<projects>
+		<project>OnionUmlVisualization</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
