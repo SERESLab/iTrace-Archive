@@ -53,6 +53,7 @@ import edu.ysu.itrace.solvers.ISolver;
 import edu.ysu.itrace.solvers.JSONGazeExportSolver;
 import edu.ysu.itrace.solvers.XMLGazeExportSolver;
 import edu.ysu.itrace.trackers.IEyeTracker;
+import edu.ysu.itrace.visualization.VisFrame;
 
 /**
  * ViewPart for managing and controlling the plugin.
@@ -432,6 +433,12 @@ public class ControlView extends ViewPart implements IPartListener2,
         visualizeButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true,
                 true, 1, 1));
         visualizeButton.setText("Visualize");
+        visualizeButton.addSelectionListener(new SelectionAdapter() { 
+        	@Override
+        	public void widgetSelected(SelectionEvent e){
+        		new VisFrame();
+        	}
+        });
         
         //Configure Filters Here
         OldJSONBasicFixationFilter oldjsonBFFilter =
