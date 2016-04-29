@@ -162,11 +162,9 @@ public class XMLGazeExportSolver implements IFileExportSolver {
                     responseWriter.writeEndElement();
 
                 } else if (response instanceof IClassMLGazeResponse) {
-                	System.out.println("###################################GAZECLASSML");
                 	IClassMLGazeResponse classmlResponse =
                             (IClassMLGazeResponse) response;
                 	UMLEntity umle = classmlResponse.getUMLE();
-                	System.out.println("got umle");
                     responseWriter.writeStartElement("cd");
                     responseWriter.writeAttribute("name", umle.entityName.toString());
                     responseWriter.writeAttribute("umlPart", umle.umlPart.toString());

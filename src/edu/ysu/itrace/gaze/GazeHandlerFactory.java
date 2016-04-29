@@ -23,9 +23,8 @@ public class GazeHandlerFactory {
             return new StyledTextGazeHandler(target);
         }
         
-        // create gaze handler for a StyledText widget
+        // create gaze handler for a FigureCanvas
         if (target instanceof FigureCanvas) {
-        	System.out.println("#Instance of FigureCanvas in createHander()"); //TESTING
             return new ClassMLGazeHandler(target, partRef);
         }
         

@@ -22,13 +22,11 @@ public class ClassMLGazeHandler implements IGazeHandler{
 	    public ClassMLGazeHandler(Object target, IWorkbenchPartReference partRef) {
 	    	this.targetFigureCanvas = (FigureCanvas) target;
 	        this.partRef = partRef;
-	        System.out.println("#constructor in ClassMLGazeHandler"); //TESTING
 	    }
 
 	    @Override
 	    public IClassMLGazeResponse handleGaze(int absoluteX, int absoluteY,
 	            int relativeX, int relativeY, final Gaze gaze){
-	    	System.out.println("in handle gaze"); //TESTING
 	    	
 	    	final String name;
 	        final ClassMLManager.UMLEntity entity;
@@ -42,11 +40,8 @@ public class ClassMLGazeHandler implements IGazeHandler{
 	    	/* If entity is null the gaze fell
     		 * outside the valid text area, so just drop this one.
     		 */
-    		if (entity == null){
-    			System.out.println("entity is null"); //TESTING
-    			return null;
-    		}
-    			
+    		if (entity == null)
+    			return null;	
 	    	
     		/*
     		 * This anonymous class just grabs the variables marked final
@@ -74,7 +69,6 @@ public class ClassMLGazeHandler implements IGazeHandler{
     			
     			@Override
     			public UMLEntity getUMLE() {
-    				System.out.println("called getUMLE");
     				return entity;
     			}
 

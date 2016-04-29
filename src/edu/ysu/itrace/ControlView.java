@@ -608,7 +608,6 @@ public class ControlView extends ViewPart implements IPartListener2,
      * @param graphicalViewer GraphicalViewer to set up.
      */
     private void setupGraphicalViewer(IEditorPart editor, GraphicalViewer graphicalViewer) {
-    	System.out.println("GraphicalViewer Setup Begin"); //TESTING
         if(graphicalViewer.getControl().getData(KEY_CLASSML_DOM) == null)
         	graphicalViewer.getControl().setData(KEY_CLASSML_DOM, new ClassMLManager(graphicalViewer));
     }

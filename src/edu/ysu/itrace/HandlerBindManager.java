@@ -23,11 +23,8 @@ public class HandlerBindManager {
      */
     public static void bind(IWorkbenchPartReference partRef) {
     	Shell workbenchShell = partRef.getPage().getWorkbenchWindow().getShell();
-    	System.out.println("#got shell"); //TESTING
-		for (Control control : workbenchShell.getChildren()){
-			System.out.println("#binding child");  //TESTING
-		bindControl(partRef, control, false);
-		}
+		for (Control control : workbenchShell.getChildren())
+			bindControl(partRef, control, false);
     }
 
     /**
@@ -59,14 +56,6 @@ public class HandlerBindManager {
                    bindControl(partRef, curControl, unbind);
             }
         }
-        
-        //Testing
-        if (control instanceof FigureCanvas) {
-        	System.out.println("#Instance of FigureCanvas in bindControl()"); //TESTING
-        }
-        if (control instanceof StyledText) {
-        	System.out.println("#Instance of StyledText in bindControl()"); //TESTING
-        }
 
         //If key handler already set, the rest of this function is irrelevant.
         if (control.getData(KEY_HANDLER) != null)
@@ -74,10 +63,8 @@ public class HandlerBindManager {
 
         IGazeHandler handler = GazeHandlerFactory.
                                createHandler(control, partRef);
-        if (handler != null && !unbind){
-        	System.out.println("#handler not null in bindControl()"); //TESTING
+        if (handler != null && !unbind)
             control.setData(KEY_HANDLER, handler);
-        }
         else
             control.setData(KEY_HANDLER, null);
     }

@@ -73,7 +73,6 @@ public class ClassMLManager {
      */
     public ClassMLManager(GraphicalViewer graphicalViewer) {
         this.graphicalViewer = graphicalViewer;
-        System.out.println("#constructor in ClassMLManager!()"); //TESTING
     }
 
     /**
@@ -88,7 +87,7 @@ public class ClassMLManager {
     	IFigure objFigure;
     	
     	try {
-    		//get the graphicalViewers control -- it's a FigureCanvas
+    		//get the graphicalViewer's control -- it's a FigureCanvas
         	Control control = graphicalViewer.getControl();
             if (control instanceof FigureCanvas) {
             	objViewport = ((FigureCanvas) control).getViewport(); // represents the visible portion of the ScrollPane
@@ -121,19 +120,15 @@ public class ClassMLManager {
                 		switch(labelText.charAt(0)){
                 		case '+':
                 			entity.entityVisibility = "public";
-                			System.out.println("PUBLIC");  //TESTING
                 			break;
                 		case '-':
                 			entity.entityVisibility = "private";
-                			System.out.println("PRIVATE");  //TESTING
                 			break;
                 		case '#':
                 			entity.entityVisibility = "protected";
-                			System.out.println("PROTECTED");  //TESTING
                 			break;
                 		default:
                 			entity.entityVisibility = "?";
-                			System.out.println("NO IDEA");  //TESTING
                 			break;
                 		}
                 		
@@ -141,8 +136,6 @@ public class ClassMLManager {
                 			System.out.println("Looking at method: " + objLabel.getText());  //TESTING
                 			entity.umlPart = UMLEPart.CLASS;
                      		entity.umlType = UMLEType.METHOD;
-                     		
-                     		//TODO: Get method details (names, etc.)
                      		
                      		// get method name
                      		if(labelText.contains("+ ") || labelText.contains("- ") || labelText.contains("# ")){
