@@ -574,12 +574,11 @@ public class ControlView extends ViewPart implements IPartListener2,
                 .getEditorReferences();
         for (IEditorReference editor : editors) {
             IEditorPart editorPart = editor.getEditor(true);
-            if (editorPart.getAdapter(Control.class) instanceof StyledText) { //make sure editorPart contains an instance of StyledText
+            if (editorPart.getAdapter(Control.class) instanceof StyledText) { // instance of StyledText
             	StyledText text = (StyledText) editorPart.getAdapter(Control.class); 
             	setupStyledText(editorPart, text);
             }
-            else if(editorPart instanceof GraphicalEditor) { //make sure editorPart contains an instance of GraphicalEditor
-            	System.out.println("#Instance of GraphicalEditor"); //TESTING
+            else if(editorPart instanceof GraphicalEditor) { // instance of GraphicalEditor
             	GraphicalViewer graphicalViewer = (GraphicalViewer) editorPart.getAdapter(GraphicalViewer.class);
             	setupGraphicalViewer(editorPart, graphicalViewer);
             }

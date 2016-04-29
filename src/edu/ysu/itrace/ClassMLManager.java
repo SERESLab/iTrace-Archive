@@ -168,9 +168,6 @@ public class ClassMLManager {
                 			entity.umlPart = UMLEPart.CLASS;
                      		entity.umlType = UMLEType.MEMBER;
                      		
-                     		//TODO: Get member details (names, etc.)
-                     		
-                     		//get member name
                      		System.out.println(labelText.substring(labelText.indexOf(" ") + 1,  labelText.indexOf(":") - 1));
                 			entity.entityName = labelText.substring(labelText.indexOf(" ") + 1,  labelText.indexOf(":") - 1);
                 			entity.type = labelText.substring(labelText.indexOf(":") + 2,  labelText.length());
@@ -183,7 +180,7 @@ public class ClassMLManager {
                 	}
                 	
                 	break;
-                case "org.eclipse.draw2d.PolylineConnection":	//#### CASTING ERROR
+                case "org.eclipse.draw2d.PolylineConnection":	//CLASS LOADING ISSUE
                 	//looking at line connection between classes
                 	System.out.println(objFigure.getClass().getName());  //TESTING
                 	
@@ -195,7 +192,9 @@ public class ClassMLManager {
                 		//get source anchor's figure
                     	Figure srcFigure = (Figure) srcAnchor.getOwner();
                     	System.out.println(srcFigure.getClass().getName());
-                		ClassFigure srcClassFigure = (ClassFigure) srcFigure;
+                    	
+                    	//ClassFigure srcClassFigure = (ClassFigure) srcFigure;  //casting error
+                    	
                 		//TODO: Get classname for source anchor
                 		entity.sourceClass = "SourceClass";
                 	}catch(Exception ex){
@@ -203,24 +202,22 @@ public class ClassMLManager {
                 	}
                 	
                 	
-                	//get target anchor's figure
                 	try{
-                		//get source anchor's figure
+                		//get target anchor's figure
                 		Figure targetFigure = (Figure) targetAnchor.getOwner();
                     	System.out.println(targetFigure.getClass().getName());
-                    	ClassFigure targetClassFigure = (ClassFigure) targetFigure;
+                    	//ClassFigure targetClassFigure = (ClassFigure) targetFigure;  //casting error
+                    	
                 		//TODO: Get classname for target anchor
                     	entity.targetClass = "TargetClass";
                 	}catch(Exception ex){
                 		System.out.println("exception: " + ex.getMessage());
                 	}
                 	
-                	
-                	
                 	entity.umlPart = UMLEPart.CONNECTION;
              		entity.umlType = UMLEType.CONNECTION;
                 	break;
-                case "org.eclipse.draw2d.PolygonDecoration":	//#### CASTING ERROR
+                case "org.eclipse.draw2d.PolygonDecoration":	//CLASS LOADING ISSUE
                 	//looking at connection head/tail between classes
                 	System.out.println(objFigure.getClass().getName());  //TESTING
                 	
@@ -241,7 +238,7 @@ public class ClassMLManager {
                 	entity.umlPart = UMLEPart.CONNECTION;
              		entity.umlType = UMLEType.CONNECTOR;
                 	break;
-                case "edu.ysu.onionuml.ui.graphics.figures.ClassFigure":	//#### CASTING ERROR
+                case "edu.ysu.onionuml.ui.graphics.figures.ClassFigure":	//CLASS LOADING ISSUE
                 	//looking at class container
                 	System.out.println(objFigure.getClass().getName());  //TESTING
 
@@ -251,7 +248,7 @@ public class ClassMLManager {
                 	entity.umlPart = UMLEPart.CLASS;
              		entity.umlType = UMLEType.CLASS;
                 	break;
-                case "edu.ysu.onionuml.ui.graphics.figures.ClassSectionFigure":	   //#### CASTING ERROR
+                case "edu.ysu.onionuml.ui.graphics.figures.ClassSectionFigure":	   //CLASS LOADING ISSUE
                 	//looking at section of class
                 	//PropertiesFigure, OperationsFigure, or OnionRelationshipsFigure
                 	System.out.println(objFigure.getClass().getName());  //TESTING

@@ -16,7 +16,7 @@ public class ClassMLGazeHandler implements IGazeHandler{
 	private FigureCanvas targetFigureCanvas;
 
 	    /**
-	     * Constructs a new gaze handler for the target Browser stack overflow page object within the
+	     * Constructs a new gaze handler for the target UML FigureCanvas object within the
 	     * workbench part specified by partRef.
 	     */
 	    public ClassMLGazeHandler(Object target, IWorkbenchPartReference partRef) {
