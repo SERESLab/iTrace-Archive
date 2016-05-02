@@ -1,7 +1,10 @@
 package edu.ysu.itrace.listeners;
 
+import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.IPartListener2;
 import org.eclipse.ui.IWorkbenchPartReference;
+
+import edu.ysu.itrace.Activator;
 
 public class EditorPartListener implements IPartListener2 {
 
@@ -12,9 +15,9 @@ public class EditorPartListener implements IPartListener2 {
 	}
 
 	@Override
-	public void partBroughtToTop(IWorkbenchPartReference arg0) {
-		// TODO Auto-generated method stub
-
+	public void partBroughtToTop(IWorkbenchPartReference partRef) {
+		if(partRef instanceof IEditorReference) 
+			Activator.getDefault().updateEditor(((IEditorReference) partRef).getEditor(false));
 	}
 
 	@Override
@@ -54,7 +57,6 @@ public class EditorPartListener implements IPartListener2 {
 	}
 	
 	public EditorPartListener(){
-		
 	}
 
 }

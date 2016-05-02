@@ -37,7 +37,7 @@ public class HierarchyVis extends JPanel implements MouseMotionListener, MouseLi
 		renderArray = new AOISection[sectionCap];
 		Arrays.fill(yArray, 40);
 		for(int i=0;i<sectionCap;i++){
-			renderArray[i] = new AOISection(200,50+(15*i),1000,15,sceTree.getChild(i).hasChildren(),sceTree.getChild(i).name);
+			renderArray[i] = new AOISection(300,50+(15*i),1000,15,sceTree.getChild(i).hasChildren(),sceTree.getChild(i).name);
 		}
 		
 		for(int i=0;i<responseCap;i++){
@@ -45,14 +45,10 @@ public class HierarchyVis extends JPanel implements MouseMotionListener, MouseLi
 				if(sceTree.getChild(j).contains(dlArray[i])){
 					yArray[i] = 54+(j*15);
 					break;
+				}else if(dlArray[i].line > sceTree.getChild(j).endLine){
+					yArray[i] = 54+(sectionCap*15);
 				}
 			}
-		}
-		currentSection = renderArray[0];
-		breadCrumb = sceTree.getName();
-		while(sceTree.getParent() != null){
-			sceTree = sceTree.getParent();
-			breadCrumb = sceTree.getName()+"/"+breadCrumb;
 		}
 	}
 	public void paintComponent(Graphics g){
@@ -63,18 +59,30 @@ public class HierarchyVis extends JPanel implements MouseMotionListener, MouseLi
 		bbGrphx.fillRect(0, 0, 5000, 5000);
 		bbGrphx.setColor(Color.black);
 		bbGrphx.setFont(new Font("Lucida Console",Font.PLAIN,20));
-		bbGrphx.drawString(breadCrumb,5,34);
+		bbGrphx.drawString("/"+currentTree.breadcrumb,5,34);
 		bbGrphx.setFont(new Font("Lucida Console",Font.PLAIN,12));
+		Color color;
 		for(int i=0;i<sectionCap;i++){
 			bbGrphx.setColor(Color.black);
-			bbGrphx.drawString(renderArray[i].name,10,62+(i*15));
-			if(i%2 == 0) bbGrphx.setColor(renderArray[i].fillColor.darker());
-			else bbGrphx.setColor(renderArray[i].fillColor);
+			bbGrphx.drawString(renderArray[i].name,
+					295-(bbGrphx.getFontMetrics().stringWidth(renderArray[i].name)),
+					62+(i*15)
+					);
+			color = renderArray[i].fillColor;
+			if(i%2 == 0 && (color.equals(Color.lightGray) || color.equals(Color.cyan))) color = color.darker();
+			bbGrphx.setColor(color);
 			bbGrphx.fill(renderArray[i]);
 		}
 		bbGrphx.setColor(Color.black);
-		for(int i=0;i<responseCap;i++)
-			bbGrphx.fillRect(200+((1000*i)/responseCap),yArray[i],2,6);
+		for(int i=0;i<responseCap;i++){
+			bbGrphx.fillRect(300+((1000*i)/responseCap),yArray[i],2,6);
+			if( i != responseCap-1)
+				bbGrphx.drawLine(300+((1000*i)/responseCap)+1, 
+								yArray[i]+3, 
+								300+((1000*(i+1))/responseCap)+1,
+								yArray[i+1]+3
+								);
+		}
 		grphx.drawImage(backBuffer,0,0,this);
 	}
 	
@@ -133,7 +141,7 @@ public class HierarchyVis extends JPanel implements MouseMotionListener, MouseLi
 					setCursor(new Cursor(Cursor.HAND_CURSOR));
 					currentSection.fillColor = new Color(0,255,149);
 				}else{
-					currentSection.fillColor = Color.lightGray.brighter();
+					currentSection.fillColor = new Color(230,230,230);
 				}
 			}else{
 				if(currentSection.hasChildren){
@@ -165,16 +173,27 @@ public class HierarchyVis extends JPanel implements MouseMotionListener, MouseLi
 			responseCap = responseList.getLength();
 			dlArray = new DocLine[responseCap];
 			yArray = new int[responseCap];
+			//Construct SCETree
+			//fill docline array, and add file trees.
+			currentTree = root;
 			for(int i=0;i<responseCap;i++){
 				Node response = responseList.item(i);
 				NamedNodeMap attributes = response.getAttributes();
 				String responseFile = attributes.getNamedItem("name").getNodeValue();
 				int responseLine = Integer.parseInt(attributes.getNamedItem("line").getNodeValue());
 				dlArray[i] = new DocLine(responseFile,responseLine);
+				currentTree.findOrAdd(new SCETree(responseFile,root));
+			}
+			//Add sce trees
+			for(int i=0;i<responseCap;i++){
+				Node response = responseList.item(i);
+				NamedNodeMap attributes = response.getAttributes();
+				String responseFile = attributes.getNamedItem("name").getNodeValue();
 				Node sces = response.getFirstChild();
+				int index = root.ChildSearch(new SCETree(responseFile,root));
 				if(sces.hasChildNodes()){
 					scesList = sces.getChildNodes();
-					currentTree = root;
+					currentTree = root.getChild(index);
 					for(int j=scesList.getLength()-1;j>=0;j--){
 						Node sce = scesList.item(j);
 						NamedNodeMap sceAttributes = sce.getAttributes();
@@ -184,6 +203,25 @@ public class HierarchyVis extends JPanel implements MouseMotionListener, MouseLi
 						int childIndex = currentTree.findOrAdd(new SCETree(sceName,responseFile,currentTree,startLine,endLine));
 						currentTree = currentTree.getChild(childIndex);
 					}
+				}
+			}
+			currentTree = root;
+			//add line nodes
+			for(int i=0;i<responseCap;){
+				boolean found = false;
+				int j;
+				for(j=0;j<currentTree.childCount;j++){
+					if(currentTree.getChild(j).contains(dlArray[i])){
+						found = true;
+						break;
+					}	
+				}
+				if(found) currentTree = currentTree.getChild(j);
+				else{
+					if(!(currentTree.startLine == dlArray[i].line && currentTree.endLine == dlArray[i].line))
+						currentTree.findOrAdd(new SCETree("Line "+dlArray[i].line,dlArray[i].doc,currentTree,dlArray[i].line,dlArray[i].line));
+					currentTree = root;
+					i++;
 				}
 			}
 		}catch(Exception e){

@@ -5,9 +5,11 @@ import java.util.HashMap;
 
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
+import edu.ysu.itrace.listeners.EditorPartListener;
 import edu.ysu.itrace.preferences.PluginPreferences;
 import edu.ysu.itrace.visualization.GazeMap;
 
@@ -18,17 +20,18 @@ public class Activator extends AbstractUIPlugin {
 
     // The plug-in ID
     public static final String PLUGIN_ID = "edu.ysu.itrace"; //$NON-NLS-1$
-    public static File visFile;
+    public File visFile;
 
     // The shared instance
     private static Activator plugin;
     
-    private static HashMap<IEditorPart,GazeMap>	gazeMaps;
+    private static HashMap<IEditorPart,GazeMap>	gazeMaps = new HashMap<IEditorPart,GazeMap>();
     
     /**
      * The constructor
      */
     public Activator() {
+    	PlatformUI.getWorkbench().getActiveWorkbenchWindow().getPartService().addPartListener(new EditorPartListener());
     }
 
     /*
@@ -60,5 +63,13 @@ public class Activator extends AbstractUIPlugin {
     public static Activator getDefault() {
         return plugin;
     }
-
+    
+    public void updateEditor(IEditorPart editorPart){
+    	if(editorPart == null){
+    		editorPart = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor();
+    		if(editorPart == null) return;
+    	}
+    	if(!gazeMaps.containsKey(editorPart)) gazeMaps.put(editorPart, new GazeMap(editorPart));
+    	gazeMaps.get(editorPart).updateFile();
+    }
 }

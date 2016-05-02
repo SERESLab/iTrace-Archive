@@ -9,6 +9,9 @@ import java.util.Queue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -429,6 +432,19 @@ public class ControlView extends ViewPart implements IPartListener2,
             }
         });
         
+        Button selectButton = new Button(buttonComposite,SWT.PUSH);
+        selectButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
+        selectButton.setText("Select a File");
+        selectButton.addSelectionListener(new SelectionAdapter(){
+        	@Override
+        	public void widgetSelected(SelectionEvent e) {
+        		JFileChooser fileChooser = new JFileChooser("C:/Users/Ben/Desktop");
+        		if(fileChooser.showOpenDialog(new JFrame()) == JFileChooser.APPROVE_OPTION)
+        			Activator.getDefault().visFile = fileChooser.getSelectedFile();
+        			Activator.getDefault().updateEditor(null);
+        	}
+        });
+        
         Button visualizeButton = new Button(buttonComposite, SWT.PUSH);
         visualizeButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true,
                 true, 1, 1));
@@ -439,6 +455,7 @@ public class ControlView extends ViewPart implements IPartListener2,
         		new VisFrame();
         	}
         });
+        
         
         //Configure Filters Here
         OldJSONBasicFixationFilter oldjsonBFFilter =
