@@ -20,7 +20,6 @@ struct EyeXNativeData
 };
 
 EyeXNativeData* g_native_data_current = NULL;
-bool add_point_callback = false;
 
 void throwJException(JNIEnv* env, const char* jclass_name, const char* msg)
 {
@@ -283,27 +282,41 @@ JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_stopTracking
 //CALIBRATION
 
 //forward declaration
+bool add_point_callback = false;
+bool compute_and_set = false;
+tobiigaze_error_code calibration_error_code;
+bool error_set = false;
 void stop_calibration_handler(tobiigaze_error_code error_code, void *user_data);
 
 void handle_calibration_error(tobiigaze_error_code error_code, void *user_data, const char *error_message) {
     if (error_code) {
-        tobiigaze_calibration_stop_async((tobiigaze_eye_tracker*) user_data, stop_calibration_handler, user_data);
+        if (!error_set) {
+        	calibration_error_code = error_code;
+        	error_set = true;
+        }
         std::cout << tobiigaze_get_error_message(error_code) << std::endl;
+        //this is assuming that the tracker will eventually stop calibration without error
+        //the sample code also assume the same thing
+        //fixed to not get state error
+        tobiigaze_calibration_stop_async((tobiigaze_eye_tracker*) user_data, stop_calibration_handler, user_data);
     }
 }
 
 void compute_calibration_handler(tobiigaze_error_code error_code, void *user_data) {
+	
     if (error_code) {
         if (error_code == TOBIIGAZE_FW_ERROR_OPERATION_FAILED) {
             std::cout << "Compute calibration FAILED due to insufficient gaze data.\n" << std::endl;
         }
-
+		
         handle_calibration_error(error_code, user_data, "compute_calibration_handler");
+        compute_and_set = true;
         return;
     }
 
     std::cout << "compute_calibration_handler: OK\n" << std::endl;
-
+	tobiigaze_calibration_stop_async((tobiigaze_eye_tracker*) user_data, stop_calibration_handler, user_data);
+	compute_and_set = true;
 }
 
 void add_calibration_point_handler(tobiigaze_error_code error_code, void *user_data) {
@@ -351,10 +364,17 @@ JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Calibrator_
 	tobiigaze_calibration_add_point_async(native_data->eye_tracker, &point, add_calibration_point_handler, native_data->eye_tracker);
 	
 	while(add_point_callback != true);
+	if (error_set) {
+		error_set = false;
+		throwJException(env, "java/lang/RuntimeException",
+			tobiigaze_get_error_message(calibration_error_code));
+		return;
+	}
 }
 
 JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Calibrator_jniStartCalibration
   (JNIEnv *env, jobject obj) {
+	add_point_callback = false;
 	
 	//Get native data from parent EyeXTracker
 	jfieldID jfid_parent = getFieldID(env, obj, "parent",
@@ -370,12 +390,20 @@ JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Calibrator_
 	
 	// calibration
 	tobiigaze_calibration_start_async(native_data->eye_tracker, add_calibration_point_handler, native_data->eye_tracker);
-
+	
+	while(add_point_callback != true);
+	if (error_set) {
+		error_set = false;
+		throwJException(env, "java/lang/RuntimeException",
+			tobiigaze_get_error_message(calibration_error_code));
+		return;
+	}
 }
 
 JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Calibrator_jniStopCalibration
   (JNIEnv *env, jobject obj) {
-
+	compute_and_set = false;
+	
 	//Get native data from parent EyeXTracker
 	jfieldID jfid_parent = getFieldID(env, obj, "parent",
 		"Ledu/ysu/itrace/trackers/EyeXTracker;");
@@ -390,7 +418,19 @@ JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Calibrator_
 
 	std::cout << "Computing calibration...\n" << std::endl;
 	tobiigaze_calibration_compute_and_set_async(native_data->eye_tracker, compute_calibration_handler, native_data->eye_tracker);
-	tobiigaze_calibration_stop_async(native_data->eye_tracker, stop_calibration_handler, native_data->eye_tracker);
+	
+	while(compute_and_set != true);
+	if (error_set) {
+		error_set = false;
+		if (calibration_error_code == TOBIIGAZE_FW_ERROR_OPERATION_FAILED) {
+            throwJException(env, "java/lang/RuntimeException",
+				"Compute calibration FAILED due to insufficient gaze data.");
+			return;
+        }
+		throwJException(env, "java/lang/RuntimeException",
+			tobiigaze_get_error_message(calibration_error_code));
+		return;
+	}
 }
 
 JNIEXPORT jdoubleArray JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Calibrator_jniGetCalibration
