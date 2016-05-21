@@ -1,5 +1,6 @@
 package edu.ysu.itrace.visualization;
 
+import java.awt.Rectangle;
 import java.util.ArrayList;
 
 public class SCETree {
@@ -7,7 +8,7 @@ public class SCETree {
 	public int startLine, endLine, childCount;
 	public boolean isExpanded;
 	private SCETree parent;
-	public AOISection section;
+	public Rectangle section;
 	public boolean isRoot = false;
 	
 	private ArrayList<SCETree> children;

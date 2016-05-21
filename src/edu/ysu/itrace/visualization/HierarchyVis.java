@@ -10,6 +10,7 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.awt.event.*;
 
@@ -24,7 +25,6 @@ public class HierarchyVis extends JPanel implements MouseMotionListener, MouseLi
 	private NodeList responseList, scesList;
 	private BufferedImage backBuffer;
 	private Graphics2D grphx,bbGrphx;
-	private AOISection currentSection;
 	SCETree root;
 	SCETree currentTree;
 	
@@ -43,7 +43,7 @@ public class HierarchyVis extends JPanel implements MouseMotionListener, MouseLi
 	}
 	private int setSections(int place, SCETree tree){
 		for(SCETree child: tree.getChildren()){
-			child.section = new AOISection(300,50+(15*place),1000,15,child.name);
+			child.section = new Rectangle(300,50+(15*place),1000,15);
 			place++;
 			if(child.isExpanded) place = setSections(place,child);
 		}
