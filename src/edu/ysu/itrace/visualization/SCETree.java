@@ -5,7 +5,9 @@ import java.util.ArrayList;
 public class SCETree {
 	public String name, file, breadcrumb;
 	public int startLine, endLine, childCount;
+	public boolean isExpanded;
 	private SCETree parent;
+	public AOISection section;
 	public boolean isRoot = false;
 	
 	private ArrayList<SCETree> children;
@@ -46,6 +48,9 @@ public class SCETree {
 	public String getName(){
 		return name;
 	}
+	public ArrayList<SCETree> getChildren(){
+		return children;
+	}
 	
 	public SCETree(String givenName, String givenFile,SCETree givenParent, int start, int end){
 		name = givenName;
@@ -54,6 +59,7 @@ public class SCETree {
 		startLine = start;
 		endLine = end;
 		childCount = 0;
+		isExpanded = false;
 		children = new ArrayList<SCETree>(2);
 		if(name.startsWith(parent.breadcrumb)) name = name.substring(parent.breadcrumb.length());
 		breadcrumb = parent.breadcrumb+name+".";

@@ -72,4 +72,11 @@ public class Activator extends AbstractUIPlugin {
     	if(!gazeMaps.containsKey(editorPart)) gazeMaps.put(editorPart, new GazeMap(editorPart));
     	gazeMaps.get(editorPart).updateFile();
     }
+    
+    public void updateGazeMapCursorIndex(int index){
+    	for(GazeMap map: gazeMaps.values()){
+    		map.cursorIndex = index;
+    		map.redraw();
+    	}
+    }
 }

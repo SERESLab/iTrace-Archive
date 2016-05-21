@@ -25,16 +25,18 @@ import org.eclipse.ui.IEditorPart;
 import org.w3c.dom.*;
 
 import edu.ysu.itrace.Activator;
+import edu.ysu.itrace.ControlView;
 
 public class GazeMap implements LineBackgroundListener, PaintListener, ExtendedModifyListener, Listener {
-	private IEditorPart	editorPart;
-	private StyledText	styledText;
-	private Document 	dataDoc;
-	private NodeList	responseList;
-	private String		fileName;
-	private File		dataFile;
+	private IEditorPart			editorPart;
+	private StyledText			styledText;
+	private Document 			dataDoc;
+	private NodeList			responseList;
+	private String				fileName;
+	private File				dataFile;
 	private ArrayList<Point>	gazeMapPoints = new ArrayList<Point>();
 	private ProjectionViewer	viewer;
+	public int					cursorIndex;
 
 
 	@Override
@@ -50,9 +52,23 @@ public class GazeMap implements LineBackgroundListener, PaintListener, ExtendedM
 
 	@Override
 	public void paintControl(PaintEvent pe) {
+		if(Activator.getDefault().visFile == null) return;
 		gazeMapPoints = generatePoints(responseList);
-		pe.gc.setBackground(pe.gc.getForeground());
+		pe.gc.setAlpha(255);
+		pe.gc.setBackground(new Color(pe.gc.getDevice(),18,173,42));
+		pe.gc.fillOval(
+				gazeMapPoints.get(cursorIndex).x-8, 
+				gazeMapPoints.get(cursorIndex).y-8, 
+				16, 
+				16
+				);
+		
 		for(int i=0;i<gazeMapPoints.size();i++){
+			int alpha = 255 - 10*Math.abs(cursorIndex-i);
+			if(alpha < 0) alpha = 0;
+			pe.gc.setAlpha(alpha);
+			pe.gc.setBackground(new Color(pe.gc.getDevice(),255-(i%255),0+(i%255),255));
+			pe.gc.setForeground(new Color(pe.gc.getDevice(),255-(i%255),0+(i%255),255));
 			if(i>0){
 				pe.gc.drawLine(
 					gazeMapPoints.get(i-1).x,
@@ -84,6 +100,7 @@ public class GazeMap implements LineBackgroundListener, PaintListener, ExtendedM
 			dataDoc = dBuilder.parse(dataFile);
 			dataDoc.getDocumentElement().normalize();
 			responseList = dataDoc.getElementsByTagName("response");
+			//ControlView.timeSpinner.setMaximum(responseList.getLength());
 		}catch(Exception e){
 			//e.printStackTrace();
 		}
@@ -98,12 +115,14 @@ public class GazeMap implements LineBackgroundListener, PaintListener, ExtendedM
 			if(fileName.equals(responseFileName)){
 				int line = Integer.parseInt(attributes.getNamedItem("line").getNodeValue());
 				int col = Integer.parseInt(attributes.getNamedItem("col").getNodeValue());
-				int wLine = viewer.modelLine2WidgetLine(line);
+				int offset = styledText.getOffsetAtLine(line-1) + (col-1);
+				points.add(styledText.getLocationAtOffset(offset));
+				//int wLine = viewer.modelLine2WidgetLine(line);
 				//System.out.println("wLine: " + wLine);
-				if(wLine != -1){
+				/*if(wLine != -1){
 					int offset = styledText.getOffsetAtLine(wLine) + col;
 					points.add(styledText.getLocationAtOffset(offset));
-				}
+				}*/
 			}
 		}
 		return points;
@@ -120,6 +139,10 @@ public class GazeMap implements LineBackgroundListener, PaintListener, ExtendedM
 		ITextOperationTarget t = (ITextOperationTarget) editorPart.getAdapter(ITextOperationTarget.class);
 		if(t instanceof ProjectionViewer) viewer = (ProjectionViewer) t;
 		updateFile();
+	}
+	
+	public void redraw(){
+		styledText.redraw();
 	}
 
 }

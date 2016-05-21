@@ -9,6 +9,7 @@ import java.awt.Cursor;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.awt.event.*;
 
@@ -19,90 +20,117 @@ import org.w3c.dom.*;
 
 public class HierarchyVis extends JPanel implements MouseMotionListener, MouseListener{
 	private Document dataDoc;
-	private int sectionCap, responseCap, sectionIndex;
+	private int responseCap;
 	private NodeList responseList, scesList;
 	private BufferedImage backBuffer;
 	private Graphics2D grphx,bbGrphx;
-	private String breadCrumb;
 	private AOISection currentSection;
 	SCETree root;
 	SCETree currentTree;
 	
 	private DocLine[] dlArray;
 	private int[] yArray;
-	private AOISection[] renderArray;
 	
-	private void update(SCETree sceTree){
-		sectionCap = sceTree.childCount;
-		renderArray = new AOISection[sectionCap];
-		Arrays.fill(yArray, 40);
-		for(int i=0;i<sectionCap;i++){
-			renderArray[i] = new AOISection(300,50+(15*i),1000,15,sceTree.getChild(i).hasChildren(),sceTree.getChild(i).name);
+	private int getSectionCap(SCETree tree){
+		int cap = 0;
+		for(int i=0;i<tree.childCount;i++){
+			if(tree.getChild(i).isExpanded) 
+				cap += getSectionCap(tree.getChild(i));
+			else
+				cap++;
 		}
-		
-		for(int i=0;i<responseCap;i++){
-			for(int j=0;j<sectionCap;j++){
-				if(sceTree.getChild(j).contains(dlArray[i])){
-					yArray[i] = 54+(j*15);
-					break;
-				}else if(dlArray[i].line > sceTree.getChild(j).endLine){
-					yArray[i] = 54+(sectionCap*15);
+		return cap;
+	}
+	private int setSections(int place, SCETree tree){
+		for(SCETree child: tree.getChildren()){
+			child.section = new AOISection(300,50+(15*place),1000,15,child.name);
+			place++;
+			if(child.isExpanded) place = setSections(place,child);
+		}
+		return place;
+	}
+	private int setY(int y, DocLine docLine, SCETree tree){
+		for(SCETree child: tree.getChildren()){
+			if(child.contains(docLine)){
+				y = child.section.y+4;
+				if(child.isExpanded)
+					y = setY(y,docLine,child);
+			}
+		}
+		return y;
+	}
+	private void findClick(Point point, SCETree tree){
+		for(SCETree child: tree.getChildren()){
+			if(child.hasChildren()){
+				if(child.section != null && child.section.contains(point)){
+					child.isExpanded = !child.isExpanded;
+					return;
+				}else{
+					findClick(point,child);
 				}
 			}
+		}
+		return;
+	}
+	private void drawSections(Graphics2D grphx, SCETree tree){
+		for(SCETree child: tree.getChildren()){
+			grphx.setFont(new Font("Lucida Console",Font.PLAIN,12));
+			if(child.isExpanded){
+				grphx.setColor(Color.orange);
+			}else if(child.hasChildren()){
+				grphx.setColor(Color.cyan);
+			}else{
+				grphx.setColor(Color.lightGray);
+			}
+			grphx.fill(child.section);
+			grphx.setColor(Color.black);
+			grphx.draw(child.section);
+			grphx.drawString(child.getName(),
+					295-(grphx.getFontMetrics().stringWidth(child.getName())),
+					child.section.y+12
+					);
+			if(child.isExpanded)
+				drawSections(grphx, child);
+		}
+	}
+	
+	private void update(){
+		Arrays.fill(yArray, 40);
+		setSections(0,root);
+		for(int i=0;i<yArray.length;i++){
+			yArray[i] = setY(0,dlArray[i],root);
 		}
 	}
 	public void paintComponent(Graphics g){
 		super.paintComponent(g);
 		grphx = (Graphics2D)g;
 		bbGrphx = (Graphics2D)backBuffer.getGraphics();
-		bbGrphx.setColor(Color.white);
+		bbGrphx.setColor(new Color(240,240,240));
 		bbGrphx.fillRect(0, 0, 5000, 5000);
 		bbGrphx.setColor(Color.black);
-		bbGrphx.setFont(new Font("Lucida Console",Font.PLAIN,20));
-		bbGrphx.drawString("/"+currentTree.breadcrumb,5,34);
 		bbGrphx.setFont(new Font("Lucida Console",Font.PLAIN,12));
-		Color color;
-		for(int i=0;i<sectionCap;i++){
-			bbGrphx.setColor(Color.black);
-			bbGrphx.drawString(renderArray[i].name,
-					295-(bbGrphx.getFontMetrics().stringWidth(renderArray[i].name)),
-					62+(i*15)
-					);
-			color = renderArray[i].fillColor;
-			if(i%2 == 0 && (color.equals(Color.lightGray) || color.equals(Color.cyan))) color = color.darker();
-			bbGrphx.setColor(color);
-			bbGrphx.fill(renderArray[i]);
-		}
-		bbGrphx.setColor(Color.black);
+		drawSections(bbGrphx,root);
+		
 		for(int i=0;i<responseCap;i++){
+			bbGrphx.setColor(Color.black);
 			bbGrphx.fillRect(300+((1000*i)/responseCap),yArray[i],2,6);
-			if( i != responseCap-1)
+			if( i != responseCap-1){
+				bbGrphx.setColor(Color.darkGray);
 				bbGrphx.drawLine(300+((1000*i)/responseCap)+1, 
 								yArray[i]+3, 
 								300+((1000*(i+1))/responseCap)+1,
 								yArray[i+1]+3
 								);
+			}
 		}
 		grphx.drawImage(backBuffer,0,0,this);
 	}
 	
 	@Override
 	public void mouseClicked(MouseEvent e) {
-		sectionIndex = 0;
-		if(e.getY()<50){
-			if(currentTree.getParent() != null){
-				currentTree = currentTree.getParent();
-				update(currentTree);
-			}
-		}else{
-			for(int i=0;i<sectionCap;i++){
-				if(renderArray[i].contains(e.getPoint()) && currentTree.getChild(i).hasChildren()){
-					currentTree = currentTree.getChild(i);
-					update(currentTree);
-					break;
-				}
-			}
-		}
+		//getInsets()sectionIndex = 0;
+		findClick(e.getPoint(),root);
+		update();
 		repaint();
 	}
 	@Override
@@ -132,26 +160,17 @@ public class HierarchyVis extends JPanel implements MouseMotionListener, MouseLi
 	}
 	@Override
 	public void mouseMoved(MouseEvent e) {
-		if(!renderArray[sectionIndex].contains(e.getPoint())) setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+		/*//if(!renderArray[sectionIndex].contains(e.getPoint())) setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
 		for(int i=0;i<sectionCap;i++){
 			currentSection = renderArray[i];
 			if(currentSection.contains(e.getPoint())){
 				sectionIndex = i;
-				if(currentSection.hasChildren){
+				if(currentSection.hasChildren)
 					setCursor(new Cursor(Cursor.HAND_CURSOR));
-					currentSection.fillColor = new Color(0,255,149);
-				}else{
-					currentSection.fillColor = new Color(230,230,230);
-				}
-			}else{
-				if(currentSection.hasChildren){
-					currentSection.fillColor = Color.cyan;
-				}else{
-					currentSection.fillColor = Color.lightGray;
-				}
 			}
 		}
 		repaint();
+		*/
 	}
 	
 	public HierarchyVis(File dataFile){
@@ -160,7 +179,7 @@ public class HierarchyVis extends JPanel implements MouseMotionListener, MouseLi
 		setSize(5000,5000);
 		backBuffer = new BufferedImage(getWidth(),getHeight(),BufferedImage.TYPE_INT_RGB);
 		root = new SCETree();
-		sectionIndex = 0;
+		//sectionIndex = 0;
 		try{
 			//Parses dataFile into dataDoc.
 			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
@@ -230,6 +249,6 @@ public class HierarchyVis extends JPanel implements MouseMotionListener, MouseLi
 		currentTree = root;
 		addMouseMotionListener(this);
 		addMouseListener(this);
-		update(currentTree);
+		update();
 	}
 }

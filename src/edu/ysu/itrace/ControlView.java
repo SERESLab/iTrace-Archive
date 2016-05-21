@@ -11,6 +11,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -42,6 +44,8 @@ import org.eclipse.ui.IWorkbenchPartReference;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
 
 import edu.ysu.itrace.exceptions.CalibrationException;
 import edu.ysu.itrace.exceptions.EyeTrackerConnectException;
@@ -57,6 +61,7 @@ import edu.ysu.itrace.solvers.JSONGazeExportSolver;
 import edu.ysu.itrace.solvers.XMLGazeExportSolver;
 import edu.ysu.itrace.trackers.IEyeTracker;
 import edu.ysu.itrace.visualization.VisFrame;
+import fj.data.fingertrees.Node;
 
 /**
  * ViewPart for managing and controlling the plugin.
@@ -85,6 +90,7 @@ public class ControlView extends ViewPart implements IPartListener2,
 
     private Spinner xDrift;
     private Spinner yDrift;
+    private Spinner timeSpinner;
 
     private JSONGazeExportSolver jsonSolver;
     private XMLGazeExportSolver xmlSolver;
@@ -432,29 +438,7 @@ public class ControlView extends ViewPart implements IPartListener2,
             }
         });
         
-        Button selectButton = new Button(buttonComposite,SWT.PUSH);
-        selectButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
-        selectButton.setText("Select a File");
-        selectButton.addSelectionListener(new SelectionAdapter(){
-        	@Override
-        	public void widgetSelected(SelectionEvent e) {
-        		JFileChooser fileChooser = new JFileChooser("C:/Users/Ben/Desktop");
-        		if(fileChooser.showOpenDialog(new JFrame()) == JFileChooser.APPROVE_OPTION)
-        			Activator.getDefault().visFile = fileChooser.getSelectedFile();
-        			Activator.getDefault().updateEditor(null);
-        	}
-        });
         
-        Button visualizeButton = new Button(buttonComposite, SWT.PUSH);
-        visualizeButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true,
-                true, 1, 1));
-        visualizeButton.setText("Visualize");
-        visualizeButton.addSelectionListener(new SelectionAdapter() { 
-        	@Override
-        	public void widgetSelected(SelectionEvent e){
-        		new VisFrame();
-        	}
-        });
         
         
         //Configure Filters Here
@@ -499,6 +483,61 @@ public class ControlView extends ViewPart implements IPartListener2,
         	});
         	grayedControls.add(filterButton);
         }
+        
+        final Composite visComposite = new Composite(parent, SWT.NONE);
+        visComposite.setLayout(new GridLayout(3,false));
+        
+        final Label visLabel = new Label(visComposite, SWT.NONE);
+        visLabel.setText("Visualization");
+        
+        Button selectButton = new Button(visComposite,SWT.PUSH);
+        selectButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
+        selectButton.setText("Select a File");
+        selectButton.addSelectionListener(new SelectionAdapter(){
+        	@Override
+        	public void widgetSelected(SelectionEvent e) {
+        		JFileChooser fileChooser = new JFileChooser("C:/Users/Ben/Desktop");
+        		if(fileChooser.showOpenDialog(new JFrame()) == JFileChooser.APPROVE_OPTION){
+        			File dataFile = fileChooser.getSelectedFile();
+        			Activator.getDefault().visFile = dataFile;
+        			
+        			Activator.getDefault().updateEditor(null);
+        			try{
+        				DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+        				DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+        				Document dataDoc = dBuilder.parse(dataFile);
+        				dataDoc.getDocumentElement().normalize();
+        				NodeList responseList = dataDoc.getElementsByTagName("response");
+        				timeSpinner.setMaximum(responseList.getLength());
+        			}catch(Exception e1){
+        				//e.printStackTrace();
+        			}
+        		}
+        	}
+        });
+        
+        Button visualizeButton = new Button(visComposite, SWT.PUSH);
+        visualizeButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true,
+                true, 1, 1));
+        visualizeButton.setText("Visualize");
+        visualizeButton.addSelectionListener(new SelectionAdapter() { 
+        	@Override
+        	public void widgetSelected(SelectionEvent e){
+        		new VisFrame();
+        	}
+        });
+        final Label timeSpinnerLabel = new Label(visComposite, SWT.NONE);
+        timeSpinnerLabel.setText("Time");
+        
+        final Spinner timeSpinner = new Spinner(visComposite, SWT.NONE);
+        timeSpinner.addModifyListener(new ModifyListener() {
+            public void modifyText(ModifyEvent e) {
+               Activator.getDefault().updateGazeMapCursorIndex(timeSpinner.getSelection());
+            }
+        });
+        timeSpinner.setMinimum(0);
+        timeSpinner.setSelection(0);
+        this.timeSpinner = timeSpinner;
     }
 
     @Override
