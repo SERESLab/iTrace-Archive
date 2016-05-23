@@ -60,6 +60,7 @@ public class EyeXTracker implements IEyeTracker {
 	        
 	     protected void displayCalibrationStatus() throws Exception {
 	    	 double[] pointsNormalized = jniGetCalibration();
+	    	 
 	    	 if (pointsNormalized == null)
 	    		 throw new IOException("Can't get calibration data!");
 	    	 int itemCount = pointsNormalized.length/4;
@@ -67,8 +68,8 @@ public class EyeXTracker implements IEyeTracker {
 	    	 for (int i = 0; i < pointsNormalized.length; i++) {
 	    		 if (pointsNormalized[i] < 0.0001) {
 	    			 pointsNormalized[i] = 0.0001;
-	    		 } else if (pointsNormalized[i] > .9999) {
-	    			 pointsNormalized[i] = .9999;
+	    		 } else if (pointsNormalized[i] > 0.9999) {
+	    			 pointsNormalized[i] = 0.9999;
 	    		 } else {
 	        		//do nothing
 	    		 }
@@ -190,11 +191,11 @@ public class EyeXTracker implements IEyeTracker {
 
     public void calibrate() throws CalibrationException {
         calibrator.calibrate();
-       /* try {
+        try {
         	calibrator.displayCalibrationStatus();
         } catch (Exception e) {
         	throw new CalibrationException("Cannot display calibration status!");
-        } */
+        }
     }
 
     public Gaze getGaze() {

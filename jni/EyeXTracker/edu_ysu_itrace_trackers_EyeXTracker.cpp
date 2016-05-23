@@ -284,6 +284,7 @@ JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_stopTracking
 //forward declaration
 bool add_point_callback = false;
 bool compute_and_set = false;
+bool stop_calibration = false;
 tobiigaze_error_code calibration_error_code;
 bool error_set = false;
 void stop_calibration_handler(tobiigaze_error_code error_code, void *user_data);
@@ -315,7 +316,6 @@ void compute_calibration_handler(tobiigaze_error_code error_code, void *user_dat
     }
 
     std::cout << "compute_calibration_handler: OK\n" << std::endl;
-	tobiigaze_calibration_stop_async((tobiigaze_eye_tracker*) user_data, stop_calibration_handler, user_data);
 	compute_and_set = true;
 }
 
@@ -329,7 +329,8 @@ void add_calibration_point_handler(tobiigaze_error_code error_code, void *user_d
 }
 
 void stop_calibration_handler(tobiigaze_error_code error_code, void *user_data) {
-
+	stop_calibration = true;
+	
 	if (error_code) {
         handle_calibration_error(error_code, user_data, "stop_calibration_handler");
         return;
@@ -403,6 +404,7 @@ JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Calibrator_
 JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Calibrator_jniStopCalibration
   (JNIEnv *env, jobject obj) {
 	compute_and_set = false;
+	stop_calibration = false;
 	
 	//Get native data from parent EyeXTracker
 	jfieldID jfid_parent = getFieldID(env, obj, "parent",
@@ -431,6 +433,9 @@ JNIEXPORT void JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Calibrator_
 			tobiigaze_get_error_message(calibration_error_code));
 		return;
 	}
+	
+	tobiigaze_calibration_stop_async(native_data->eye_tracker, stop_calibration_handler, native_data->eye_tracker);
+	while(stop_calibration != true);
 }
 
 JNIEXPORT jdoubleArray JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Calibrator_jniGetCalibration
@@ -448,47 +453,53 @@ JNIEXPORT jdoubleArray JNICALL Java_edu_ysu_itrace_trackers_EyeXTracker_00024Cal
 	jobject parent_eyex_tracker = env->GetObjectField(obj, jfid_parent);
 	EyeXNativeData* native_data = getEyeXNativeData(env, parent_eyex_tracker);
 	
-    tobiigaze_calibration *calibration = (tobiigaze_calibration*) malloc (sizeof *calibration);
-	if (calibration == NULL) {
-		return NULL;
-	}
+    tobiigaze_calibration *calibration = new tobiigaze_calibration;
 	tobiigaze_calibration_point_data point_data_items[TOBIIGAZE_MAX_CALIBRATION_POINT_DATA_ITEMS];
-	uint32_t point_data_items_capacity;
-	uint32_t* point_data_items_size;
+	uint32_t point_data_items_size;
 	tobiigaze_error_code error_code;
 	
 	//Get calibration
 	tobiigaze_get_calibration(native_data->eye_tracker, calibration, &error_code);
 	if (error_code) {
 		std::cout << "Cannot retrieve calibration data." << std::endl;
-		free(calibration);
+		delete calibration;
 		return NULL;
 	}
 	
-	tobiigaze_get_calibration_point_data_items(&(*calibration), point_data_items,
-			point_data_items_capacity, point_data_items_size, &error_code);
+	tobiigaze_get_calibration_point_data_items(calibration, point_data_items,
+			TOBIIGAZE_MAX_CALIBRATION_POINT_DATA_ITEMS, &point_data_items_size, &error_code);
 	if (error_code) {
 		std::cout << tobiigaze_get_error_message(error_code) << std::endl;
-		free(calibration);
+		delete calibration;
 		return NULL;
 	}
+
+	delete calibration;
 	
-	free(calibration);
-	
-	jdoubleArray calibrationPoints = env->NewDoubleArray(4 * (*point_data_items_size));  // allocate
+	jdoubleArray calibrationPoints = env->NewDoubleArray(4 * (point_data_items_size));  // allocate
 		
    	if (NULL == calibrationPoints) return NULL;
    	jdouble *points = env->GetDoubleArrayElements(calibrationPoints, 0);
    		
    	tobiigaze_calibration_point_data item;
-   	for (int i = 0; i < (*point_data_items_size); i++) {
+
+   	for (int i = 0; i < point_data_items_size; i++) {
    		item = point_data_items[i];
-   		int size = *point_data_items_size;
         
-        points[i] = item.left_map_position.x;
-        points[size+i] = item.left_map_position.y;
-        points[2*size+i] = item.right_map_position.x;
-        points[3*size+i] = item.right_map_position.y;
+        if (item.left_status == TOBIIGAZE_CALIBRATION_POINT_STATUS_VALID_AND_USED_IN_CALIBRATION) {
+        	points[i] = item.left_map_position.x;
+        	points[point_data_items_size+i] = item.left_map_position.y;
+        } else {
+        	points[i] = -1;
+        	points[point_data_items_size+i] = -1;
+        }
+        if (item.right_status == TOBIIGAZE_CALIBRATION_POINT_STATUS_VALID_AND_USED_IN_CALIBRATION) {
+        	points[2*point_data_items_size+i] = item.right_map_position.x;
+        	points[3*point_data_items_size+i] = item.right_map_position.y;
+        } else {
+        	points[2*point_data_items_size+i] = 2;
+        	points[3*point_data_items_size+i] = 2;
+       	}
     }
     env->ReleaseDoubleArrayElements(calibrationPoints, points, 0);
     return calibrationPoints;
