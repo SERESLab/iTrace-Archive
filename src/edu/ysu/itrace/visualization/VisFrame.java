@@ -16,7 +16,7 @@ public class VisFrame extends JFrame {
 		super();
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setExtendedState(java.awt.Frame.MAXIMIZED_BOTH);
-		HierarchyVis hVis = new HierarchyVis(dataFile);
+		HierarchyVis hVis = new HierarchyVis();
 		JScrollPane visPane = new JScrollPane(hVis);
 		add(visPane);
 		setVisible(true);

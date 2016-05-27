@@ -12,6 +12,7 @@ import org.osgi.framework.BundleContext;
 import edu.ysu.itrace.listeners.EditorPartListener;
 import edu.ysu.itrace.preferences.PluginPreferences;
 import edu.ysu.itrace.visualization.GazeMap;
+import edu.ysu.itrace.visualization.data.DataExtractor;
 
 /**
  * The activator class controls the plug-in life cycle
@@ -21,7 +22,7 @@ public class Activator extends AbstractUIPlugin {
     // The plug-in ID
     public static final String PLUGIN_ID = "edu.ysu.itrace"; //$NON-NLS-1$
     public File visFile;
-
+    public DataExtractor extractor = new DataExtractor();
     // The shared instance
     private static Activator plugin;
     

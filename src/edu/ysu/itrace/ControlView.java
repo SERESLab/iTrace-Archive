@@ -500,7 +500,7 @@ public class ControlView extends ViewPart implements IPartListener2,
         		if(fileChooser.showOpenDialog(new JFrame()) == JFileChooser.APPROVE_OPTION){
         			File dataFile = fileChooser.getSelectedFile();
         			Activator.getDefault().visFile = dataFile;
-        			
+        			Activator.getDefault().extractor.setFile(dataFile);
         			Activator.getDefault().updateEditor(null);
         			try{
         				DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();

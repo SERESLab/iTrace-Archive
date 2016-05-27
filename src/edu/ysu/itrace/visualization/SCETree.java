@@ -4,7 +4,7 @@ import java.awt.Rectangle;
 import java.util.ArrayList;
 
 public class SCETree {
-	public String name, file, breadcrumb;
+	public String name, file, breadcrumb, type;
 	public int startLine, endLine, childCount;
 	public boolean isExpanded;
 	private SCETree parent;

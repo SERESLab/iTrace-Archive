@@ -2,7 +2,6 @@ package edu.ysu.itrace.visualization;
 
 import javax.swing.JPanel;
 
-import javax.xml.parsers.*;
 
 import java.awt.Color;
 import java.awt.Cursor;
@@ -14,33 +13,19 @@ import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.awt.event.*;
 
-import java.io.File;
-import java.util.Arrays;
+import java.util.ArrayList;
 
-import org.w3c.dom.*;
+import edu.ysu.itrace.Activator;
 
 public class HierarchyVis extends JPanel implements MouseMotionListener, MouseListener{
-	private Document dataDoc;
 	private int responseCap;
-	private NodeList responseList, scesList;
 	private BufferedImage backBuffer;
 	private Graphics2D grphx,bbGrphx;
 	SCETree root;
-	SCETree currentTree;
 	
-	private DocLine[] dlArray;
+	private ArrayList<DocLine> DocLines;
 	private int[] yArray;
 	
-	private int getSectionCap(SCETree tree){
-		int cap = 0;
-		for(int i=0;i<tree.childCount;i++){
-			if(tree.getChild(i).isExpanded) 
-				cap += getSectionCap(tree.getChild(i));
-			else
-				cap++;
-		}
-		return cap;
-	}
 	private int setSections(int place, SCETree tree){
 		for(SCETree child: tree.getChildren()){
 			child.section = new Rectangle(300,50+(15*place),1000,15);
@@ -76,11 +61,11 @@ public class HierarchyVis extends JPanel implements MouseMotionListener, MouseLi
 		for(SCETree child: tree.getChildren()){
 			grphx.setFont(new Font("Lucida Console",Font.PLAIN,12));
 			if(child.isExpanded){
-				grphx.setColor(Color.orange);
+				grphx.setColor(new Color(0xFFFFFF - child.file.hashCode()));
 			}else if(child.hasChildren()){
-				grphx.setColor(Color.cyan);
+				grphx.setColor(new Color(child.file.hashCode()).brighter().brighter());
 			}else{
-				grphx.setColor(Color.lightGray);
+				grphx.setColor(new Color(child.file.hashCode()));
 			}
 			grphx.fill(child.section);
 			grphx.setColor(Color.black);
@@ -95,10 +80,9 @@ public class HierarchyVis extends JPanel implements MouseMotionListener, MouseLi
 	}
 	
 	private void update(){
-		Arrays.fill(yArray, 40);
 		setSections(0,root);
 		for(int i=0;i<yArray.length;i++){
-			yArray[i] = setY(0,dlArray[i],root);
+			yArray[i] = setY(0,DocLines.get(i),root);
 		}
 	}
 	public void paintComponent(Graphics g){
@@ -116,9 +100,9 @@ public class HierarchyVis extends JPanel implements MouseMotionListener, MouseLi
 			bbGrphx.fillRect(300+((1000*i)/responseCap),yArray[i],2,6);
 			if( i != responseCap-1){
 				bbGrphx.setColor(Color.darkGray);
-				bbGrphx.drawLine(300+((1000*i)/responseCap)+1, 
+				bbGrphx.drawLine(300+((1000*i)/responseCap), 
 								yArray[i]+3, 
-								300+((1000*(i+1))/responseCap)+1,
+								300+((1000*(i+1))/responseCap),
 								yArray[i+1]+3
 								);
 			}
@@ -128,7 +112,6 @@ public class HierarchyVis extends JPanel implements MouseMotionListener, MouseLi
 	
 	@Override
 	public void mouseClicked(MouseEvent e) {
-		//getInsets()sectionIndex = 0;
 		findClick(e.getPoint(),root);
 		update();
 		repaint();
@@ -173,80 +156,15 @@ public class HierarchyVis extends JPanel implements MouseMotionListener, MouseLi
 		*/
 	}
 	
-	public HierarchyVis(File dataFile){
+	public HierarchyVis(){
 		super.setBackground(Color.darkGray);
 		super.setOpaque(true);
 		setSize(5000,5000);
 		backBuffer = new BufferedImage(getWidth(),getHeight(),BufferedImage.TYPE_INT_RGB);
-		root = new SCETree();
-		//sectionIndex = 0;
-		try{
-			//Parses dataFile into dataDoc.
-			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-			DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-			dataDoc = dBuilder.parse(dataFile);
-			dataDoc.getDocumentElement().normalize();
-			
-			//Extract Data
-			responseList = dataDoc.getElementsByTagName("response");
-			responseCap = responseList.getLength();
-			dlArray = new DocLine[responseCap];
-			yArray = new int[responseCap];
-			//Construct SCETree
-			//fill docline array, and add file trees.
-			currentTree = root;
-			for(int i=0;i<responseCap;i++){
-				Node response = responseList.item(i);
-				NamedNodeMap attributes = response.getAttributes();
-				String responseFile = attributes.getNamedItem("name").getNodeValue();
-				int responseLine = Integer.parseInt(attributes.getNamedItem("line").getNodeValue());
-				dlArray[i] = new DocLine(responseFile,responseLine);
-				currentTree.findOrAdd(new SCETree(responseFile,root));
-			}
-			//Add sce trees
-			for(int i=0;i<responseCap;i++){
-				Node response = responseList.item(i);
-				NamedNodeMap attributes = response.getAttributes();
-				String responseFile = attributes.getNamedItem("name").getNodeValue();
-				Node sces = response.getFirstChild();
-				int index = root.ChildSearch(new SCETree(responseFile,root));
-				if(sces.hasChildNodes()){
-					scesList = sces.getChildNodes();
-					currentTree = root.getChild(index);
-					for(int j=scesList.getLength()-1;j>=0;j--){
-						Node sce = scesList.item(j);
-						NamedNodeMap sceAttributes = sce.getAttributes();
-						String sceName = sceAttributes.getNamedItem("name").getNodeValue();
-						int startLine = Integer.parseInt(sceAttributes.getNamedItem("start_line").getNodeValue());
-						int endLine = Integer.parseInt(sceAttributes.getNamedItem("end_line").getNodeValue());
-						int childIndex = currentTree.findOrAdd(new SCETree(sceName,responseFile,currentTree,startLine,endLine));
-						currentTree = currentTree.getChild(childIndex);
-					}
-				}
-			}
-			currentTree = root;
-			//add line nodes
-			for(int i=0;i<responseCap;){
-				boolean found = false;
-				int j;
-				for(j=0;j<currentTree.childCount;j++){
-					if(currentTree.getChild(j).contains(dlArray[i])){
-						found = true;
-						break;
-					}	
-				}
-				if(found) currentTree = currentTree.getChild(j);
-				else{
-					if(!(currentTree.startLine == dlArray[i].line && currentTree.endLine == dlArray[i].line))
-						currentTree.findOrAdd(new SCETree("Line "+dlArray[i].line,dlArray[i].doc,currentTree,dlArray[i].line,dlArray[i].line));
-					currentTree = root;
-					i++;
-				}
-			}
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-		currentTree = root;
+		DocLines = Activator.getDefault().extractor.getDocLines();
+		responseCap = DocLines.size();
+		root = Activator.getDefault().extractor.getSCETree();
+		yArray = new int[responseCap];
 		addMouseMotionListener(this);
 		addMouseListener(this);
 		update();

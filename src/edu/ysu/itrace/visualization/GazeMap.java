@@ -1,50 +1,38 @@
 package edu.ysu.itrace.visualization;
 
-import java.io.File;
 import java.util.ArrayList;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
+import java.util.HashMap;
 
 import org.eclipse.jface.text.ITextOperationTarget;
 import org.eclipse.jface.text.source.projection.ProjectionViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ExtendedModifyEvent;
 import org.eclipse.swt.custom.ExtendedModifyListener;
-import org.eclipse.swt.custom.LineBackgroundEvent;
-import org.eclipse.swt.custom.LineBackgroundListener;
 import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.events.MouseMoveListener;
+import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.ui.IEditorPart;
-import org.w3c.dom.*;
 
 import edu.ysu.itrace.Activator;
 import edu.ysu.itrace.ControlView;
 
-public class GazeMap implements LineBackgroundListener, PaintListener, ExtendedModifyListener, Listener {
-	private IEditorPart			editorPart;
-	private StyledText			styledText;
-	private Document 			dataDoc;
-	private NodeList			responseList;
-	private String				fileName;
-	private File				dataFile;
-	private ArrayList<Point>	gazeMapPoints = new ArrayList<Point>();
-	private ProjectionViewer	viewer;
-	public int					cursorIndex;
-
-
-	@Override
-	public void handleEvent(Event arg0) {
-		// TODO Auto-generated method stub
-
-	}
-
+public class GazeMap implements PaintListener, ExtendedModifyListener, MouseMoveListener{
+	private IEditorPart					editorPart;
+	private StyledText					styledText;
+	private String						fileName;
+	private ArrayList<Point>			gazeMapPoints = new ArrayList<Point>();
+	private ProjectionViewer			viewer;
+	private GazeMapPopup				pd;
+	private ArrayList<VisFixation>		VisFixations;
+	private HashMap<Point,VisFixation>	pointFixationHash = new HashMap<Point,VisFixation>();
+	public int							cursorIndex;
+	
+	
 	@Override
 	public void modifyText(ExtendedModifyEvent arg0) {
 		styledText.redraw();
@@ -53,7 +41,7 @@ public class GazeMap implements LineBackgroundListener, PaintListener, ExtendedM
 	@Override
 	public void paintControl(PaintEvent pe) {
 		if(Activator.getDefault().visFile == null) return;
-		gazeMapPoints = generatePoints(responseList);
+		gazeMapPoints = generatePoints(VisFixations);
 		pe.gc.setAlpha(255);
 		pe.gc.setBackground(new Color(pe.gc.getDevice(),18,173,42));
 		pe.gc.fillOval(
@@ -85,57 +73,73 @@ public class GazeMap implements LineBackgroundListener, PaintListener, ExtendedM
 					);
 		}
 	}
-
 	@Override
-	public void lineGetBackground(LineBackgroundEvent arg0) {
-		// TODO Auto-generated method stub
-
+	public void mouseMove(MouseEvent me) {
+		Point mousePoint = new Point(me.x,me.y);
+		boolean found = false;
+		for(Point point: pointFixationHash.keySet()){
+			if(pointDistance(point,mousePoint) < 8 && pd == null){
+				//System.out.println(gazeMapPoint);
+				pd = new GazeMapPopup(pointFixationHash.get(point), new Point(point.x,point.y));
+				pd.open();
+				found = true;
+			}
+			if(!found && pd != null){
+				pd.close();
+				pd = null;
+			}
+		}
+		
+	}
+	
+	public double pointDistance(Point p1,Point p2){
+		return Math.sqrt(Math.pow(p1.x-3-p2.x, 2)+Math.pow(p1.y-3-p2.y, 2));
 	}
 	
 	public void updateFile(){
-		dataFile = 	Activator.getDefault().visFile;
-		try{
-			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-			DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-			dataDoc = dBuilder.parse(dataFile);
-			dataDoc.getDocumentElement().normalize();
-			responseList = dataDoc.getElementsByTagName("response");
-			//ControlView.timeSpinner.setMaximum(responseList.getLength());
-		}catch(Exception e){
-			//e.printStackTrace();
-		}
+		VisFixations = Activator.getDefault().extractor.getFixations();
 		styledText.redraw();
 	}
 	
-	public ArrayList<Point> generatePoints(NodeList responses){
+	public ArrayList<Point> generatePoints(ArrayList<VisFixation> vfs){
 		ArrayList<Point> points = new ArrayList<Point>();
-		for(int i=0;i<responses.getLength();i++){
-			NamedNodeMap attributes = responses.item(i).getAttributes();
-			String responseFileName = attributes.getNamedItem("name").getNodeValue();
-			if(fileName.equals(responseFileName)){
-				int line = Integer.parseInt(attributes.getNamedItem("line").getNodeValue());
-				int col = Integer.parseInt(attributes.getNamedItem("col").getNodeValue());
-				int offset = styledText.getOffsetAtLine(line-1) + (col-1);
+		for(VisFixation vf: vfs){
+			if(vf.file.equals(fileName)){
+				int line = viewer.modelLine2WidgetLine(vf.line);
+				if(line == -1){
+					System.out.println(vf.line + "\t" + vf.column);
+					continue;
+				}
+				int offset = styledText.getOffsetAtLine(line) + vf.column;
+				//offset = viewer.modelOffset2WidgetOffset(offset);
+				//if(offset == -1){
+				//	System.out.println(vf.line + "\t" + vf.column);
+				//	continue;
+				//}
+				Point point = styledText.getLocationAtOffset(offset);
+				points.add(point);
+				pointFixationHash.put(point, vf);
+			}
+		}
+		/*
+				int offset = styledText.getOffsetAtLine(line) + col;
 				points.add(styledText.getLocationAtOffset(offset));
 				//int wLine = viewer.modelLine2WidgetLine(line);
 				//System.out.println("wLine: " + wLine);
 				/*if(wLine != -1){
 					int offset = styledText.getOffsetAtLine(wLine) + col;
 					points.add(styledText.getLocationAtOffset(offset));
-				}*/
-			}
-		}
+		
+		*/
 		return points;
 	}
 	
 	public GazeMap(IEditorPart editorPart){
 		this.editorPart = editorPart;
-		fileName = editorPart.getEditorInput().getName();
+		fileName = this.editorPart.getEditorInput().getName();
 		styledText = (StyledText) editorPart.getAdapter(Control.class);
 		styledText.addPaintListener(this);
-		styledText.addLineBackgroundListener(this);
-		styledText.addListener(SWT.MouseMove,this);
-		//styledText.setTabs(4);
+		styledText.addMouseMoveListener(this);
 		ITextOperationTarget t = (ITextOperationTarget) editorPart.getAdapter(ITextOperationTarget.class);
 		if(t instanceof ProjectionViewer) viewer = (ProjectionViewer) t;
 		updateFile();
@@ -144,5 +148,9 @@ public class GazeMap implements LineBackgroundListener, PaintListener, ExtendedM
 	public void redraw(){
 		styledText.redraw();
 	}
+
+	
+
+	
 
 }
