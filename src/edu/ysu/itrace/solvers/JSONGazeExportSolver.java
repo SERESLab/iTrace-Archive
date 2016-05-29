@@ -92,7 +92,6 @@ public class JSONGazeExportSolver implements IFileExportSolver {
                         (int) (screenRect.width * response.getGaze().getX());
                 int screenY =
                         (int) (screenRect.height * response.getGaze().getY());
-
                 responseWriter.beginObject()
                               .name("name")
                               .value(response.getName())
@@ -111,17 +110,10 @@ public class JSONGazeExportSolver implements IFileExportSolver {
                               .name("right_pupil_diameter")
                               .value(response.getGaze().getRightPupilDiameter())
                               .name("timestamp")
-                              .value(new Timestamp(response.getGaze().getSystemTime()).toString())
+                              .value(response.getGaze().getTimestamp().toString())
                               .name("session_time")
                               .value(response.getGaze().getSystemTime()-Activator.getDefault().sessionStartTime);
-                              /*
-                              .name("tracker_time")
-                              .value(response.getGaze().getTrackerTime().getTime())
-                              .name("system_time")
-                              .value(response.getGaze().getSystemTime())
-                              .name("nano_time")
-                              .value(response.getGaze().getNanoTime());
-                              */
+                              
                 try {
                     IStyledTextGazeResponse styledResponse =
                             (IStyledTextGazeResponse) response;

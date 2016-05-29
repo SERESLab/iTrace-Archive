@@ -1,6 +1,7 @@
 package edu.ysu.itrace;
 
 import java.util.Date;
+import java.sql.Timestamp;
 
 public class Gaze {
     //Between 0.0 and 1.0
@@ -16,6 +17,7 @@ public class Gaze {
     private Date trackerTime;
     private long systemTime = System.currentTimeMillis();
     private long nanoTime = System.nanoTime();
+    private Timestamp timestamp;
 
     public Gaze(double left_x, double right_x, double left_y, double right_y,
                 double left_validity, double right_validity,
@@ -33,6 +35,9 @@ public class Gaze {
         this.trackerTime = timestamp;
         this.left_validity = left_validity;
         this.right_validity = right_validity;
+        
+        this.timestamp = new Timestamp(this.systemTime);
+        this.timestamp.setNanos((int) (this.nanoTime % 1000000000));
 
         this.left_pupil_diameter = left_pupil_diameter;
         this.right_pupil_diameter = right_pupil_diameter;
@@ -88,5 +93,8 @@ public class Gaze {
 
     public long getNanoTime() {
         return nanoTime;
+    }
+    public Timestamp getTimestamp(){
+    	return timestamp;
     }
 }
