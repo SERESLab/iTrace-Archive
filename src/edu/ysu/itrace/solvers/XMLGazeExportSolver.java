@@ -5,6 +5,7 @@ import java.awt.Toolkit;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.sql.Timestamp;
 
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
@@ -18,6 +19,7 @@ import javax.xml.stream.XMLStreamWriter;
 
 import org.eclipse.core.resources.ResourcesPlugin;
 
+import edu.ysu.itrace.Activator;
 import edu.ysu.itrace.AstManager.SourceCodeEntity;
 import edu.ysu.itrace.gaze.IGazeResponse;
 import edu.ysu.itrace.gaze.IStyledTextGazeResponse;
@@ -113,6 +115,13 @@ public class XMLGazeExportSolver implements IFileExportSolver {
                         String.valueOf(response.getGaze()
                                        .getRightPupilDiameter()));
                 responseWriter.writeAttribute(
+                        "timestamp",
+                        new Timestamp(response.getGaze().getSystemTime()).toString());
+                responseWriter.writeAttribute(
+                        "seesion_time",
+                        String.valueOf(response.getGaze().getSystemTime()-Activator.getDefault().sessionStartTime));
+                /*
+                responseWriter.writeAttribute(
                         "tracker_time",
                         String.valueOf(response.getGaze().getTrackerTime()
                                 .getTime()));
@@ -122,6 +131,7 @@ public class XMLGazeExportSolver implements IFileExportSolver {
                 responseWriter.writeAttribute(
                         "nano_time",
                         String.valueOf(response.getGaze().getNanoTime()));
+                */
 
                 try {
                     IStyledTextGazeResponse styledResponse =

@@ -223,6 +223,7 @@ public class ControlView extends ViewPart implements IPartListener2,
         startButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
+            	
                 startTracking();
             }
         });
@@ -663,7 +664,6 @@ public class ControlView extends ViewPart implements IPartListener2,
             displayError("Tracking is already in progress.");
             return;
         }
-
         if (!requestTracker()) {
             // Error handling occurs in requestTracker(). Just return and
             // pretend
@@ -701,6 +701,7 @@ public class ControlView extends ViewPart implements IPartListener2,
             // If tracking is in progress, the gaze transport should be some.
             displayError(FATAL_ERROR_MSG);
         }
+        Activator.getDefault().sessionStartTime = System.currentTimeMillis();
     }
 
     private void stopTracking() {

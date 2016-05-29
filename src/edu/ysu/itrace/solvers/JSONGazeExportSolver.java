@@ -5,6 +5,7 @@ import java.awt.Toolkit;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.sql.Timestamp;
 
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
@@ -17,6 +18,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 
 import com.google.gson.stream.JsonWriter;
 
+import edu.ysu.itrace.Activator;
 import edu.ysu.itrace.AstManager.SourceCodeEntity;
 import edu.ysu.itrace.gaze.IGazeResponse;
 import edu.ysu.itrace.gaze.IStyledTextGazeResponse;
@@ -108,12 +110,18 @@ public class JSONGazeExportSolver implements IFileExportSolver {
                               .value(response.getGaze().getLeftPupilDiameter())
                               .name("right_pupil_diameter")
                               .value(response.getGaze().getRightPupilDiameter())
+                              .name("timestamp")
+                              .value(new Timestamp(response.getGaze().getSystemTime()).toString())
+                              .name("session_time")
+                              .value(response.getGaze().getSystemTime()-Activator.getDefault().sessionStartTime);
+                              /*
                               .name("tracker_time")
                               .value(response.getGaze().getTrackerTime().getTime())
                               .name("system_time")
                               .value(response.getGaze().getSystemTime())
                               .name("nano_time")
                               .value(response.getGaze().getNanoTime());
+                              */
                 try {
                     IStyledTextGazeResponse styledResponse =
                             (IStyledTextGazeResponse) response;
