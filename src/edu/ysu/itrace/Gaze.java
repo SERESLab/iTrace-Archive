@@ -2,6 +2,7 @@ package edu.ysu.itrace;
 
 import java.util.Date;
 import java.sql.Timestamp;
+import java.util.Calendar;
 
 public class Gaze {
     //Between 0.0 and 1.0
@@ -15,9 +16,12 @@ public class Gaze {
     private double right_pupil_diameter;
 
     private Date trackerTime;
+    private Calendar calendar = Calendar.getInstance();
     private long systemTime = System.currentTimeMillis();
     private long nanoTime = System.nanoTime();
-    private Timestamp timestamp;
+    private long nanoseconds;
+    private String timestamp = "";
+    public Timestamp ts;
 
     public Gaze(double left_x, double right_x, double left_y, double right_y,
                 double left_validity, double right_validity,
@@ -36,9 +40,27 @@ public class Gaze {
         this.left_validity = left_validity;
         this.right_validity = right_validity;
         
-        this.timestamp = new Timestamp(this.systemTime);
-        this.timestamp.setNanos((int) (this.nanoTime % 1000000000));
+        calendar.setTimeInMillis(systemTime);
+        nanoseconds = nanoTime;
+        
+        ts = new Timestamp(systemTime);
 
+        nanoseconds = nanoseconds%1000000000;
+        
+        ts.setNanos((int)nanoseconds);
+
+        this.timestamp = calendar.get(Calendar.YEAR)+"-";
+        if(calendar.get(Calendar.MONTH)+1 < 10) this.timestamp += 0;
+        this.timestamp += +(calendar.get(Calendar.MONTH)+1)+"-";
+        if(calendar.get(Calendar.DATE) < 10) this.timestamp += 0;
+        this.timestamp += calendar.get(Calendar.DATE)+"T";
+        if(calendar.get(Calendar.HOUR_OF_DAY) < 10) this.timestamp += 0;
+        this.timestamp += calendar.get(Calendar.HOUR_OF_DAY)+":";
+        if(calendar.get(Calendar.MINUTE) < 10) this.timestamp += 0;
+        this.timestamp += calendar.get(Calendar.MINUTE)+":";
+        if(calendar.get(Calendar.SECOND) < 10) this.timestamp += 0;
+        this.timestamp += calendar.get(Calendar.SECOND)+"."+nanoseconds;
+        
         this.left_pupil_diameter = left_pupil_diameter;
         this.right_pupil_diameter = right_pupil_diameter;
     }
@@ -94,7 +116,7 @@ public class Gaze {
     public long getNanoTime() {
         return nanoTime;
     }
-    public Timestamp getTimestamp(){
+    public String getTimestamp(){
     	return timestamp;
     }
 }

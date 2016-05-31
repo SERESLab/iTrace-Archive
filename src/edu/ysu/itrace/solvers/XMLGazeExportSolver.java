@@ -98,7 +98,7 @@ public class XMLGazeExportSolver implements IFileExportSolver {
                         (int) (screenRect.width * response.getGaze().getX());
                 int screenY =
                         (int) (screenRect.height * response.getGaze().getY());
-
+                
                 responseWriter.writeStartElement("response");
                 responseWriter.writeAttribute("name", response.getName());
                 responseWriter.writeAttribute("type", response.getGazeType());
@@ -116,10 +116,14 @@ public class XMLGazeExportSolver implements IFileExportSolver {
                                        .getRightPupilDiameter()));
                 responseWriter.writeAttribute(
                         "timestamp",
-                        response.getGaze().getTimestamp().toString());
+                        response.getGaze().getTimestamp());
                 responseWriter.writeAttribute(
-                        "seesion_time",
+                        "",
+                        response.getGaze().ts.toString());
+                responseWriter.writeAttribute(
+                        "session_time",
                         String.valueOf(response.getGaze().getSystemTime()-Activator.getDefault().sessionStartTime));
+                
 
                 try {
                     IStyledTextGazeResponse styledResponse =

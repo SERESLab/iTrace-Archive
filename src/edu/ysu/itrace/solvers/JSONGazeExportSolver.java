@@ -110,7 +110,7 @@ public class JSONGazeExportSolver implements IFileExportSolver {
                               .name("right_pupil_diameter")
                               .value(response.getGaze().getRightPupilDiameter())
                               .name("timestamp")
-                              .value(response.getGaze().getTimestamp().toString())
+                              .value(response.getGaze().getTimestamp())
                               .name("session_time")
                               .value(response.getGaze().getSystemTime()-Activator.getDefault().sessionStartTime);
                               
