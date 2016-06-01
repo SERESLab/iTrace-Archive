@@ -32,6 +32,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Spinner;
+import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.IPartListener2;
@@ -124,6 +125,8 @@ public class ControlView extends ViewPart implements IPartListener2,
 
                     if (response != null) {
                         try {
+                        	IActionBars actionBars = getViewSite().getActionBars();
+                        	actionBars.getStatusLineManager().setMessage(String.valueOf(response.getGaze().getSessionTime()));
                             gazeResponses.add(response);
                         } catch (IllegalStateException ise) {
                             System.err.println("Error! Gaze response queue is "

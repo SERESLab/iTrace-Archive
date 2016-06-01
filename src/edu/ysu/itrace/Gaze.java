@@ -59,7 +59,10 @@ public class Gaze {
         if(calendar.get(Calendar.MINUTE) < 10) this.timestamp += 0;
         this.timestamp += calendar.get(Calendar.MINUTE)+":";
         if(calendar.get(Calendar.SECOND) < 10) this.timestamp += 0;
-        this.timestamp += calendar.get(Calendar.SECOND)+"."+nanoseconds;
+        this.timestamp += (double)(calendar.get(Calendar.SECOND)+(nanoseconds*Math.pow(10, -9)));
+        if(calendar.get(Calendar.ZONE_OFFSET) < 0) this.timestamp += "-";
+        else this.timestamp += "+";
+        this.timestamp += "0" + Math.abs((calendar.get(Calendar.ZONE_OFFSET)/3600000)) + ":00";
         
         this.left_pupil_diameter = left_pupil_diameter;
         this.right_pupil_diameter = right_pupil_diameter;
@@ -115,6 +118,9 @@ public class Gaze {
 
     public long getNanoTime() {
         return nanoTime;
+    }
+    public long getSessionTime(){
+    	return systemTime - Activator.getDefault().sessionStartTime;
     }
     public String getTimestamp(){
     	return timestamp;

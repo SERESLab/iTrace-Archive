@@ -94,13 +94,17 @@ public class XMLGazeExportSolver implements IFileExportSolver {
     @Override
     public void process(IGazeResponse response) {
         try {
+        	try {
+                IStyledTextGazeResponse styledResponse =
+                        (IStyledTextGazeResponse) response;
+        		
                 int screenX =
                         (int) (screenRect.width * response.getGaze().getX());
                 int screenY =
                         (int) (screenRect.height * response.getGaze().getY());
                 
                 responseWriter.writeStartElement("response");
-                responseWriter.writeAttribute("name", response.getName());
+                responseWriter.writeAttribute("name", styledResponse.getName());
                 responseWriter.writeAttribute("type", response.getGazeType());
                 responseWriter.writeAttribute("x", String.valueOf(screenX));
                 responseWriter.writeAttribute("y", String.valueOf(screenY));
@@ -117,17 +121,19 @@ public class XMLGazeExportSolver implements IFileExportSolver {
                 responseWriter.writeAttribute(
                         "timestamp",
                         response.getGaze().getTimestamp());
+                /*
                 responseWriter.writeAttribute(
                         "",
                         response.getGaze().ts.toString());
+                        */
                 responseWriter.writeAttribute(
                         "session_time",
-                        String.valueOf(response.getGaze().getSystemTime()-Activator.getDefault().sessionStartTime));
-                
-
+                        String.valueOf(response.getGaze().getSessionTime()));
+                /*
                 try {
                     IStyledTextGazeResponse styledResponse =
-                            (IStyledTextGazeResponse) response;
+                            (IStyledTextGazeResponse) response;*/
+                
                     responseWriter.writeAttribute("path", styledResponse.getPath());
                     responseWriter.writeAttribute("line_height",
                             String.valueOf(styledResponse.getLineHeight()));
