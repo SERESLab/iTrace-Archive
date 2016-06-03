@@ -249,7 +249,7 @@ public class TobiiTracker implements IEyeTracker {
                left_y_mod = left_y,
                right_y_mod = right_y;
         try {
-        	long millis = Math.round((double)(timestamp/1000));
+        	long millis = Math.round(((double)timestamp/1000));
             Gaze gaze = new Gaze(left_x, right_x, left_y, right_y,
                                  gaze_left_validity, gaze_right_validity,
                                  left_pupil_diameter, right_pupil_diameter,
