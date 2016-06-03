@@ -133,11 +133,12 @@ public class ControlView extends ViewPart implements IPartListener2,
                         	actionBars.getStatusLineManager().setMessage(String.valueOf(response.getGaze().getSessionTime()));
                             gazeResponses.add(response);
                             registerTime = System.nanoTime();
-                        	if(registerTime-startTime < 1000000){
+                            
+                        	//if(registerTime-startTime < 1000000) 
                         		System.out.println(registerTime - startTime);
-                        		meanTime = ((meanTime*numOfTimes)+(registerTime-startTime))/(numOfTimes+1);
-                        		numOfTimes++;
-                        	}
+                        	meanTime = ((meanTime*numOfTimes)+(registerTime-startTime))/(numOfTimes+1);
+                        	numOfTimes++;
+                        	
                         	startTime = registerTime;
                         } catch (IllegalStateException ise) {
                             System.err.println("Error! Gaze response queue is "

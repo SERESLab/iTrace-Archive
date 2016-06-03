@@ -41,9 +41,7 @@ public class Gaze {
         this.right_validity = right_validity;
         
         calendar.setTimeInMillis(systemTime);
-        nanoseconds = nanoTime;
-
-        nanoseconds = nanoseconds%1000000000;
+        nanoseconds = nanoTime%1000000000;
 
         this.timestamp = calendar.get(Calendar.YEAR)+"-";
         if(calendar.get(Calendar.MONTH)+1 < 10) this.timestamp += 0;
@@ -55,7 +53,7 @@ public class Gaze {
         if(calendar.get(Calendar.MINUTE) < 10) this.timestamp += 0;
         this.timestamp += calendar.get(Calendar.MINUTE)+":";
         if(calendar.get(Calendar.SECOND) < 10) this.timestamp += 0;
-        this.timestamp += (double)(calendar.get(Calendar.SECOND)+(nanoseconds*Math.pow(10, -9)));
+        this.timestamp += (double)(calendar.get(Calendar.SECOND)+((double)nanoseconds/1000000000));
         if(calendar.get(Calendar.ZONE_OFFSET) < 0) this.timestamp += "-";
         else this.timestamp += "+";
         this.timestamp += "0" + Math.abs((calendar.get(Calendar.ZONE_OFFSET)/3600000)) + ":00";
