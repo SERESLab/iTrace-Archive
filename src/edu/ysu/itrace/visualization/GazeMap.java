@@ -31,6 +31,7 @@ public class GazeMap implements PaintListener, ExtendedModifyListener, MouseMove
 	private ArrayList<VisFixation>		VisFixations;
 	private HashMap<Point,VisFixation>	pointFixationHash = new HashMap<Point,VisFixation>();
 	public int							cursorIndex;
+	public int							longestDuration = 0;
 	
 	
 	@Override
@@ -42,19 +43,11 @@ public class GazeMap implements PaintListener, ExtendedModifyListener, MouseMove
 	public void paintControl(PaintEvent pe) {
 		if(Activator.getDefault().visFile == null) return;
 		gazeMapPoints = generatePoints(VisFixations);
-		pe.gc.setAlpha(255);
-		pe.gc.setBackground(new Color(pe.gc.getDevice(),18,173,42));
-		pe.gc.fillOval(
-				gazeMapPoints.get(cursorIndex).x-8, 
-				gazeMapPoints.get(cursorIndex).y-8, 
-				16, 
-				16
-				);
 		
 		for(int i=0;i<gazeMapPoints.size();i++){
 			int alpha = 255 - 10*Math.abs(cursorIndex-i);
 			if(alpha < 0) alpha = 0;
-			pe.gc.setAlpha(alpha);
+			//pe.gc.setAlpha(alpha);
 			pe.gc.setBackground(new Color(pe.gc.getDevice(),255-(i%255),0+(i%255),255));
 			pe.gc.setForeground(new Color(pe.gc.getDevice(),255-(i%255),0+(i%255),255));
 			if(i>0){
@@ -65,11 +58,13 @@ public class GazeMap implements PaintListener, ExtendedModifyListener, MouseMove
 					gazeMapPoints.get(i).y
 					);
 			}
+			int diameter = findDiameter(pointFixationHash.get(gazeMapPoints.get(i)).duration);
+			if(i == cursorIndex) pe.gc.setBackground(new Color(pe.gc.getDevice(),18,173,42));
 			pe.gc.fillOval(
-					gazeMapPoints.get(i).x-3,
-					gazeMapPoints.get(i).y-3, 
-					6,
-					6
+					gazeMapPoints.get(i).x-(diameter/2),
+					gazeMapPoints.get(i).y-(diameter/2), 
+					diameter,
+					diameter
 					);
 		}
 	}
@@ -96,8 +91,21 @@ public class GazeMap implements PaintListener, ExtendedModifyListener, MouseMove
 		return Math.sqrt(Math.pow(p1.x-3-p2.x, 2)+Math.pow(p1.y-3-p2.y, 2));
 	}
 	
+	private void findLongestDuration(ArrayList<VisFixation> vfs){
+		for(VisFixation vf: vfs)
+			if(vf.duration > longestDuration) longestDuration = vf.duration;
+	}
+	
+	private int findDiameter(int duration){
+		double percent = (double)duration/(double)longestDuration;
+		//System.out.println(duration + "/" + longestDuration + " = " + percent);
+		double diameter = 6 + percent*18;
+		return (int)diameter;
+	}
+	
 	public void updateFile(){
 		VisFixations = Activator.getDefault().extractor.getFixations();
+		findLongestDuration(VisFixations);
 		styledText.redraw();
 	}
 	
@@ -107,7 +115,7 @@ public class GazeMap implements PaintListener, ExtendedModifyListener, MouseMove
 			if(vf.file.equals(fileName)){
 				int line = viewer.modelLine2WidgetLine(vf.line);
 				if(line == -1){
-					System.out.println(vf.line + "\t" + vf.column);
+					//System.out.println(vf.line + "\t" + vf.column);
 					continue;
 				}
 				int offset = styledText.getOffsetAtLine(line) + vf.column;
