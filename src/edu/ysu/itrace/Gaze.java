@@ -15,18 +15,18 @@ public class Gaze {
     private double left_pupil_diameter;
     private double right_pupil_diameter;
 
-    private Date trackerTime;
+    private long trackerTime;
     private Calendar calendar = Calendar.getInstance();
-    private long systemTime = System.currentTimeMillis();
     private long nanoTime = System.nanoTime();
+    private long systemTime = System.currentTimeMillis();
     private long nanoseconds;
     private String timestamp = "";
-    public Timestamp ts;
+
 
     public Gaze(double left_x, double right_x, double left_y, double right_y,
                 double left_validity, double right_validity,
                 double left_pupil_diameter, double right_pupil_diameter,
-                Date timestamp) {
+                long trackerTime) {
         this.left_x = left_x;
         this.right_x = right_x;
 
@@ -36,18 +36,14 @@ public class Gaze {
         this.x = (left_x + right_x) / 2;
         this.y = (left_y + right_y) / 2;
 
-        this.trackerTime = timestamp;
+        this.trackerTime = trackerTime;
         this.left_validity = left_validity;
         this.right_validity = right_validity;
         
         calendar.setTimeInMillis(systemTime);
         nanoseconds = nanoTime;
-        
-        ts = new Timestamp(systemTime);
 
         nanoseconds = nanoseconds%1000000000;
-        
-        ts.setNanos((int)nanoseconds);
 
         this.timestamp = calendar.get(Calendar.YEAR)+"-";
         if(calendar.get(Calendar.MONTH)+1 < 10) this.timestamp += 0;
@@ -108,7 +104,7 @@ public class Gaze {
         return right_pupil_diameter;
     }
 
-    public Date getTrackerTime() {
+    public long getTrackerTime() {
         return trackerTime;
     }
 
@@ -120,7 +116,7 @@ public class Gaze {
         return nanoTime;
     }
     public long getSessionTime(){
-    	return systemTime - Activator.getDefault().sessionStartTime;
+    	return nanoTime - Activator.getDefault().sessionStartTime;
     }
     public String getTimestamp(){
     	return timestamp;

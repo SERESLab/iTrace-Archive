@@ -249,10 +249,11 @@ public class TobiiTracker implements IEyeTracker {
                left_y_mod = left_y,
                right_y_mod = right_y;
         try {
+        	long millis = Math.round((double)(timestamp/1000));
             Gaze gaze = new Gaze(left_x, right_x, left_y, right_y,
                                  gaze_left_validity, gaze_right_validity,
                                  left_pupil_diameter, right_pupil_diameter,
-                                 new Date(timestamp / 1000));
+                                 millis);
             if (recentGazes.size() >= 15)
                 recentGazes.remove();
             recentGazes.add(gaze);
@@ -272,7 +273,7 @@ public class TobiiTracker implements IEyeTracker {
             Gaze modifiedGaze = new Gaze(left_x_mod, right_x_mod, left_y_mod,
                     right_y_mod, gaze_left_validity, gaze_right_validity,
                     left_pupil_diameter, right_pupil_diameter,
-                    new Date(timestamp / 1000));
+                    millis);
 
             gaze_points.put(modifiedGaze);
         } catch (InterruptedException e) {

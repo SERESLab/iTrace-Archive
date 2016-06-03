@@ -96,6 +96,10 @@ public class ControlView extends ViewPart implements IPartListener2,
     		new CopyOnWriteArrayList<IFilter>();
     
     private SessionInfoHandler sessionInfo = new SessionInfoHandler();
+    
+    private long startTime, registerTime;
+    private long meanTime = 0;
+    private long numOfTimes = 0;
 
     /*
      * Gets gazes from the eye tracker, calls gaze handlers, and adds responses
@@ -128,6 +132,13 @@ public class ControlView extends ViewPart implements IPartListener2,
                         	IActionBars actionBars = getViewSite().getActionBars();
                         	actionBars.getStatusLineManager().setMessage(String.valueOf(response.getGaze().getSessionTime()));
                             gazeResponses.add(response);
+                            registerTime = System.nanoTime();
+                        	if(registerTime-startTime < 1000000){
+                        		System.out.println(registerTime - startTime);
+                        		meanTime = ((meanTime*numOfTimes)+(registerTime-startTime))/(numOfTimes+1);
+                        		numOfTimes++;
+                        	}
+                        	startTime = registerTime;
                         } catch (IllegalStateException ise) {
                             System.err.println("Error! Gaze response queue is "
                                     + "full!");
@@ -226,7 +237,7 @@ public class ControlView extends ViewPart implements IPartListener2,
         startButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-            	
+            	startTime = System.nanoTime();
                 startTracking();
             }
         });
@@ -429,6 +440,7 @@ public class ControlView extends ViewPart implements IPartListener2,
         				activeSolvers.remove(solver);
         			}
                 }
+                System.out.println("Average Time = " + meanTime);
             }
         });
         
@@ -704,7 +716,7 @@ public class ControlView extends ViewPart implements IPartListener2,
             // If tracking is in progress, the gaze transport should be some.
             displayError(FATAL_ERROR_MSG);
         }
-        Activator.getDefault().sessionStartTime = System.currentTimeMillis();
+        Activator.getDefault().sessionStartTime = System.nanoTime();
     }
 
     private void stopTracking() {

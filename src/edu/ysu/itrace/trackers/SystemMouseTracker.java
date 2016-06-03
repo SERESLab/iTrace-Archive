@@ -63,7 +63,7 @@ public class SystemMouseTracker implements IEyeTracker {
                 double y = (double) cursorPosition.y /
                            (double) screenSize.height;
                 Gaze gaze = new Gaze(x - 0.05, x + 0.05, y, y, 1.0, 1.0,
-                                     0.0, 0.0, new Date());
+                                     0.0, 0.0, System.currentTimeMillis());
                 parent.calibrator.moveCrosshair(cursorPosition.x,
                                                 cursorPosition.y);
                 parent.gazePoints.add(gaze);
