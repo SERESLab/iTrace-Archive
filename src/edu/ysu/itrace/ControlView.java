@@ -3,6 +3,8 @@ package edu.ysu.itrace;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.io.File;
+import java.io.PrintWriter;
+import java.sql.Date;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -100,6 +102,8 @@ public class ControlView extends ViewPart implements IPartListener2,
     private long startTime, registerTime;
     private long meanTime = 0;
     private long numOfTimes = 0;
+    
+    private PrintWriter timingLogPrintWriter;
 
     /*
      * Gets gazes from the eye tracker, calls gaze handlers, and adds responses
@@ -134,8 +138,8 @@ public class ControlView extends ViewPart implements IPartListener2,
                             gazeResponses.add(response);
                             registerTime = System.nanoTime();
                             
-                        	//if(registerTime-startTime < 1000000) 
-                        		System.out.println(registerTime - startTime);
+                            if(timingLogPrintWriter != null)
+                        		timingLogPrintWriter.println(registerTime - startTime);
                         	meanTime = ((meanTime*numOfTimes)+(registerTime-startTime))/(numOfTimes+1);
                         	numOfTimes++;
                         	
@@ -240,6 +244,13 @@ public class ControlView extends ViewPart implements IPartListener2,
             public void widgetSelected(SelectionEvent e) {
             	startTime = System.nanoTime();
                 startTracking();
+                try{
+                	timingLogPrintWriter = new PrintWriter("Timing Log " + new Date(System.currentTimeMillis()).toString() + ".txt");
+                	timingLogPrintWriter.println("Response registering times in nanos: ");
+                }
+                catch(Exception printWriterException){
+                	printWriterException.printStackTrace();
+                }
             }
         });
         
@@ -441,7 +452,10 @@ public class ControlView extends ViewPart implements IPartListener2,
         				activeSolvers.remove(solver);
         			}
                 }
-                System.out.println("Average Time = " + meanTime);
+                if(timingLogPrintWriter != null){
+                	timingLogPrintWriter.println("Average Time = " + meanTime);
+                	timingLogPrintWriter.close();
+                }
             }
         });
         
