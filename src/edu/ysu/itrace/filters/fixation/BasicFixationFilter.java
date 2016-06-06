@@ -337,6 +337,7 @@ public abstract class BasicFixationFilter implements IFilter {
 		processPeaks();
 		peakIndices();
 		spatialPos();
+		removeShortFixations();
 	}
 	
 }
