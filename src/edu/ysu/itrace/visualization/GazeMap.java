@@ -116,9 +116,10 @@ public class GazeMap implements PaintListener, ExtendedModifyListener, MouseMove
 				int line = viewer.modelLine2WidgetLine(vf.line);
 				if(line == -1){
 					//System.out.println(vf.line + "\t" + vf.column);
-					continue;
+					//continue;
 				}
-				int offset = styledText.getOffsetAtLine(line) + vf.column;
+				int offset = styledText.getOffsetAtLine(vf.line-1) + vf.column-1;
+				
 				//offset = viewer.modelOffset2WidgetOffset(offset);
 				//if(offset == -1){
 				//	System.out.println(vf.line + "\t" + vf.column);
