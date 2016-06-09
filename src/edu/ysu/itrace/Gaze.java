@@ -1,6 +1,5 @@
 package edu.ysu.itrace;
 
-import java.util.Date;
 import java.sql.Timestamp;
 import java.util.Calendar;
 
@@ -19,8 +18,9 @@ public class Gaze {
     private Calendar calendar = Calendar.getInstance();
     private long nanoTime = System.nanoTime();
     private long systemTime = System.currentTimeMillis();
-    private long nanoseconds;
-    private String timestamp = "";
+    private int nanoseconds;
+    private Timestamp timestamp;
+    private String timestampString;
 
 
     public Gaze(double left_x, double right_x, double left_y, double right_y,
@@ -41,22 +41,17 @@ public class Gaze {
         this.right_validity = right_validity;
         
         calendar.setTimeInMillis(systemTime);
-        nanoseconds = nanoTime%1000000000;
+        nanoseconds = (int) (nanoTime%1000000000);
 
-        this.timestamp = calendar.get(Calendar.YEAR)+"-";
-        if(calendar.get(Calendar.MONTH)+1 < 10) this.timestamp += 0;
-        this.timestamp += +(calendar.get(Calendar.MONTH)+1)+"-";
-        if(calendar.get(Calendar.DATE) < 10) this.timestamp += 0;
-        this.timestamp += calendar.get(Calendar.DATE)+"T";
-        if(calendar.get(Calendar.HOUR_OF_DAY) < 10) this.timestamp += 0;
-        this.timestamp += calendar.get(Calendar.HOUR_OF_DAY)+":";
-        if(calendar.get(Calendar.MINUTE) < 10) this.timestamp += 0;
-        this.timestamp += calendar.get(Calendar.MINUTE)+":";
-        if(calendar.get(Calendar.SECOND) < 10) this.timestamp += 0;
-        this.timestamp += (double)(calendar.get(Calendar.SECOND)+((double)nanoseconds/1000000000));
-        if(calendar.get(Calendar.ZONE_OFFSET) < 0) this.timestamp += "-";
-        else this.timestamp += "+";
-        this.timestamp += "0" + Math.abs((calendar.get(Calendar.ZONE_OFFSET)/3600000)) + ":00";
+        timestamp = new Timestamp(systemTime);
+        timestamp.setNanos(nanoseconds);
+        
+        timestampString = timestamp.toString();
+        timestampString = timestampString.substring(0, 10) + "T" + timestampString.substring(11);
+        if(calendar.get(Calendar.ZONE_OFFSET) < 0) timestampString += "-";
+        else timestampString += "+";
+        if(Math.abs((calendar.get(Calendar.ZONE_OFFSET)/3600000)) < 10) timestampString += 0;
+        timestampString += Math.abs((calendar.get(Calendar.ZONE_OFFSET)/3600000)) + ":00";
         
         this.left_pupil_diameter = left_pupil_diameter;
         this.right_pupil_diameter = right_pupil_diameter;
@@ -117,6 +112,6 @@ public class Gaze {
     	return nanoTime - Activator.getDefault().sessionStartTime;
     }
     public String getTimestamp(){
-    	return timestamp;
+    	return timestampString;
     }
 }
