@@ -100,7 +100,7 @@ public class BrowserGazeHandler implements IGazeHandler {
 	        
 	        }
 	        
-	        else if (targetBrowser.getUrl().contains("bugzilla.mozilla.org/show_bug.cgi?id=")) {
+	        else if (targetBrowser.getText().contains("YAHOO.namespace('bugzilla');")) {
 	        	
 	        	BRManager brManager = (BRManager) targetBrowser
        				.getData(ControlView.KEY_BR_DOM);
