@@ -1,7 +1,9 @@
 package edu.ysu.itrace.gaze;
 
+import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.custom.StyledText;
 
+import edu.ysu.itrace.gaze.handlers.BrowserGazeHandler;
 import edu.ysu.itrace.gaze.handlers.StyledTextGazeHandler;
 
 /**
@@ -16,7 +18,12 @@ public class GazeHandlerFactory {
     public static IGazeHandler createHandler(Object target) {
         // create gaze handler for a StyledText widget
         if (target instanceof StyledText) {
-            return new StyledTextGazeHandler(target);
+            return new StyledTextGazeHandler(target); 
+        }
+        
+        if (target instanceof Browser) {
+        //create gaze handler for a Browser Stack overflow and Bug Report widget
+        	return new BrowserGazeHandler(target);
         }
 
         return null;
