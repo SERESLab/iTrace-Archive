@@ -110,6 +110,7 @@ public class TobiiTracker implements IEyeTracker {
             new LinkedBlockingQueue<Gaze>();
     private Calibrator calibrator;
     private double xDrift = 0, yDrift = 0;
+    private Long previousTrackerTime;
 
     static { System.loadLibrary("TobiiTracker"); }
 
@@ -209,6 +210,13 @@ public class TobiiTracker implements IEyeTracker {
             double right_x, double right_y, int left_validity,
             int right_validity, double left_pupil_diameter,
             double right_pupil_diameter) {
+    	if(previousTrackerTime != null && (timestamp/1000) == (previousTrackerTime/1000)){
+        	//Ignore new gaze;
+    		return;
+        }else{
+        	//Set previousGaze to new gaze 
+        	previousTrackerTime = timestamp;
+        }
         //Drift
         left_x += xDrift;
         right_x += xDrift;
@@ -249,11 +257,11 @@ public class TobiiTracker implements IEyeTracker {
                left_y_mod = left_y,
                right_y_mod = right_y;
         try {
-        	long millis = Math.round(((double)timestamp/1000));
             Gaze gaze = new Gaze(left_x, right_x, left_y, right_y,
                                  gaze_left_validity, gaze_right_validity,
                                  left_pupil_diameter, right_pupil_diameter,
                                  timestamp);
+            
             if (recentGazes.size() >= 15)
                 recentGazes.remove();
             recentGazes.add(gaze);
