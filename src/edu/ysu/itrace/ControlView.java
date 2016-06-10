@@ -12,6 +12,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.action.IStatusLineManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.ModifyListener;
@@ -97,9 +98,9 @@ public class ControlView extends ViewPart implements IPartListener2,
     
     private SessionInfoHandler sessionInfo = new SessionInfoHandler();
     
-    private long startTime, registerTime;
-    private long meanTime = 0;
-    private long numOfTimes = 0;
+    private IActionBars actionBars;
+    private IStatusLineManager statusLineManager;
+    private long registerTime = 2000;
 
     /*
      * Gets gazes from the eye tracker, calls gaze handlers, and adds responses
@@ -129,14 +130,18 @@ public class ControlView extends ViewPart implements IPartListener2,
 
                     if (response != null) {
                         try {
-                        	IActionBars actionBars = getViewSite().getActionBars();
-                        	actionBars.getStatusLineManager().setMessage(String.valueOf(response.getGaze().getSessionTime()));
+                        	statusLineManager
+                        		.setMessage(String.valueOf(response.getGaze().getSessionTime()));
+                        	registerTime = System.currentTimeMillis();
                             gazeResponses.add(response);
                         } catch (IllegalStateException ise) {
                             System.err.println("Error! Gaze response queue is "
                                     + "full!");
                         }
                     }
+                }else{
+                	if((System.currentTimeMillis()-registerTime) > 2000)
+                		statusLineManager.setMessage("");
                 }
 
                 if (trackingInProgress || g != null) {
@@ -230,7 +235,8 @@ public class ControlView extends ViewPart implements IPartListener2,
         startButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-            	startTime = System.nanoTime();
+            	actionBars = getViewSite().getActionBars();
+            	statusLineManager = actionBars.getStatusLineManager();
                 startTracking();
             }
         });
@@ -424,6 +430,7 @@ public class ControlView extends ViewPart implements IPartListener2,
             @Override
             public void widgetSelected(SelectionEvent e) {
                 stopTracking();
+                statusLineManager.setMessage("");
                 for (final Control controls : solversComposite.getChildren()) {
             		Button button = (Button) controls;
             		button.setSelection(false);
