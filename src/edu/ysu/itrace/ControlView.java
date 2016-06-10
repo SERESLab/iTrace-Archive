@@ -102,6 +102,7 @@ public class ControlView extends ViewPart implements IPartListener2,
     private IStatusLineManager statusLineManager;
     private long registerTime = 2000;
 
+
     /*
      * Gets gazes from the eye tracker, calls gaze handlers, and adds responses
      * to the queue for the response handler thread to process.
@@ -134,6 +135,7 @@ public class ControlView extends ViewPart implements IPartListener2,
                         		.setMessage(String.valueOf(response.getGaze().getSessionTime()));
                         	registerTime = System.currentTimeMillis();
                             gazeResponses.add(response);
+
                         } catch (IllegalStateException ise) {
                             System.err.println("Error! Gaze response queue is "
                                     + "full!");
@@ -440,7 +442,6 @@ public class ControlView extends ViewPart implements IPartListener2,
         				activeSolvers.remove(solver);
         			}
                 }
-                //System.out.println("Average Time = " + meanTime);
             }
         });
         
