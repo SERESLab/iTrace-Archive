@@ -112,12 +112,10 @@ public class JSONGazeExportSolver implements IFileExportSolver {
                               .value(response.getGaze().getLeftPupilDiameter())
                               .name("right_pupil_diameter")
                               .value(response.getGaze().getRightPupilDiameter())
-                              .name("tracker_time")
-                              .value(response.getGaze().getTrackerTime().getTime())
-                              .name("system_time")
-                              .value(response.getGaze().getSystemTime())
-                              .name("nano_time")
-                              .value(response.getGaze().getNanoTime());
+                              .name("timestamp")
+                              .value(response.getGaze().getTimestamp())
+                              .name("session_time")
+                              .value(response.getGaze().getSessionTime());
                 if (response instanceof IStyledTextGazeResponse) {
                     IStyledTextGazeResponse styledResponse =
                             (IStyledTextGazeResponse) response;
