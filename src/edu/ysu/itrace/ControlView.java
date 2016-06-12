@@ -137,6 +137,11 @@ public class ControlView extends ViewPart implements IPartListener2,
                         	statusLineManager
                         		.setMessage(String.valueOf(response.getGaze().getSessionTime()));
                         	registerTime = System.currentTimeMillis();
+                        	PlatformUI.getWorkbench()
+                        		.getActiveWorkbenchWindow().getActivePage()
+                        			.getActiveEditor().getEditorSite().getActionBars()
+                        				.getStatusLineManager()
+                        					.setMessage(String.valueOf(response.getGaze().getSessionTime()));
                             gazeResponses.add(response);
 
                         } catch (IllegalStateException ise) {
