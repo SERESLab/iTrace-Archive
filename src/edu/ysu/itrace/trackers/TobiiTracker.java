@@ -210,6 +210,7 @@ public class TobiiTracker implements IEyeTracker {
             double right_x, double right_y, int left_validity,
             int right_validity, double left_pupil_diameter,
             double right_pupil_diameter) {
+    	if(left_validity == 4 && right_validity == 4) return; //Ignore new gaze
     	if(previousTrackerTime != null && (timestamp/1000) == (previousTrackerTime/1000)){
         	//Ignore new gaze;
     		return;
