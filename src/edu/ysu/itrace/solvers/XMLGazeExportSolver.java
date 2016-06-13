@@ -123,9 +123,9 @@ public class XMLGazeExportSolver implements IFileExportSolver {
                         "session_time",
                         String.valueOf(response.getGaze().getSessionTime()));
                 responseWriter.writeAttribute(
-                        "tracker/system/nano",
-                        response.getGaze().getTrackerTime()+"/"+
+                        "system/tracker/nano",
                         response.getGaze().getSystemTime()+"/"+
+                        response.getGaze().getTrackerTime()+"/"+
                         response.getGaze().getNanoTime());
 
                 if (response instanceof IStyledTextGazeResponse) {

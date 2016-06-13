@@ -150,8 +150,14 @@ public class ControlView extends ViewPart implements IPartListener2,
                         }
                     }
                 }else{
-                	if((System.currentTimeMillis()-registerTime) > 2000)
+                	if((System.currentTimeMillis()-registerTime) > 2000){
                 		statusLineManager.setMessage("");
+                		PlatformUI.getWorkbench()
+                		.getActiveWorkbenchWindow().getActivePage()
+                			.getActiveEditor().getEditorSite().getActionBars()
+                				.getStatusLineManager()
+                					.setMessage(String.valueOf(""));
+                	}
                 }
 
                 if (trackingInProgress || g != null) {
@@ -441,6 +447,11 @@ public class ControlView extends ViewPart implements IPartListener2,
             public void widgetSelected(SelectionEvent e) {
                 stopTracking();
                 statusLineManager.setMessage("");
+                PlatformUI.getWorkbench()
+        		.getActiveWorkbenchWindow().getActivePage()
+        			.getActiveEditor().getEditorSite().getActionBars()
+        				.getStatusLineManager()
+        					.setMessage(String.valueOf(""));
                 for (final Control controls : solversComposite.getChildren()) {
             		Button button = (Button) controls;
             		button.setSelection(false);
