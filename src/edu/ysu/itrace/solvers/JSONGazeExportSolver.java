@@ -115,7 +115,13 @@ public class JSONGazeExportSolver implements IFileExportSolver {
                               .name("timestamp")
                               .value(response.getGaze().getTimestamp())
                               .name("session_time")
-                              .value(response.getGaze().getSessionTime());
+                              .value(response.getGaze().getSessionTime())
+                              .name("tracker_time")
+                              .value(response.getGaze().getTrackerTime())
+                              .name("system_time")
+                              .value(response.getGaze().getSystemTime())
+                              .name("nano_time")
+                              .value(response.getGaze().getNanoTime());
                 if (response instanceof IStyledTextGazeResponse) {
                     IStyledTextGazeResponse styledResponse =
                             (IStyledTextGazeResponse) response;

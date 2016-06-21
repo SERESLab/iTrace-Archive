@@ -44,7 +44,7 @@ public class Gaze {
         nanoseconds = (int) (nanoTime%1000000000);
 
         timestamp = new Timestamp(systemTime);
-        timestamp.setNanos(nanoseconds);
+        //timestamp.setNanos(nanoseconds);
         
         timestampString = timestamp.toString();
         timestampString = timestampString.substring(0, 10) + "T" + timestampString.substring(11);
@@ -98,7 +98,7 @@ public class Gaze {
     }
 
     public long getTrackerTime() {
-        return trackerTime;
+        return trackerTime/1000;
     }
 
     public long getSystemTime() {
