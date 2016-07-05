@@ -56,6 +56,7 @@ import edu.ysu.itrace.solvers.ISolver;
 import edu.ysu.itrace.solvers.JSONGazeExportSolver;
 import edu.ysu.itrace.solvers.XMLGazeExportSolver;
 import edu.ysu.itrace.trackers.IEyeTracker;
+import edu.ysu.itrace.trackers.SystemMouseTracker;
 
 /**
  * ViewPart for managing and controlling the plugin.
@@ -101,6 +102,8 @@ public class ControlView extends ViewPart implements IPartListener2,
     
     private SessionInfoHandler sessionInfo = new SessionInfoHandler();
     
+    private EyeStatusWnd eyeStatusWnd;
+    
     private IActionBars actionBars;
     private IStatusLineManager statusLineManager;
     private long registerTime = 2000;
@@ -142,6 +145,23 @@ public class ControlView extends ViewPart implements IPartListener2,
                         			.getActiveEditor().getEditorSite().getActionBars()
                         				.getStatusLineManager()
                         					.setMessage(String.valueOf(response.getGaze().getSessionTime()));
+                        	if( !( tracker instanceof SystemMouseTracker ) ){
+                        		if( eyeStatusWnd == null ){
+                        			eyeStatusWnd = new EyeStatusWnd( 
+                        					new java.awt.Point((int)g.getLeftX(),(int)g.getLeftY()),
+                        					new java.awt.Point((int)g.getRightX(),(int)g.getRightY()),
+                        					g.getLeftValidity(),
+                        					g.getRightValidity()
+                        					);
+                        		}else{
+                        			eyeStatusWnd.update(
+                        					new java.awt.Point((int)g.getLeftX(),(int)g.getLeftY()),
+                        					new java.awt.Point((int)g.getRightX(),(int)g.getRightY()),
+                        					g.getLeftValidity(),
+                        					g.getRightValidity()
+                        					);
+                        		}
+                        	}
                             gazeResponses.add(response);
 
                         } catch (IllegalStateException ise) {
