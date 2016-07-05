@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
 
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -36,11 +37,14 @@ public class SessionInfoHandler {
 	private String devUsername = null;
 	private String devName = null;
 	
+	//Frame for the dialogs to use the appear on top.
+	JFrame dialogFrame;
+	
 	//needed booleans
 	boolean hasSessionInfo = false;
 	boolean hasDevInfo = false;
 	boolean isConfigured = false;
-	
+
 	public SessionInfoHandler() {
 		UIManager.put("swing.boldMetal", new Boolean(false)); //make UI font plain
 	}
@@ -136,7 +140,7 @@ public class SessionInfoHandler {
 		c.fill = GridBagConstraints.HORIZONTAL;
 		sessionPanel.add(scrollPane,c);
 		
-		final int selection = JOptionPane.showConfirmDialog(null, sessionPanel, 
+		final int selection = JOptionPane.showConfirmDialog(dialogFrame, sessionPanel, 
 				"Enter the Current Session Info.",
 				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 		if (selection == JOptionPane.OK_OPTION) {
@@ -173,7 +177,7 @@ public class SessionInfoHandler {
 		devPanel.add(new JLabel("Developer Name (Optional, Alpha/Space Characters Only):"));
 		devPanel.add(devNameText);
 		
-		final int selection = JOptionPane.showConfirmDialog(null, devPanel, 
+		final int selection = JOptionPane.showConfirmDialog(dialogFrame, devPanel, 
 				"Enter the Developer Info.",
 				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 		if (selection == JOptionPane.OK_OPTION) {
@@ -202,11 +206,16 @@ public class SessionInfoHandler {
 	}
 	
 	public void config() {
+		dialogFrame = new JFrame();
+		dialogFrame.setVisible( true );
+		dialogFrame.setLocation( 500,500 );
+		dialogFrame.setAlwaysOnTop( true );
 		sessionUI();
 		developerUI();
 		if (hasSessionInfo && hasDevInfo) {
 			isConfigured = true;
 		}
+		dialogFrame.dispose();
 	}
 	
 	public void export() throws IOException {
