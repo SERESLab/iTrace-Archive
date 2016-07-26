@@ -30,6 +30,7 @@ import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
@@ -187,9 +188,13 @@ public class ControlView extends ViewPart implements IPartListener2,
                 IGazeResponse response = gazeResponses.poll();
 
                 if (response != null) {
-                    for (ISolver solver : activeSolvers) {
-                        solver.process(response);
-                    }
+                	Display.getDefault().asyncExec(new Runnable(){
+                		public void run(){
+                		for (ISolver solver : activeSolvers) {
+                			solver.process(response);
+                		}
+                		}
+                	});
                 }
             }
             for (ISolver solver : activeSolvers) {

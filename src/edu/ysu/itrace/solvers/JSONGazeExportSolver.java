@@ -144,7 +144,7 @@ public class JSONGazeExportSolver implements IFileExportSolver {
                     for (SourceCodeEntity sce : styledResponse.getSCEs()) {
                         responseWriter.beginObject()
                                       .name("name")
-                                      .value(sce.name)
+                                      .value(sce.getName())
                                       .name("type")
                                       .value(sce.type.toString())
                                       .name("how")

@@ -88,6 +88,30 @@ public class AstManager {
         public int totalLength;
         public int startLine, endLine;
         public int startCol, endCol;
+        
+        
+        private int startModelOffset;
+        
+        public String getName(){
+        	if( type != SCEType.COMMENT )
+        		return name;
+        	else{
+        		int widgetOffsetStart = projectionViewer.modelOffset2WidgetOffset(startModelOffset);
+                int widgetOffsetEnd = widgetOffsetStart+totalLength;
+                if( widgetOffsetStart >= 0 && widgetOffsetEnd >= 0)
+                	return styledText.getText(widgetOffsetStart,widgetOffsetEnd);
+                else{
+                	int offsetStart = startModelOffset;
+                	while(widgetOffsetStart < 0){
+                		offsetStart++;
+                		widgetOffsetStart = projectionViewer.modelOffset2WidgetOffset(offsetStart);
+                	}
+                	int shownLineIndex = styledText.getLineAtOffset(offsetStart);
+                	return styledText.getLine(shownLineIndex);
+                }
+        	}
+        		
+        }
     }
 
     /**
@@ -361,6 +385,8 @@ public class AstManager {
                 else if(comment.isBlockComment()) sce.how = SCEHow.BLOCK_COMMENT;
                 else sce.how = SCEHow.DOC_COMMENT;
                 //The projectionViewer is used to convert the ASTNode's model offset to a Widget offset. ~Ben
+                sce.startModelOffset = comment.getStartPosition();
+                sce.totalLength = comment.getLength();
                 int widgetOffsetStart = projectionViewer.modelOffset2WidgetOffset(comment.getStartPosition());
                 int widgetOffsetEnd = widgetOffsetStart+comment.getLength();
                 if( widgetOffsetStart >= 0 && widgetOffsetEnd >= 0)
