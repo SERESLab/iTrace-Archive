@@ -363,7 +363,17 @@ public class AstManager {
                 //The projectionViewer is used to convert the ASTNode's model offset to a Widget offset. ~Ben
                 int widgetOffsetStart = projectionViewer.modelOffset2WidgetOffset(comment.getStartPosition());
                 int widgetOffsetEnd = widgetOffsetStart+comment.getLength();
-                sce.name = styledText.getText(widgetOffsetStart,widgetOffsetEnd);
+                if( widgetOffsetStart >= 0 && widgetOffsetEnd >= 0)
+                	sce.name = styledText.getText(widgetOffsetStart,widgetOffsetEnd);
+                else{
+                	int offsetStart = comment.getStartPosition();
+                	while(widgetOffsetStart < 0){
+                		offsetStart++;
+                		widgetOffsetStart = projectionViewer.modelOffset2WidgetOffset(offsetStart);
+                	}
+                	int shownLineIndex = styledText.getLineAtOffset(offsetStart);
+                	sce.name = styledText.getLine(shownLineIndex);
+                }
                 determineSCEPosition(compileUnit, comment, sce);
                 sourceCodeEntities.add(sce);
             }
