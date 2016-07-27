@@ -52,6 +52,7 @@ import edu.ysu.itrace.filters.fixation.OldXMLBasicFixationFilter;
 import edu.ysu.itrace.filters.fixation.XMLBasicFixationFilter;
 import edu.ysu.itrace.gaze.IGazeHandler;
 import edu.ysu.itrace.gaze.IGazeResponse;
+import edu.ysu.itrace.gaze.IStyledTextGazeResponse;
 import edu.ysu.itrace.solvers.ISolver;
 import edu.ysu.itrace.solvers.JSONGazeExportSolver;
 import edu.ysu.itrace.solvers.XMLGazeExportSolver;
@@ -143,7 +144,14 @@ public class ControlView extends ViewPart implements IPartListener2,
                         				.getStatusLineManager()
                         					.setMessage(String.valueOf(response.getGaze().getSessionTime()));
                             gazeResponses.add(response);
-
+                            if(response instanceof IStyledTextGazeResponse){
+                            	IStyledTextGazeResponse styledTextResponse = (IStyledTextGazeResponse)response;
+	                            Activator.getDefault().updateHighlighters(
+	                            		PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor(),
+	                            		styledTextResponse.getLine()-1,
+	                            		styledTextResponse.getCol()
+	                            		);
+                            }
                         } catch (IllegalStateException ise) {
                             System.err.println("Error! Gaze response queue is "
                                     + "full!");

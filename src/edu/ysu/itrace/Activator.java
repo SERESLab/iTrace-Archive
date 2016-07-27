@@ -1,6 +1,10 @@
 package edu.ysu.itrace;
 
+import java.util.HashMap;
+
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
@@ -16,6 +20,7 @@ public class Activator extends AbstractUIPlugin {
     public long sessionStartTime;
     // The shared instance
     private static Activator plugin;
+    private HashMap<IEditorPart,TokenHighlighter> tokenHighlighters = new HashMap<IEditorPart,TokenHighlighter>();
     
     
     /**
@@ -52,6 +57,15 @@ public class Activator extends AbstractUIPlugin {
      */
     public static Activator getDefault() {
         return plugin;
+    }
+    
+    public void updateHighlighters(IEditorPart editorPart, int line, int column){
+    	if(editorPart == null){
+    		editorPart = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor();
+    		if(editorPart == null) return;
+    	}
+    	if(!tokenHighlighters.containsKey(editorPart)) tokenHighlighters.put(editorPart, new TokenHighlighter(editorPart));
+    	tokenHighlighters.get(editorPart).update(line,column);
     }
 
 }
