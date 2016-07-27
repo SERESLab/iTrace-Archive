@@ -1,5 +1,6 @@
 package edu.ysu.itrace.gaze.handlers;
 
+import org.eclipse.jface.text.source.projection.ProjectionViewer;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.graphics.Point;
 
@@ -15,6 +16,7 @@ import edu.ysu.itrace.gaze.IStyledTextGazeResponse;
  */
 public class StyledTextGazeHandler implements IGazeHandler {
     private StyledText targetStyledText;
+    private ProjectionViewer projectionViewer;
 
     /**
      * Constructs a new gaze handler for the target StyledText object
@@ -34,17 +36,19 @@ public class StyledTextGazeHandler implements IGazeHandler {
         final int fontHeight;
         final AstManager.SourceCodeEntity[] entities;
         final String path;
+        
 
         try {
             if (targetStyledText.getData(ControlView.KEY_AST) == null)
             		return null;
             AstManager astManager = (AstManager) targetStyledText
             		.getData(ControlView.KEY_AST);
-            lineIndex = targetStyledText.getLineIndex(relativeY);
-            int lineOffset = targetStyledText.getOffsetAtLine(lineIndex);
+            projectionViewer = astManager.getProjectionViewer();
+            int lineOffset = targetStyledText.getOffsetAtLine(targetStyledText.getLineIndex(relativeY));
             int offset = targetStyledText.getOffsetAtLocation(new Point(
                     relativeX, relativeY));
             col = offset - lineOffset;
+            lineIndex = projectionViewer.widgetLine2ModelLine(targetStyledText.getLineIndex(relativeY));
 
             // (0, 0) relative to the control in absolute screen
             // coordinates.
@@ -53,8 +57,7 @@ public class StyledTextGazeHandler implements IGazeHandler {
             // Top-left position of the first character on the line in
             // relative coordinates.
             Point lineAnchorPosition = targetStyledText
-                    .getLocationAtOffset(targetStyledText
-                            .getOffsetAtLine(lineIndex));
+                    .getLocationAtOffset(lineOffset);
             // To absolute.
             absoluteLineAnchorPosition = new Point(lineAnchorPosition.x
                     + relativeRoot.x, lineAnchorPosition.y + relativeRoot.y);

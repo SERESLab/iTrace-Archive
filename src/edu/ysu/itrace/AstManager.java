@@ -172,6 +172,9 @@ public class AstManager {
     public String getPath() {
         return editorPath;
     }
+    public ProjectionViewer getProjectionViewer(){
+    	return projectionViewer;
+    }
 
     /**
      * Gets the source code entities found at a location in source.
