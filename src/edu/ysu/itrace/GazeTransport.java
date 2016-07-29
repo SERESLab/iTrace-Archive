@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.util.Vector;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.PlatformUI;
+
 import edu.ysu.itrace.trackers.IEyeTracker;
 
 /**
@@ -39,15 +42,18 @@ public class GazeTransport extends Thread {
         while (running) {
             if (trackerRunning)
             {
+            	//System.out.println("GazeTransport");
                 //Get up to 15 gazes from the eye tracker per run. Add to all
                 //client queues.
                 Gaze currentGaze = eyeTracker.getGaze();
                 for (int loops = 0; loops < 15 && currentGaze != null;
                         ++loops) {
+                	Activator.getDefault().updateHighlighters(null,currentGaze);
                     for (LinkedBlockingQueue<Gaze> client : clients)
                         client.add(currentGaze);
                     currentGaze = eyeTracker.getGaze();
                 }
+                //Activator.getDefault().updateHighlighters(null,currentGaze);
             }
 
             try {

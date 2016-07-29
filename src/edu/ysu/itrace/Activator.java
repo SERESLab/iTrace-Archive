@@ -3,6 +3,7 @@ package edu.ysu.itrace;
 import java.util.HashMap;
 
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
@@ -18,6 +19,9 @@ public class Activator extends AbstractUIPlugin {
     // The plug-in ID
     public static final String PLUGIN_ID = "edu.ysu.itrace"; //$NON-NLS-1$
     public long sessionStartTime;
+    public GazeTransport gazeTransport;
+    public Rectangle monitorBounds;
+    public IEditorPart activeEditor;
     // The shared instance
     private static Activator plugin;
     private HashMap<IEditorPart,TokenHighlighter> tokenHighlighters = new HashMap<IEditorPart,TokenHighlighter>();
@@ -39,6 +43,7 @@ public class Activator extends AbstractUIPlugin {
         IPreferenceStore prefStore = getDefault().getPreferenceStore();
         EyeTrackerFactory.setTrackerType(EyeTrackerFactory.TrackerType.valueOf(
                 prefStore.getString(PluginPreferences.EYE_TRACKER_TYPE)));
+        activeEditor = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor();
     }
 
     /*
@@ -64,8 +69,26 @@ public class Activator extends AbstractUIPlugin {
     		editorPart = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor();
     		if(editorPart == null) return;
     	}
-    	if(!tokenHighlighters.containsKey(editorPart)) tokenHighlighters.put(editorPart, new TokenHighlighter(editorPart));
+    	if(!tokenHighlighters.containsKey(editorPart)) 
+    		tokenHighlighters.put(editorPart, new TokenHighlighter(editorPart));
     	tokenHighlighters.get(editorPart).update(line,column);
+    }
+    
+    public void updateHighlighters(IEditorPart editorPart,Gaze gaze){
+    	if(editorPart == null) editorPart = activeEditor;
+    	//System.out.println("asdf");
+    	if(!tokenHighlighters.containsKey(editorPart)) 
+    		tokenHighlighters.put(editorPart, new TokenHighlighter(editorPart));
+    	tokenHighlighters.get(editorPart).updateHandleGaze(gaze);
+    }
+    
+    public void showTokenHighLights(){
+		if(!tokenHighlighters.containsKey(activeEditor)) 
+    		tokenHighlighters.put(activeEditor, new TokenHighlighter(activeEditor));
+		if(activeEditor == null) return;
+    	for(TokenHighlighter tokenHighlighter: tokenHighlighters.values()){
+    		tokenHighlighter.setShow();
+    	}
     }
 
 }

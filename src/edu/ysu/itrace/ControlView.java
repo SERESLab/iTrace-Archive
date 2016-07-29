@@ -144,14 +144,17 @@ public class ControlView extends ViewPart implements IPartListener2,
                         				.getStatusLineManager()
                         					.setMessage(String.valueOf(response.getGaze().getSessionTime()));
                             gazeResponses.add(response);
+                            
                             if(response instanceof IStyledTextGazeResponse){
                             	IStyledTextGazeResponse styledTextResponse = (IStyledTextGazeResponse)response;
+                            	
 	                            Activator.getDefault().updateHighlighters(
 	                            		PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor(),
 	                            		styledTextResponse.getLine()-1,
 	                            		styledTextResponse.getCol()
 	                            		);
                             }
+                            
                         } catch (IllegalStateException ise) {
                             System.err.println("Error! Gaze response queue is "
                                     + "full!");
@@ -216,6 +219,7 @@ public class ControlView extends ViewPart implements IPartListener2,
             rootShell = rootShell.getParent().getShell();
         }
         rootShell.addShellListener(this);
+        Activator.getDefault().monitorBounds = rootShell.getMonitor().getBounds();
 
         // add listener for determining part visibility
         getSite().getWorkbenchWindow().getPartService().addPartListener(this);
@@ -293,10 +297,17 @@ public class ControlView extends ViewPart implements IPartListener2,
         display_crosshair.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
+            	
                 if (tracker == null)
                     requestTracker();
-
+                
                 if (tracker != null) {
+                	Activator.getDefault().showTokenHighLights();
+                	if (gazeTransport != null)
+                        crosshairQueue =
+                                gazeTransport.createClient();
+                	
+                	/*
                     tracker.displayCrosshair(
                             display_crosshair.getSelection());
                     // Create a client for the crosshair so that it will
@@ -313,6 +324,7 @@ public class ControlView extends ViewPart implements IPartListener2,
                             crosshairQueue = null;
                         }
                     }
+                    */
                 } else {
                     if (display_crosshair.getSelection()) {
                         displayError(DONT_CHANGE_THAT_MSG);
@@ -542,6 +554,10 @@ public class ControlView extends ViewPart implements IPartListener2,
 
     @Override
     public void partActivated(IWorkbenchPartReference partRef) {
+    	if(partRef.getPart(false) instanceof IEditorPart) {
+    		Activator.getDefault().activeEditor = (IEditorPart) partRef.getPart(false);
+    	System.out.println("qwer");
+    	}
     }
 
     @Override
@@ -738,7 +754,9 @@ public class ControlView extends ViewPart implements IPartListener2,
                 tracker.setYDrift(yDrift.getSelection());
 
                 gazeTransport = new GazeTransport(tracker);
-                gazeTransport.start();
+                Activator.getDefault().gazeTransport = gazeTransport;
+                Activator.getDefault().gazeTransport.start();
+                //gazeTransport.start();
                 return true;
             } else {
                 displayError("Either an eye tracker was not selected or an "
