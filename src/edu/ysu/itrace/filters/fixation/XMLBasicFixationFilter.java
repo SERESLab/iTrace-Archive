@@ -109,16 +109,18 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 		double rightValidity = Double.parseDouble(reader.getAttributeValue(5));
 		double leftPupilDiam = Double.parseDouble(reader.getAttributeValue(6));
 		double rightPupilDiam = Double.parseDouble(reader.getAttributeValue(7));
-		long trackerTime = Long.parseLong(reader.getAttributeValue(8));
-		long systemTime = Long.parseLong(reader.getAttributeValue(9));
-		long nanoTime = Long.parseLong(reader.getAttributeValue(10));
-		String path = reader.getAttributeValue(11);
-		int lineHeight = Integer.parseInt(reader.getAttributeValue(12));
-		int fontHeight = Integer.parseInt(reader.getAttributeValue(13));
-		int line = Integer.parseInt(reader.getAttributeValue(14));
-		int col = Integer.parseInt(reader.getAttributeValue(15));
-		int lineBaseX = Integer.parseInt(reader.getAttributeValue(16));
-		int lineBaseY = Integer.parseInt(reader.getAttributeValue(17));
+		String timeStamp = reader.getAttributeValue(8);
+		long sessionTime = Long.parseLong(reader.getAttributeValue(9));
+		long trackerTime = Long.parseLong(reader.getAttributeValue(10));
+		long systemTime = Long.parseLong(reader.getAttributeValue(11));
+		long nanoTime = Long.parseLong(reader.getAttributeValue(12));
+		String path = reader.getAttributeValue(13);
+		int lineHeight = Integer.parseInt(reader.getAttributeValue(14));
+		int fontHeight = Integer.parseInt(reader.getAttributeValue(15));
+		int line = Integer.parseInt(reader.getAttributeValue(16));
+		int col = Integer.parseInt(reader.getAttributeValue(17));
+		int lineBaseX = Integer.parseInt(reader.getAttributeValue(18));
+		int lineBaseY = Integer.parseInt(reader.getAttributeValue(19));
 		ArrayList<SourceCodeEntity> sces = new ArrayList<SourceCodeEntity>();
 		
 		reader.next();
@@ -140,9 +142,9 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 		}
 		
 		return new NewRawGaze(file, type, x, y, leftValidity, rightValidity,
-				leftPupilDiam, rightPupilDiam, trackerTime, systemTime,
-				nanoTime, path, lineHeight, fontHeight, lineBaseX, line,
-				col, lineBaseY, sces);
+				leftPupilDiam, rightPupilDiam, timeStamp, sessionTime,
+				trackerTime, systemTime, nanoTime, path, lineHeight,
+				fontHeight, lineBaseX, line, col, lineBaseY, sces);
 	}
 	
 	@Override
@@ -201,14 +203,16 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 			                writer.writeAttribute("right_pupil_diameter",
 			                        String.valueOf(fixation.getRawGaze()
 			                                       .getRightPupilDiam()));
-			                writer.writeAttribute(
-			                        "tracker-time",
+			                writer.writeAttribute("timestamp",
+			                		((NewRawGaze)fixation.getRawGaze()).getTimeStamp());
+			                writer.writeAttribute("session_time",
+			                		String.valueOf(((NewRawGaze)
+			                				fixation.getRawGaze()).getSessionTime()));
+			                writer.writeAttribute("tracker-time",
 			                        String.valueOf(fixation.getRawGaze().getTrackerTime()));
-			                writer.writeAttribute(
-			                        "system-time",
+			                writer.writeAttribute("system-time",
 			                        String.valueOf(fixation.getRawGaze().getSystemTime()));
-			                writer.writeAttribute(
-			                        "nano-time",
+			                writer.writeAttribute("nano-time",
 			                        String.valueOf(fixation.getRawGaze().getNanoTime()));
 			                writer.writeAttribute("duration",
 			                		String.valueOf(fixation.getDuration()));

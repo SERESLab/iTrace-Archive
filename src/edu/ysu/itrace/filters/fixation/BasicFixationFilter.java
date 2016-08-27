@@ -23,8 +23,8 @@ public abstract class BasicFixationFilter implements IFilter {
 	private double[] diffVector;
 	private double[] peak;
 	private List<Integer> peakIndices;
-	private int r = 5; //sliding window
-	private double threshold =  35 / (16.6 * r);
+	private int r = 0; //sliding window, set after reading in gazes
+	private double threshold = 0; //set after setting r
 	private double radius = 35;
 	private long durationThresh = 60;
 
@@ -134,22 +134,20 @@ public abstract class BasicFixationFilter implements IFilter {
 			Point2D.Double mBefore = new Point2D.Double();
 			Point2D.Double mAfter = new Point2D.Double();
 			
-			for (int k = 0; k < r; k++) {
-				diffVector[k] = 0;
-			}
-			for (int l = rawGazes.size()-1; l > rawGazes.size()-r-1; l--) {
-				diffVector[l] = 0;
-			}
-			
 			for (int i = r; i < rawGazes.size()-r; i++) {
 				mBefore.setLocation(0,0);
 				mAfter.setLocation(0,0);
 				for (int j = 1; j <= r; j++) {
-					mBefore.x = mBefore.x + rawGazes.get(i-r).getX() / r;
-					mBefore.y = mBefore.y + rawGazes.get(i-r).getY() / r;
-					mAfter.x = mAfter.x + rawGazes.get(i+r).getX() / r;
-					mAfter.y = mAfter.y + rawGazes.get(i+r).getY() / r;
+					mBefore.x += rawGazes.get(i-j).getX();
+					mBefore.y += rawGazes.get(i-j).getY();
+					mAfter.x += rawGazes.get(i+j).getX();
+					mAfter.y += rawGazes.get(i+j).getY();
 				}
+				mBefore.x /= r;
+				mBefore.y /= r;
+				mAfter.x /= r;
+				mAfter.y /= r;
+
 				diffVector[i] = Math.sqrt(Math.pow(mAfter.x-mBefore.x, 2) +
 						Math.pow(mAfter.y-mBefore.y,2));
 			}
@@ -162,10 +160,6 @@ public abstract class BasicFixationFilter implements IFilter {
 	public void peaks() {
 		if (diffVector != null) {
 			peak = new double[rawGazes.size()];
-			
-			for (int i = 0; i < rawGazes.size(); i++) {
-				peak[i] = 0;
-			}
 			
 			for (int j = 1; j < rawGazes.size()-1; j++) {
 				if (diffVector[j] > diffVector[j-1] &&
@@ -187,10 +181,10 @@ public abstract class BasicFixationFilter implements IFilter {
 						if (peak[j] < peak[i]) {
 							peak[j] = 0;
 						}
-						for (int k = i+1; k <= i+r; k++) {
-							if (peak[j] < peak[i]) {
-								peak[j] = 0;
-							}
+					}
+					for (int k = i+1; k <= i+r; k++) {
+						if (peak[k] < peak[i]) {
+							peak[k] = 0;
 						}
 					}
 				}
@@ -203,7 +197,7 @@ public abstract class BasicFixationFilter implements IFilter {
 	 */
 	public void peakIndices() {
 		if (peak != null) {
-			peakIndices = new ArrayList<>();
+			peakIndices = new ArrayList<Integer>();
 			
 			for (int i = 0; i < rawGazes.size(); i++) {
 				if (peak[i] >= threshold) {
@@ -212,7 +206,7 @@ public abstract class BasicFixationFilter implements IFilter {
 			}
 		}
 	}
-	
+
 	/**
 	 * Estimate spatial position of fixations
 	 */
@@ -222,10 +216,20 @@ public abstract class BasicFixationFilter implements IFilter {
 			
 			while (shortestDist < radius) {
 				processedGazes.clear();
+
 				for (int i = 1; i < peakIndices.size(); i++) {
 					processedGazes.add(mergeRawGazes(peakIndices.get(i-1),peakIndices.get(i)));
 				}
 				
+				//account for end fixations
+				if (r != peakIndices.get(0)) {
+					processedGazes.add(mergeRawGazes(r,peakIndices.get(0)));
+				}
+				if (peakIndices.get(peakIndices.size()-1) != rawGazes.size()-r-1) {
+					processedGazes.add(mergeRawGazes(peakIndices.get(peakIndices.size()-1),
+								rawGazes.size()-r-1));
+				}
+
 				shortestDist = Integer.MAX_VALUE;
 				int index = -1;
 				
@@ -245,7 +249,7 @@ public abstract class BasicFixationFilter implements IFilter {
 				}
 				
 				if (shortestDist < radius) {
-					peakIndices.remove(index);
+					peakIndices.remove(index); //should probably check that it actually found and removed something
 				}
 			}
 		}
@@ -307,6 +311,7 @@ public abstract class BasicFixationFilter implements IFilter {
 			NewRawGaze rawGaze = (NewRawGaze)rawGazes.get(iStart);
 			processedGaze = new NewRawGaze(rawGaze.getFile(), rawGaze.getType(),
 					medianX, medianY, 1, 1, leftPupilDiam, rightPupilDiam,
+					rawGaze.getTimeStamp(), rawGaze.getSessionTime(),
 					rawGaze.getTrackerTime(), rawGaze.getSystemTime(),
 					rawGaze.getNanoTime(), rawGaze.getPath(), rawGaze.getLineHeight(),
 					rawGaze.getFontHeight(), rawGaze.getLineBaseX(), rawGaze.getLine(),
@@ -331,6 +336,14 @@ public abstract class BasicFixationFilter implements IFilter {
 	//Overridden function
 	@Override
 	public void process() {
+		//set sliding window
+		if (rawGazes.size() > 10) {
+			this.r = 5;
+		} else {
+			this.r = 1;
+		}
+		//set threshold based on sliding window
+		this.threshold =  35 / (16.6 * r);
 		interpolate();
 		diffVector();
 		peaks();

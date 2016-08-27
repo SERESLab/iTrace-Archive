@@ -133,6 +133,8 @@ public class JSONBasicFixationFilter extends BasicFixationFilter {
 		double rightValidity = -1;
 		double leftPupilDiam = -1;
 		double rightPupilDiam = -1;
+		String timeStamp = null;
+		long sessionTime = -1;
 		long trackerTime = -1;
 		long systemTime = -1;
 		long nanoTime = -1;
@@ -164,6 +166,10 @@ public class JSONBasicFixationFilter extends BasicFixationFilter {
 				leftPupilDiam = reader.nextDouble();
 			} else if (name.equals("right_pupil_diameter")) {
 				rightPupilDiam = reader.nextDouble();
+			} else if (name.equals("timestamp")) {
+				timeStamp = reader.nextString();
+			} else if (name.equals("session_time")) {
+				sessionTime = reader.nextLong();
 			} else if (name.equals("tracker_time")) {
 				trackerTime = reader.nextLong();
 			} else if (name.equals("system_time")) {
@@ -196,8 +202,9 @@ public class JSONBasicFixationFilter extends BasicFixationFilter {
 		}
 		reader.endObject();
 		return new NewRawGaze(file, type, x, y, leftValidity, rightValidity,
-				leftPupilDiam, rightPupilDiam, trackerTime, systemTime,
-				nanoTime, path, lineHeight, fontHeight, lineBaseX, line, col,
+				leftPupilDiam, rightPupilDiam, timeStamp, sessionTime,
+				trackerTime, systemTime, nanoTime, path, lineHeight,
+				fontHeight, lineBaseX, line, col,
 				lineBaseY, sces);
 	}
 	
@@ -294,6 +301,10 @@ public class JSONBasicFixationFilter extends BasicFixationFilter {
 									.value(fixation.getRawGaze().getLeftPupilDiam())
 									.name("right_pupil_diameter")
 									.value(fixation.getRawGaze().getRightPupilDiam())
+									.name("timestamp")
+									.value(((NewRawGaze)fixation.getRawGaze()).getTimeStamp())
+									.name("session_time")
+									.value(((NewRawGaze)fixation.getRawGaze()).getSessionTime())
 									.name("tracker_time")
 									.value(fixation.getRawGaze().getTrackerTime())
 									.name("system_time")
