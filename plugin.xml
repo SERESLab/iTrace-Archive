@@ -13,6 +13,7 @@
          point="org.eclipse.ui.perspectiveExtensions">
       <perspectiveExtension
             targetID="edu.ysu.itrace.perspectivefactory">
+            <actionSet id="org.eclipse.wst.server.ui.internal.webbrowser.actionSet"/>
       </perspectiveExtension>
    </extension>
    <extension

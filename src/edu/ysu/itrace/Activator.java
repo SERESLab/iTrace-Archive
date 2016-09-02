@@ -13,9 +13,10 @@ public class Activator extends AbstractUIPlugin {
 
     // The plug-in ID
     public static final String PLUGIN_ID = "edu.ysu.itrace"; //$NON-NLS-1$
-
+    public long sessionStartTime;
     // The shared instance
     private static Activator plugin;
+    
     
     /**
      * The constructor

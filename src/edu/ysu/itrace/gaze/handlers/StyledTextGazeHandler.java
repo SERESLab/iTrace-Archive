@@ -85,7 +85,15 @@ public class StyledTextGazeHandler implements IGazeHandler {
 
             @Override
             public String getGazeType() {
-                return "text";
+            	String type = path;
+            	int dotIndex;
+            	for(dotIndex=0; dotIndex<type.length();dotIndex++)
+            		if(path.charAt(dotIndex) == '.')
+            			break;
+            	if(dotIndex+1 == type.length())
+            		return "text";
+            	type = type.substring(dotIndex+1);
+            	return type;
             }
 
             @Override

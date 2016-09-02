@@ -12,7 +12,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.action.IStatusLineManager;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.ModifyEvent;
@@ -32,6 +34,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Spinner;
+import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.IPartListener2;
@@ -61,6 +64,8 @@ public class ControlView extends ViewPart implements IPartListener2,
         ShellListener {
     private static final int POLL_GAZES_MS = 5;
     public static final String KEY_AST = "itraceAST";
+    public static final String KEY_SO_DOM = "itraceSO";
+    public static final String KEY_BR_DOM = "itraceBR";
     public static final String FATAL_ERROR_MSG = "A fatal error occurred. "
             + "Restart the plugin and try again. If "
             + "the problem persists, submit a bug report.";
@@ -95,6 +100,11 @@ public class ControlView extends ViewPart implements IPartListener2,
     		new CopyOnWriteArrayList<IFilter>();
     
     private SessionInfoHandler sessionInfo = new SessionInfoHandler();
+    
+    private IActionBars actionBars;
+    private IStatusLineManager statusLineManager;
+    private long registerTime = 2000;
+
 
     /*
      * Gets gazes from the eye tracker, calls gaze handlers, and adds responses
@@ -124,12 +134,30 @@ public class ControlView extends ViewPart implements IPartListener2,
 
                     if (response != null) {
                         try {
+                        	statusLineManager
+                        		.setMessage(String.valueOf(response.getGaze().getSessionTime()));
+                        	registerTime = System.currentTimeMillis();
+                        	PlatformUI.getWorkbench()
+                        		.getActiveWorkbenchWindow().getActivePage()
+                        			.getActiveEditor().getEditorSite().getActionBars()
+                        				.getStatusLineManager()
+                        					.setMessage(String.valueOf(response.getGaze().getSessionTime()));
                             gazeResponses.add(response);
+
                         } catch (IllegalStateException ise) {
                             System.err.println("Error! Gaze response queue is "
                                     + "full!");
                         }
                     }
+                }else{
+                	if((System.currentTimeMillis()-registerTime) > 2000){
+                		statusLineManager.setMessage("");
+                		PlatformUI.getWorkbench()
+                		.getActiveWorkbenchWindow().getActivePage()
+                			.getActiveEditor().getEditorSite().getActionBars()
+                				.getStatusLineManager()
+                					.setMessage(String.valueOf(""));
+                	}
                 }
 
                 if (trackingInProgress || g != null) {
@@ -223,6 +251,8 @@ public class ControlView extends ViewPart implements IPartListener2,
         startButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
+            	actionBars = getViewSite().getActionBars();
+            	statusLineManager = actionBars.getStatusLineManager();
                 startTracking();
             }
         });
@@ -416,6 +446,12 @@ public class ControlView extends ViewPart implements IPartListener2,
             @Override
             public void widgetSelected(SelectionEvent e) {
                 stopTracking();
+                statusLineManager.setMessage("");
+                PlatformUI.getWorkbench()
+        		.getActiveWorkbenchWindow().getActivePage()
+        			.getActiveEditor().getEditorSite().getActionBars()
+        				.getStatusLineManager()
+        					.setMessage(String.valueOf(""));
                 for (final Control controls : solversComposite.getChildren()) {
             		Button button = (Button) controls;
             		button.setSelection(false);
@@ -522,7 +558,7 @@ public class ControlView extends ViewPart implements IPartListener2,
 
     @Override
     public void partVisible(IWorkbenchPartReference partRef) {
-        setupStyledText(partRef);
+        setupControls(partRef);
         HandlerBindManager.bind(partRef);
     }
 
@@ -557,25 +593,62 @@ public class ControlView extends ViewPart implements IPartListener2,
     }
 
     /**
-     * Find styled text controls within a part, set it up to be used by iTrace,
+     * Find styled text or browser controls within a part, set it up to be used by iTrace,
      * and extract meta-data from it.
      * 
      * @param partRef Highest-level part reference possible.
      */
-    private void setupStyledText(IWorkbenchPartReference partRef) {
-        IEditorReference[] editors = PlatformUI.getWorkbench()
+    private void setupControls(IWorkbenchPartReference partRef) {
+        //set up styled text manager if there is one
+    	IEditorReference[] editors = PlatformUI.getWorkbench()
                 .getActiveWorkbenchWindow().getActivePage()
                 .getEditorReferences();
         for (IEditorReference editor : editors) {
             IEditorPart editorPart = editor.getEditor(true);
-            StyledText text = (StyledText) editorPart.getAdapter(Control.class);
-            if (text != null)
+            if (editorPart.getAdapter(Control.class) instanceof StyledText) { //make sure editorPart contains an instance of StyledText
+            	StyledText text = (StyledText) editorPart.getAdapter(Control.class); 
             	setupStyledText(editorPart, text);
+            }
+            //ignore anything else
+        }
+        //set up browser manager if there is one
+        Shell workbenchShell = partRef.getPage().getWorkbenchWindow().
+                getShell();
+        for (Control control : workbenchShell.getChildren()) {
+        	setupBrowser(control);
         }
     }
+    
+    
 
     /**
-     * Recursive helper method for setupStyledText(IWorkbenchPartReference).
+     * Find browser control, set it up to be used by iTrace,
+     * and extract meta-data from it.
+     * Recursive helper method for setupControls(IWorkbenchPartReference).
+     * 
+     * @param control control that might be a Browser
+     */
+    private void setupBrowser(Control control) {
+        	//If composite
+            if (control instanceof Composite) {
+                Composite composite = (Composite) control;
+
+                Control[] children = composite.getChildren();
+                if (children.length > 0 && children[0] != null) {
+                   for (Control curControl : children) 
+                       setupBrowser(curControl);
+                }
+            }
+        	
+           if (control instanceof Browser) {
+        	   Browser browse = (Browser) control;
+        	   setupBrowser(browse);
+           }
+				
+    }
+    
+    /**
+     * Recursive helper method for setupControls(IWorkbenchPartReference).
      * 
      * @param editor IEditorPart which owns the StyledText in the next
      *               parameter.
@@ -587,6 +660,21 @@ public class ControlView extends ViewPart implements IPartListener2,
             styledText.setData(KEY_AST, new AstManager(editor, styledText));
     }
 
+    /**
+     * Recursive helper method for setupControls(IWorkbenchPartReference).
+     * 
+     * @param editor IEditorPart which owns the Browser in the next
+     *               parameter.
+     * @param control Browser to set up.
+     */
+    private void setupBrowser(Browser control) {
+        Browser browser = (Browser) control;
+        if (browser.getData(KEY_SO_DOM) == null)
+            browser.setData(KEY_SO_DOM, new SOManager(browser));
+        if (browser.getData(KEY_BR_DOM) == null)
+        	browser.setData(KEY_BR_DOM, new BRManager(browser));
+    }
+    
     /**
      * Finds the control under the specified screen coordinates and calls its
      * gaze handler on the localized point. Returns the gaze response or null if
@@ -663,7 +751,6 @@ public class ControlView extends ViewPart implements IPartListener2,
             displayError("Tracking is already in progress.");
             return;
         }
-
         if (!requestTracker()) {
             // Error handling occurs in requestTracker(). Just return and
             // pretend
@@ -701,6 +788,7 @@ public class ControlView extends ViewPart implements IPartListener2,
             // If tracking is in progress, the gaze transport should be some.
             displayError(FATAL_ERROR_MSG);
         }
+        Activator.getDefault().sessionStartTime = System.nanoTime();
     }
 
     private void stopTracking() {

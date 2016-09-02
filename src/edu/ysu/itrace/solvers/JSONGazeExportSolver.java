@@ -18,7 +18,11 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import com.google.gson.stream.JsonWriter;
 
 import edu.ysu.itrace.AstManager.SourceCodeEntity;
+import edu.ysu.itrace.SOManager.StackOverflowEntity;
+import edu.ysu.itrace.BRManager.BugReportEntity;
 import edu.ysu.itrace.gaze.IGazeResponse;
+import edu.ysu.itrace.gaze.IStackOverflowGazeResponse;
+import edu.ysu.itrace.gaze.IBugReportGazeResponse;
 import edu.ysu.itrace.gaze.IStyledTextGazeResponse;
 
 /**
@@ -108,13 +112,17 @@ public class JSONGazeExportSolver implements IFileExportSolver {
                               .value(response.getGaze().getLeftPupilDiameter())
                               .name("right_pupil_diameter")
                               .value(response.getGaze().getRightPupilDiameter())
+                              .name("timestamp")
+                              .value(response.getGaze().getTimestamp())
+                              .name("session_time")
+                              .value(response.getGaze().getSessionTime())
                               .name("tracker_time")
-                              .value(response.getGaze().getTrackerTime().getTime())
+                              .value(response.getGaze().getTrackerTime())
                               .name("system_time")
                               .value(response.getGaze().getSystemTime())
                               .name("nano_time")
                               .value(response.getGaze().getNanoTime());
-                try {
+                if (response instanceof IStyledTextGazeResponse) {
                     IStyledTextGazeResponse styledResponse =
                             (IStyledTextGazeResponse) response;
                     responseWriter.name("path")
@@ -155,8 +163,52 @@ public class JSONGazeExportSolver implements IFileExportSolver {
                     }
                     responseWriter.endArray();
 
-                } catch (ClassCastException e) {
-                    // not styled text, oh well
+                } else if (response instanceof IStackOverflowGazeResponse) {
+                	IStackOverflowGazeResponse stackOverflowResponse =
+                            (IStackOverflowGazeResponse) response;
+                	StackOverflowEntity soe = stackOverflowResponse.getSOE();
+                    responseWriter.name("url")
+                                  .value(stackOverflowResponse.getURL())
+                                  .name("Id")
+                                  .value(stackOverflowResponse.getID())
+                                  .name("soe")
+                                  .beginObject()
+                                  	.name("part")
+                                  	.value(soe.part.toString())
+                                  	.name("part_number")
+                                  	.value(soe.partNum)
+                                  	.name("type")
+                                  	.value(soe.type.toString())
+                                  	.name("type_number")
+                                  	.value(soe.typeNum)
+                                  .endObject();
+                                  
+                }
+                
+                else if (response instanceof IBugReportGazeResponse) {
+                	IBugReportGazeResponse bugReportResponse =
+                            (IBugReportGazeResponse) response;
+                	BugReportEntity bre = bugReportResponse.getBRE();
+                    responseWriter.name("url")
+                                  .value(bugReportResponse.getURL())
+                                  .name("Id")
+                                  .value(bugReportResponse.getID())
+                                  .name("bre")
+                                  .beginObject()
+                                  	.name("part")
+                                  	.value(bre.part.toString())
+                                  	.name("part_number")
+                                  	.value(bre.partNum)
+                                  	.name("type")
+                                  	.value(bre.type.toString())
+                                  	.name("type_number")
+                                  	.value(bre.typeNum)
+                                  .endObject();
+                                  
+                }
+                
+                else {
+                	//ignore anything else
                 }
                 responseWriter.endObject();
         } catch (IOException e) {
