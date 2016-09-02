@@ -70,21 +70,21 @@ public class Activator extends AbstractUIPlugin {
     		if(editorPart == null) return;
     	}
     	if(!tokenHighlighters.containsKey(editorPart)) 
-    		tokenHighlighters.put(editorPart, new TokenHighlighter(editorPart));
-    	tokenHighlighters.get(editorPart).update(line,column);
+    		tokenHighlighters.put(editorPart, new TokenHighlighter(editorPart, true));
+    	//tokenHighlighters.get(editorPart).update(line,column);
     }
     
     public void updateHighlighters(IEditorPart editorPart,Gaze gaze){
     	if(editorPart == null) editorPart = activeEditor;
     	//System.out.println("asdf");
     	if(!tokenHighlighters.containsKey(editorPart)) 
-    		tokenHighlighters.put(editorPart, new TokenHighlighter(editorPart));
+    		tokenHighlighters.put(editorPart, new TokenHighlighter(editorPart,true));
     	tokenHighlighters.get(editorPart).updateHandleGaze(gaze);
     }
     
     public void showTokenHighLights(){
 		if(!tokenHighlighters.containsKey(activeEditor)) 
-    		tokenHighlighters.put(activeEditor, new TokenHighlighter(activeEditor));
+    		tokenHighlighters.put(activeEditor, new TokenHighlighter(activeEditor, false));
 		if(activeEditor == null) return;
     	for(TokenHighlighter tokenHighlighter: tokenHighlighters.values()){
     		tokenHighlighter.setShow();

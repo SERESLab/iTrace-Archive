@@ -147,12 +147,13 @@ public class ControlView extends ViewPart implements IPartListener2,
                             
                             if(response instanceof IStyledTextGazeResponse){
                             	IStyledTextGazeResponse styledTextResponse = (IStyledTextGazeResponse)response;
-                            	
+                            	/*
 	                            Activator.getDefault().updateHighlighters(
 	                            		PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor(),
 	                            		styledTextResponse.getLine()-1,
 	                            		styledTextResponse.getCol()
 	                            		);
+	                           */
                             }
                             
                         } catch (IllegalStateException ise) {
@@ -292,6 +293,23 @@ public class ControlView extends ViewPart implements IPartListener2,
         final Composite tuningComposite = new Composite(parent, SWT.NONE);
         tuningComposite.setLayout(new RowLayout(SWT.VERTICAL));
 
+        final Button highlight_tokens = new Button(tuningComposite, SWT.CHECK);
+        highlight_tokens.setText("Highlight Tokens");
+        highlight_tokens.addSelectionListener(new SelectionAdapter(){
+        	@Override
+            public void widgetSelected(SelectionEvent e) {
+            	
+                if (tracker == null)
+                    requestTracker();
+                
+                if (tracker != null){
+                	Activator.getDefault().showTokenHighLights();
+                	if (gazeTransport != null)
+                        gazeTransport.createClient();
+                }
+        	}
+        });
+        
         final Button display_crosshair = new Button(tuningComposite, SWT.CHECK);
         display_crosshair.setText("Display Crosshair");
         display_crosshair.addSelectionListener(new SelectionAdapter() {
@@ -302,12 +320,12 @@ public class ControlView extends ViewPart implements IPartListener2,
                     requestTracker();
                 
                 if (tracker != null) {
-                	Activator.getDefault().showTokenHighLights();
+                	//Activator.getDefault().showTokenHighLights();
                 	if (gazeTransport != null)
                         crosshairQueue =
                                 gazeTransport.createClient();
                 	
-                	/*
+                	
                     tracker.displayCrosshair(
                             display_crosshair.getSelection());
                     // Create a client for the crosshair so that it will
@@ -324,7 +342,7 @@ public class ControlView extends ViewPart implements IPartListener2,
                             crosshairQueue = null;
                         }
                     }
-                    */
+                    
                 } else {
                     if (display_crosshair.getSelection()) {
                         displayError(DONT_CHANGE_THAT_MSG);

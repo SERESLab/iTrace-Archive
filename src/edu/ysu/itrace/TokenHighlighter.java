@@ -33,7 +33,11 @@ public class TokenHighlighter  extends Thread implements PaintListener {
 	private Rectangle boundingBox;
 	private LinkedBlockingQueue<Gaze> gazeQueue;
 	private StyledTextGazeHandler gazeHandler;
+	private Point[] points;
+	private int pointIndex;
+	private int numberOfPoints;
 	public boolean show;
+	
 	
 	@Override
 	public void run(){
@@ -58,7 +62,7 @@ public class TokenHighlighter  extends Thread implements PaintListener {
 				                	IStyledTextGazeResponse response = 
 				                		gazeHandler.handleGaze(screenX, screenY, relativeX, relativeY, gaze);
 				                	if(response != null){
-				                		update(response.getLine()-1,response.getCol());
+				                		//update(response.getLine()-1,response.getCol());
 				                	}
 				                }
 							}
@@ -80,20 +84,24 @@ public class TokenHighlighter  extends Thread implements PaintListener {
 		}
 	}
 
+	
+	
 	public void redraw(){
 		styledText.redraw();
 	}
 	
-	public void update(int lineIndex, int column){
+	public void update(int lineIndex, int column, int x, int y){
 		
-        System.out.println(lineIndex + "    " + column);
+        //System.out.println(lineIndex + "    " + column);
         int lineOffset = styledText.getOffsetAtLine(lineIndex);
 		String lineContent = styledText.getLine(lineIndex);
-		System.out.println(lineContent);
+		//System.out.println(lineContent);
 		String[] tokens = lineContent.split(" ");
 		OffsetSpan tokenOffsetSpan = findTokenOffsetSpan(tokens,column,lineOffset);
-		if(tokenOffsetSpan == null) boundingBox = null;
-		else boundingBox = styledText.getTextBounds(tokenOffsetSpan.startOffset,tokenOffsetSpan.endOffset);
+		boundingBox = getBoundingBox(lineOffset,lineContent,x,y);
+		
+		//if(tokenOffsetSpan == null) boundingBox = null;
+		//else boundingBox = styledText.getTextBounds(tokenOffsetSpan.startOffset,tokenOffsetSpan.endOffset);
 		styledText.redraw();
 
 	}
@@ -118,7 +126,7 @@ public class TokenHighlighter  extends Thread implements PaintListener {
 			            	IStyledTextGazeResponse response = 
 			            		gazeHandler.handleGaze(screenX, screenY, relativeX, relativeY, gaze);
 			            	if(response != null && !boundingBoxContains(relativeX,relativeY)){
-			            		update(response.getLine()-1,response.getCol());
+			            		update(response.getLine()-1,response.getCol(), relativeX, relativeY);
 			            	}
 			            }
 	               }
@@ -161,7 +169,44 @@ public class TokenHighlighter  extends Thread implements PaintListener {
 		return tokenOffsetSpan;
 	}
 	
-	public TokenHighlighter(IEditorPart editorPart){
+	private Rectangle getBoundingBox(int lineOffset, String lineContent, int x, int y){
+		Rectangle box = null;
+		points[pointIndex] = new Point(x,y);
+		pointIndex++;
+		if(pointIndex > numberOfPoints-1) pointIndex = pointIndex%numberOfPoints;
+		int startOffset = 0;
+		int endOffset;
+		//System.out.println(startOffset + "--" + lineContent.length());
+		while(startOffset < lineContent.length()){
+			while(startOffset < lineContent.length() && checkChar(lineContent.charAt(startOffset))) 
+				startOffset++;
+			endOffset = startOffset;
+			while(endOffset < lineContent.length()-1 && !checkChar(lineContent.charAt(endOffset+1))) 
+				endOffset++;
+			box = styledText.getTextBounds(lineOffset+startOffset, lineOffset+endOffset);
+			if(containsPoints(box)) break;
+			startOffset = endOffset+1;
+		}
+		if(box != null && !containsPoints(box)) box = null;
+		return box;
+	}
+	
+	private boolean containsPoints(Rectangle box){
+		for(Point p: points){
+			if(p != null && !box.contains(p)) return false;
+		}
+		return true;
+	}
+	
+	private boolean checkChar(char c){
+		char[] delimeters = {' ', '\t','(',')','[',']','{','}','.',','};
+		for(char delimeter: delimeters){
+			if(c == delimeter) return true;
+		}
+		return false;
+	}
+	
+	public TokenHighlighter(IEditorPart editorPart, boolean show){
 		
 		this.editorPart = editorPart;
 		this.styledText = (StyledText) this.editorPart.getAdapter(Control.class);
@@ -169,7 +214,11 @@ public class TokenHighlighter  extends Thread implements PaintListener {
 		if(t instanceof ProjectionViewer) projectionViewer = (ProjectionViewer) t;
 		this.styledText.addPaintListener(this);
 		this.gazeHandler = new StyledTextGazeHandler(styledText);
-		this.show = false;
+		this.show = show;
+		this.numberOfPoints = 5;
+		this.points = new Point[numberOfPoints];
+		this.pointIndex = 0;
+		
 		//this.gazeQueue = Activator.getDefault().gazeTransport.createClient();
 		//System.out.println("gazeQueue");
 	}
