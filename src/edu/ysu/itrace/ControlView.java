@@ -32,10 +32,9 @@ import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.IEditorPart;
-import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.IPartListener2;
+import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchPartReference;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
 
@@ -490,19 +489,17 @@ public class ControlView extends ViewPart implements IPartListener2,
     }
 
     /**
-     * Find styled text controls within a part, set it up to be used by iTrace,
+     * Find styled text control within a part, set it up to be used by iTrace,
      * and extract meta-data from it.
      * 
-     * @param partRef Highest-level part reference possible.
+     * @param partRef partRef that just became visible.
      */
     private void setupStyledText(IWorkbenchPartReference partRef) {
-        IEditorReference[] editors = PlatformUI.getWorkbench()
-                .getActiveWorkbenchWindow().getActivePage()
-                .getEditorReferences();
-        for (IEditorReference editor : editors) {
-            IEditorPart editorPart = editor.getEditor(true);
-            StyledText text = (StyledText) editorPart.getAdapter(Control.class);
-            setupStyledText(editorPart, text);
+    	IWorkbenchPart part = partRef.getPart(true);
+        Control control = part.getAdapter(Control.class);
+        
+        if (control instanceof StyledText) {
+        	setupStyledText((IEditorPart) part, (StyledText) control);
         }
     }
 
@@ -514,7 +511,7 @@ public class ControlView extends ViewPart implements IPartListener2,
      * @param control StyledText to set up.
      */
     private void setupStyledText(IEditorPart editor, StyledText control) {
-        StyledText styledText = (StyledText) control;
+        StyledText styledText = control;
         if (styledText.getData(KEY_AST) == null)
             styledText.setData(KEY_AST, new AstManager(editor, styledText));
     }

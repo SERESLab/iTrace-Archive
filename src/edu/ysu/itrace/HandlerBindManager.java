@@ -1,9 +1,11 @@
 package edu.ysu.itrace;
 
+import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchPartReference;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.navigator.CommonNavigator;
+import org.eclipse.ui.navigator.resources.ProjectExplorer;
 
 import edu.ysu.itrace.gaze.GazeHandlerFactory;
 import edu.ysu.itrace.gaze.IGazeHandler;
@@ -15,27 +17,61 @@ public class HandlerBindManager {
     public static final String KEY_HANDLER = "gazeHandler";
 
     /**
-     * Binds all controls in an IWorkbenchPartReference which can be bound to
-     * their appropriate gaze handlers.
+     * Binds all controls in an IWorkbenchPartReference that is
+     * an instance of IEditorPartReference to their appropriate
+     * gaze handlers if the handler exists.
+     * Binds the IWorkbenchPartReference that is an instance of
+     * IViewPartReference to the appropriate gaze handler if the
+     * handler exists.
      * @param partRef Workbench part from which to get controls.
      */
     public static void bind(IWorkbenchPartReference partRef) {
-        Shell workbenchShell = partRef.getPage().getWorkbenchWindow().
-                               getShell();
-        for (Control control : workbenchShell.getChildren())
-            bindControl(partRef, control, false);
+        IWorkbenchPart part = partRef.getPart(true);
+        Control control = part.getAdapter(Control.class);
+        
+        //is an EditorPart
+        if (control != null) {
+        	bindControl(partRef, control, false);
+        //is a ViewPart
+        } else {
+        	//must be handled on a case to case basis
+        	
+        	//Project Explorer
+        	if (part.getAdapter(ProjectExplorer.class) != null) {
+        		ProjectExplorer explorer = part.getAdapter(ProjectExplorer.class);
+        		//this control is the primary control associated with a ProjectExplorer
+        		Control viewControl = explorer.getCommonViewer().getControl();
+        		bindControl(partRef, viewControl, false);
+        	}
+        }
     }
 
     /**
-     * Unbinds all controls in an IWorkbenchPartReference which are currently
-     * bound to a gaze handler.
+     * Unbinds all controls in an IWorkbenchPartReference that is an instance
+     * of IEditorPartReference which are currently bound to a gaze handler.
+     * Unbinds an IWorkbenchPartReference that is an instance of IViewPartReference
+     * which is currently bound to a gaze handler.
      * @param partRef Workbench part from which to get controls.
      */
     public static void unbind(IWorkbenchPartReference partRef) {
-        Shell workbenchShell = partRef.getPage().getWorkbenchWindow().
-                               getShell();
-        for (Control control : workbenchShell.getChildren())
-            bindControl(partRef, control, true);
+    	IWorkbenchPart part = partRef.getPart(true);
+        Control control = part.getAdapter(Control.class);
+        
+        //is an EditorPart
+        if (control != null) {
+        	bindControl(partRef, control, true);
+        //is a ViewPart
+        } else {
+        	//must be handled on a case to case basis
+        	
+        	//Project Explorer
+        	if (part.getAdapter(ProjectExplorer.class) != null) {
+        		ProjectExplorer explorer = part.getAdapter(ProjectExplorer.class);
+        		//this control is the primary control associated with a ProjectExplorer
+        		Control viewControl = explorer.getCommonViewer().getControl();
+        		bindControl(partRef, viewControl, true);
+        	}
+        }
     }
 
     /**
@@ -56,11 +92,9 @@ public class HandlerBindManager {
                    bindControl(partRef, curControl, unbind);
             }
         }
-
-        //If key handler already set, the rest of this function is irrelevant.
-        if (control.getData(KEY_HANDLER) != null)
-            return;
-
+        
+        //control should not have any data set
+        //upon reaching this part of the method
         IGazeHandler handler = GazeHandlerFactory.
                                createHandler(control, partRef);
         if (handler != null && !unbind)

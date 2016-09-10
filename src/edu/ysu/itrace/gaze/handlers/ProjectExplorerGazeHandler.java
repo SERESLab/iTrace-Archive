@@ -3,6 +3,7 @@ package edu.ysu.itrace.gaze.handlers;
 import java.util.Hashtable;
 import java.util.Map;
 
+import org.eclipse.swt.widgets.Tree;
 import org.eclipse.ui.IWorkbenchPartReference;
 
 import edu.ysu.itrace.Gaze;
@@ -10,15 +11,18 @@ import edu.ysu.itrace.gaze.IGazeHandler;
 import edu.ysu.itrace.gaze.IGazeResponse;
 
 /**
- * Implements a fallback handler for any UI elements lacking something
- * more specific. This handler just records the UI element's title.
+ * Implements a Gaze Handler for the ProjectExplorer View.
  */
-public class WorkbenchPartGazeHandler implements IGazeHandler {
+public class ProjectExplorerGazeHandler implements IGazeHandler {
     private String name;
+    private Tree tree; //for future use
     private Map<String,String> properties = new Hashtable<String,String>();
 
-    public WorkbenchPartGazeHandler(IWorkbenchPartReference partRef) {
+    public ProjectExplorerGazeHandler(Object target,
+    		IWorkbenchPartReference partRef) {
+    	assert(target instanceof Tree);
         this.name = partRef.getPartName();
+        this.tree = (Tree) target;
     }
 
     @Override
@@ -37,13 +41,13 @@ public class WorkbenchPartGazeHandler implements IGazeHandler {
 
             @Override
             public IGazeHandler getGazeHandler() {
-                return WorkbenchPartGazeHandler.this;
+                return ProjectExplorerGazeHandler.this;
             }
 
             @Override
             public String getType() {
                 // TODO Auto-generated method stub
-                return "part";
+                return "view_part";
             }
 
             @Override
