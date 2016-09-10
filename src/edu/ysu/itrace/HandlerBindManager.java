@@ -4,7 +4,6 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchPartReference;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.ui.navigator.CommonNavigator;
 import org.eclipse.ui.navigator.resources.ProjectExplorer;
 
 import edu.ysu.itrace.gaze.GazeHandlerFactory;
@@ -76,12 +75,11 @@ public class HandlerBindManager {
 
     /**
      * Bind a control. If it is a composite, also bind all of its children.
-     * @param partRef Same partRef parameter passed to bind()/unbind().
      * @param control Highest level control.
      * @param unbind If true, unbind instead of bind.
      */
     private static void bindControl(IWorkbenchPartReference partRef,
-            Control control, boolean unbind) {
+    		Control control, boolean unbind) {
         //If composite, bind children.
         if (control instanceof Composite) {
             Composite composite = (Composite) control;

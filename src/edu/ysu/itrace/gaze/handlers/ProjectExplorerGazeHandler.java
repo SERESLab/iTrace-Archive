@@ -1,8 +1,5 @@
 package edu.ysu.itrace.gaze.handlers;
 
-import java.util.Hashtable;
-import java.util.Map;
-
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.ui.IWorkbenchPartReference;
 
@@ -16,7 +13,6 @@ import edu.ysu.itrace.gaze.IGazeResponse;
 public class ProjectExplorerGazeHandler implements IGazeHandler {
     private String name;
     private Tree tree; //for future use
-    private Map<String,String> properties = new Hashtable<String,String>();
 
     public ProjectExplorerGazeHandler(Object target,
     		IWorkbenchPartReference partRef) {
@@ -45,14 +41,9 @@ public class ProjectExplorerGazeHandler implements IGazeHandler {
             }
 
             @Override
-            public String getType() {
+            public String getGazeType() {
                 // TODO Auto-generated method stub
                 return "view_part";
-            }
-
-            @Override
-            public Map<String, String> getProperties() {
-                return properties;
             }
         };
     }

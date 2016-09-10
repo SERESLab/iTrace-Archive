@@ -63,7 +63,7 @@ public class SystemMouseTracker implements IEyeTracker {
                 double y = (double) cursorPosition.y /
                            (double) screenSize.height;
                 Gaze gaze = new Gaze(x - 0.05, x + 0.05, y, y, 1.0, 1.0,
-                                     0.0, 0.0, new Date());
+                                     0.0, 0.0, System.currentTimeMillis());
                 parent.calibrator.moveCrosshair(cursorPosition.x,
                                                 cursorPosition.y);
                 parent.gazePoints.add(gaze);
@@ -94,6 +94,10 @@ public class SystemMouseTracker implements IEyeTracker {
                 throws Exception {
             //Do nothing.
         }
+        
+        protected void displayCalibrationStatus() throws Exception {
+        	//Do nothing.
+        }
     }
 
     private LinkedBlockingQueue<Gaze> gazePoints
@@ -119,6 +123,11 @@ public class SystemMouseTracker implements IEyeTracker {
 
     public void calibrate() throws CalibrationException {
         calibrator.calibrate();
+        try {
+        	calibrator.displayCalibrationStatus();
+        } catch (Exception e) {
+        	throw new CalibrationException("Cannot display calibration status!");
+        }
     }
 
     public void startTracking() throws IOException {

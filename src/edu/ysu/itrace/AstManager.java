@@ -164,7 +164,6 @@ public class AstManager {
             if (found)
                 entities.add(sce);
         }
-
         return entities.toArray(new SourceCodeEntity[0]);
     }
 
@@ -349,6 +348,7 @@ public class AstManager {
                 Comment comment = (Comment) comment_obj;
                 SourceCodeEntity sce = new SourceCodeEntity();
                 sce.type = SCEType.COMMENT;
+                sce.how = SCEHow.DECLARE; //needs something here for export otherwise exception thrown (declare might not be appropriate)-Jenna
                 sce.name = comment.toString();
                 determineSCEPosition(compileUnit, comment, sce);
                 sourceCodeEntities.add(sce);

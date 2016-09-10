@@ -1,7 +1,8 @@
 package edu.ysu.itrace;
-
+ 
 import java.awt.Dimension;
 import java.awt.Toolkit;
+import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -11,7 +12,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.action.IStatusLineManager;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.ModifyEvent;
@@ -31,15 +34,22 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Spinner;
+import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IPartListener2;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchPartReference;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
 
 import edu.ysu.itrace.exceptions.CalibrationException;
 import edu.ysu.itrace.exceptions.EyeTrackerConnectException;
+import edu.ysu.itrace.filters.IFilter;
+import edu.ysu.itrace.filters.fixation.JSONBasicFixationFilter;
+import edu.ysu.itrace.filters.fixation.OldJSONBasicFixationFilter;
+import edu.ysu.itrace.filters.fixation.OldXMLBasicFixationFilter;
+import edu.ysu.itrace.filters.fixation.XMLBasicFixationFilter;
 import edu.ysu.itrace.gaze.IGazeHandler;
 import edu.ysu.itrace.gaze.IGazeResponse;
 import edu.ysu.itrace.solvers.ISolver;
@@ -54,6 +64,8 @@ public class ControlView extends ViewPart implements IPartListener2,
         ShellListener {
     private static final int POLL_GAZES_MS = 5;
     public static final String KEY_AST = "itraceAST";
+    public static final String KEY_SO_DOM = "itraceSO";
+    public static final String KEY_BR_DOM = "itraceBR";
     public static final String FATAL_ERROR_MSG = "A fatal error occurred. "
             + "Restart the plugin and try again. If "
             + "the problem persists, submit a bug report.";
@@ -84,7 +96,15 @@ public class ControlView extends ViewPart implements IPartListener2,
     private CopyOnWriteArrayList<ISolver> activeSolvers =
             new CopyOnWriteArrayList<ISolver>();
     
+    private CopyOnWriteArrayList<IFilter> availableFilters =
+    		new CopyOnWriteArrayList<IFilter>();
+    
     private SessionInfoHandler sessionInfo = new SessionInfoHandler();
+    
+    private IActionBars actionBars;
+    private IStatusLineManager statusLineManager;
+    private long registerTime = 2000;
+
 
     /*
      * Gets gazes from the eye tracker, calls gaze handlers, and adds responses
@@ -114,12 +134,30 @@ public class ControlView extends ViewPart implements IPartListener2,
 
                     if (response != null) {
                         try {
+                        	statusLineManager
+                        		.setMessage(String.valueOf(response.getGaze().getSessionTime()));
+                        	registerTime = System.currentTimeMillis();
+                        	PlatformUI.getWorkbench()
+                        		.getActiveWorkbenchWindow().getActivePage()
+                        			.getActiveEditor().getEditorSite().getActionBars()
+                        				.getStatusLineManager()
+                        					.setMessage(String.valueOf(response.getGaze().getSessionTime()));
                             gazeResponses.add(response);
+
                         } catch (IllegalStateException ise) {
                             System.err.println("Error! Gaze response queue is "
                                     + "full!");
                         }
                     }
+                }else{
+                	if((System.currentTimeMillis()-registerTime) > 2000){
+                		statusLineManager.setMessage("");
+                		PlatformUI.getWorkbench()
+                		.getActiveWorkbenchWindow().getActivePage()
+                			.getActiveEditor().getEditorSite().getActionBars()
+                				.getStatusLineManager()
+                					.setMessage(String.valueOf(""));
+                	}
                 }
 
                 if (trackingInProgress || g != null) {
@@ -184,28 +222,6 @@ public class ControlView extends ViewPart implements IPartListener2,
         final Composite buttonComposite = new Composite(parent, SWT.NONE);
         buttonComposite.setLayout(new GridLayout(2, false));
 
-        final Button startButton = new Button(buttonComposite, SWT.PUSH);
-        startButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true,
-                1, 1));
-        startButton.setText("Start Tracking");
-        startButton.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                startTracking();
-            }
-        });
-
-        final Button stopButton = new Button(buttonComposite, SWT.PUSH);
-        stopButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true,
-                1, 1));
-        stopButton.setText("Stop Tracking");
-        stopButton.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                stopTracking();
-            }
-        });
-        
         Button calibrateButton = new Button(buttonComposite, SWT.PUSH);
         calibrateButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true,
                 true, 1, 1));
@@ -227,6 +243,20 @@ public class ControlView extends ViewPart implements IPartListener2,
                 }
             }
         });
+        
+        final Button startButton = new Button(buttonComposite, SWT.PUSH);
+        startButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true,
+                1, 1));
+        startButton.setText("Start Tracking");
+        startButton.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+            	actionBars = getViewSite().getActionBars();
+            	statusLineManager = actionBars.getStatusLineManager();
+                startTracking();
+            }
+        });
+        
         /*
         final Button displayStatus = new Button(buttonComposite, SWT.PUSH);
         displayStatus.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true,
@@ -242,10 +272,6 @@ public class ControlView extends ViewPart implements IPartListener2,
                 }
             }
         });*/
-        
-        //Session info Composite
-        final Composite infoComposite = new Composite(parent, SWT.NONE);
-        infoComposite.setLayout(new GridLayout(1, false));
 
         final String DONT_CHANGE_THAT_MSG =
                 "Don't change this value until "
@@ -352,8 +378,6 @@ public class ControlView extends ViewPart implements IPartListener2,
                 @Override
                 public void widgetSelected(SelectionEvent e) {
                 	if (sessionInfo.isConfigured()) {
-                		solver.config(sessionInfo.getSessionID(),
-                				sessionInfo.getDevUsername());
                 		if (solverEnabled.getSelection()) {
                 			activeSolvers.addIfAbsent(solver);
                 		} else {
@@ -362,6 +386,9 @@ public class ControlView extends ViewPart implements IPartListener2,
                 			}
                 		}
                 	} else {
+                		while (activeSolvers.contains(solver)) {
+                			activeSolvers.remove(solver);
+                		}
                 		solverEnabled.setSelection(false);
                 		displayError("You must configure your Sesssion "
                 				+ "Info. first.");
@@ -375,11 +402,9 @@ public class ControlView extends ViewPart implements IPartListener2,
                 @Override
                 public void widgetSelected(SelectionEvent e) {
                 	if (sessionInfo.isConfigured()) {
-                		solver.config(sessionInfo.getSessionID(),
-                				sessionInfo.getDevUsername());
                 		solver.displayExportFile();
                 	} else {
-                		displayError("You must configure you Session Info. "
+                		displayError("You must configure your Session Info. "
                 				+ "first.");
                 	}
                 }
@@ -388,20 +413,99 @@ public class ControlView extends ViewPart implements IPartListener2,
         }
         
         //Session Info Button
-        final Button infoButton = new Button(infoComposite, SWT.PUSH);
+        final Button infoButton = new Button(buttonComposite, SWT.PUSH);
         infoButton.setText("Session Info");
         infoButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-            	for (final Control controls : solversComposite.getChildren()) {
+            	sessionInfo.config();
+            	if (sessionInfo.isConfigured()) {
+            		// set all solver check buttons to checked
+            		for (final Control controls : solversComposite.getChildren()) {
+            			Button button = (Button) controls;
+            			button.setSelection(true);
+            		}
+            		
+            		// Configure all available solvers
+            		for (final ISolver solver: availableSolvers) {
+            			solver.config(sessionInfo.getSessionID(),
+                				sessionInfo.getDevUsername());
+            			activeSolvers.addIfAbsent(solver);
+            		}
+            	}
+            }
+        });  
+        grayedControls.addIfAbsent(infoButton);
+        
+        //Stop Tracking Button
+        final Button stopButton = new Button(buttonComposite, SWT.PUSH);
+        stopButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true,
+                1, 1));
+        stopButton.setText("Stop Tracking");
+        stopButton.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                stopTracking();
+                statusLineManager.setMessage("");
+                PlatformUI.getWorkbench()
+        		.getActiveWorkbenchWindow().getActivePage()
+        			.getActiveEditor().getEditorSite().getActionBars()
+        				.getStatusLineManager()
+        					.setMessage(String.valueOf(""));
+                for (final Control controls : solversComposite.getChildren()) {
             		Button button = (Button) controls;
             		button.setSelection(false);
             	}
-            	sessionInfo.config();
+                for (final ISolver solver: activeSolvers) {
+                	if(activeSolvers.contains(solver)) {
+        				activeSolvers.remove(solver);
+        			}
+                }
             }
-        });  
-        grayedControls.add(infoButton);
-
+        });
+        
+        //Configure Filters Here
+        OldJSONBasicFixationFilter oldjsonBFFilter =
+        		new OldJSONBasicFixationFilter();
+        OldXMLBasicFixationFilter oldxmlBFFilter =
+        		new OldXMLBasicFixationFilter();
+        JSONBasicFixationFilter jsonBFFilter =
+        		new JSONBasicFixationFilter();
+        XMLBasicFixationFilter xmlBFFilter =
+        		new XMLBasicFixationFilter();
+        availableFilters.add(oldjsonBFFilter);
+        availableFilters.add(jsonBFFilter);
+        availableFilters.add(oldxmlBFFilter);
+        availableFilters.add(xmlBFFilter);
+        
+        final Composite filterComposite = new Composite(parent, SWT.NONE);
+        filterComposite.setLayout(new GridLayout(2, false));
+        
+        for (final IFilter filter: availableFilters) {
+        	final Button filterButton =
+        			new Button(filterComposite, SWT.PUSH);
+        	filterButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true,
+                	1, 1));
+        	filterButton.setText(filter.getFilterName());
+        	filterButton.addSelectionListener(new SelectionAdapter() {
+            	@Override
+            	public void widgetSelected(SelectionEvent e) {
+                	File[] fileList = filter.filterUI();
+                	if (fileList != null) {
+                		for (int i = 0; i < fileList.length; i++) {
+                			try {
+                				filter.read(fileList[i]);
+                				filter.process();
+                				filter.export();
+                			} catch(IOException exc) {
+                				displayError(exc.getMessage());
+                			}
+                		}
+                	}
+            	}
+        	});
+        	grayedControls.add(filterButton);
+        }
     }
 
     @Override
@@ -454,7 +558,7 @@ public class ControlView extends ViewPart implements IPartListener2,
 
     @Override
     public void partVisible(IWorkbenchPartReference partRef) {
-        setupStyledText(partRef);
+        setupControls(partRef);
         HandlerBindManager.bind(partRef);
     }
 
@@ -489,34 +593,80 @@ public class ControlView extends ViewPart implements IPartListener2,
     }
 
     /**
-     * Find styled text control within a part, set it up to be used by iTrace,
+     * Find styled text or browser controls within a part, set it up to be used by iTrace,
      * and extract meta-data from it.
      * 
      * @param partRef partRef that just became visible.
      */
-    private void setupStyledText(IWorkbenchPartReference partRef) {
+    private void setupControls(IWorkbenchPartReference partRef) {
     	IWorkbenchPart part = partRef.getPart(true);
         Control control = part.getAdapter(Control.class);
         
         if (control instanceof StyledText) {
+        	//set up styled text manager if there is one
         	setupStyledText((IEditorPart) part, (StyledText) control);
+        } else if (control instanceof Browser) {
+        	//set up browser manager if there is one
+        	//currently doesn't utilize the partRef attached
+        	setupBrowser((Browser) control);
         }
+        //TODO: no control set up for ProjectExplorer, since there isn't an need for 
+        //a Manager right now, might be needed in the future
     }
-
+    
     /**
-     * Recursive helper method for setupStyledText(IWorkbenchPartReference).
+     * Find browser control, set it up to be used by iTrace,
+     * and extract meta-data from it.
+     * Recursive helper method for setupControls(IWorkbenchPartReference).
+     * 
+     * @param control control that might be a Browser
+     */
+    /*private void setupBrowser(Control control) {
+        	//If composite
+            if (control instanceof Composite) {
+                Composite composite = (Composite) control;
+
+                Control[] children = composite.getChildren();
+                if (children.length > 0 && children[0] != null) {
+                   for (Control curControl : children) 
+                       setupBrowser(curControl);
+                }
+            }
+        	
+           if (control instanceof Browser) {
+        	   Browser browse = (Browser) control;
+        	   setupBrowser(browse);
+           }
+				
+    }*/
+    
+    /**
+     * Recursive helper method for setupControls(IWorkbenchPartReference).
      * 
      * @param editor IEditorPart which owns the StyledText in the next
      *               parameter.
-     * @param control StyledText to set up.
+     * @param styledText StyledText to set up.
      */
-    private void setupStyledText(IEditorPart editor, StyledText control) {
-        StyledText styledText = control;
+    private void setupStyledText(IEditorPart editor, StyledText styledText) {
         if (styledText.getData(KEY_AST) == null)
             styledText.setData(KEY_AST, new AstManager(editor, styledText));
     }
 
-    /*
+    /**
+     * Recursive helper method for setupControls(IWorkbenchPartReference).
+     * 
+     * @param editor IEditorPart which owns the Browser in the next
+     *               parameter.
+     * @param control browser to set up.
+     */
+    private void setupBrowser(Browser browser) {
+        if (browser.getData(KEY_SO_DOM) == null)
+            browser.setData(KEY_SO_DOM, new SOManager(browser));
+        if (browser.getData(KEY_BR_DOM) == null)
+        	browser.setData(KEY_BR_DOM, new BRManager(browser));
+    }
+    
+    /**
      * Finds the control under the specified screen coordinates and calls its
      * gaze handler on the localized point. Returns the gaze response or null if
      * the gaze is not handled.
@@ -592,7 +742,6 @@ public class ControlView extends ViewPart implements IPartListener2,
             displayError("Tracking is already in progress.");
             return;
         }
-
         if (!requestTracker()) {
             // Error handling occurs in requestTracker(). Just return and
             // pretend
@@ -630,6 +779,7 @@ public class ControlView extends ViewPart implements IPartListener2,
             // If tracking is in progress, the gaze transport should be some.
             displayError(FATAL_ERROR_MSG);
         }
+        Activator.getDefault().sessionStartTime = System.nanoTime();
     }
 
     private void stopTracking() {
