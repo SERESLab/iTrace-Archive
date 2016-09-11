@@ -20,7 +20,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.eclipse.jface.text.ITextOperationTarget;
 import org.eclipse.jface.text.source.projection.ProjectionViewer;
 
-public class TokenHighlighter  extends Thread implements PaintListener {
+public class TokenHighlighter implements PaintListener {
 	private class OffsetSpan{
 		int startOffset;
 		int endOffset;
@@ -36,48 +36,17 @@ public class TokenHighlighter  extends Thread implements PaintListener {
 	private Point[] points;
 	private int pointIndex;
 	private int numberOfPoints;
-	public boolean show;
+	private boolean show;
 	
-	
-	@Override
-	public void run(){
-		Display.getDefault().asyncExec(new Runnable() {
-               public void run() { 
-					try{
-						while(show){
-							Gaze gaze = gazeQueue.poll();
-							if(gaze != null){
-								Dimension screenRect =
-				                        Toolkit.getDefaultToolkit().getScreenSize();
-				                int screenX = (int) (gaze.getX() * screenRect.width);
-				                int screenY = (int) (gaze.getY() * screenRect.height);
-				                Rectangle monitorBounds = Activator.getDefault().monitorBounds;
-				                Rectangle editorBounds = styledText.getBounds();
-				                Point screenPos = styledText.toDisplay(0, 0);
-				                editorBounds.x = screenPos.x - monitorBounds.x;
-				                editorBounds.y = screenPos.y - monitorBounds.y;
-				                if(editorBounds.contains(screenX, screenY)){
-				                	int relativeX = screenX-editorBounds.x;
-				                	int relativeY = screenY-editorBounds.y;
-				                	IStyledTextGazeResponse response = 
-				                		gazeHandler.handleGaze(screenX, screenY, relativeX, relativeY, gaze);
-				                	if(response != null){
-				                		//update(response.getLine()-1,response.getCol());
-				                	}
-				                }
-							}
-							Thread.sleep(1000);
-						}
-					}catch(Exception e){
-						e.printStackTrace();
-					}
-               }
-		});
-	}
 	
 	@Override
 	public void paintControl(PaintEvent pe) {
 		if(boundingBox != null && show){
+			pe.gc.drawRectangle(boundingBox);
+			pe.gc.setAlpha(125);
+			pe.gc.fillRectangle(boundingBox);
+		}else if(boundingBox == null){
+			boundingBox = new Rectangle(-1,-1,0,0);
 			pe.gc.drawRectangle(boundingBox);
 			pe.gc.setAlpha(125);
 			pe.gc.fillRectangle(boundingBox);
@@ -107,9 +76,9 @@ public class TokenHighlighter  extends Thread implements PaintListener {
 	}
 	
 	public void updateHandleGaze(Gaze gaze){
-		if(gaze != null){
+		if(gaze != null && show){
 			Display.getDefault().asyncExec(new Runnable() {
-	               public void run() { 
+	               public void run() {
 						Dimension screenRect =
 			                    Toolkit.getDefaultToolkit().getScreenSize();
 			            int screenX = (int) (gaze.getX() * screenRect.width);
@@ -131,6 +100,8 @@ public class TokenHighlighter  extends Thread implements PaintListener {
 			            }
 	               }
 				});
+			}else{
+				boundingBox = null;
 			}
 		}
 		
@@ -150,8 +121,8 @@ public class TokenHighlighter  extends Thread implements PaintListener {
 	}
 		
 	
-	public void setShow(){
-		show = !show;
+	public void setShow(boolean show){
+		this.show = show;
 		//if(show) this.start();
 	}
 	
@@ -215,7 +186,7 @@ public class TokenHighlighter  extends Thread implements PaintListener {
 		this.styledText.addPaintListener(this);
 		this.gazeHandler = new StyledTextGazeHandler(styledText);
 		this.show = show;
-		this.numberOfPoints = 5;
+		this.numberOfPoints = 10;
 		this.points = new Point[numberOfPoints];
 		this.pointIndex = 0;
 		

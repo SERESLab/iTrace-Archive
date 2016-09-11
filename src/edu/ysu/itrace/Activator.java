@@ -21,11 +21,11 @@ public class Activator extends AbstractUIPlugin {
     public long sessionStartTime;
     public GazeTransport gazeTransport;
     public Rectangle monitorBounds;
-    public IEditorPart activeEditor;
+    private IEditorPart activeEditor;
     // The shared instance
     private static Activator plugin;
     private HashMap<IEditorPart,TokenHighlighter> tokenHighlighters = new HashMap<IEditorPart,TokenHighlighter>();
-    
+    private boolean showTokenHighlights = false;
     
     /**
      * The constructor
@@ -64,30 +64,26 @@ public class Activator extends AbstractUIPlugin {
         return plugin;
     }
     
-    public void updateHighlighters(IEditorPart editorPart, int line, int column){
-    	if(editorPart == null){
-    		editorPart = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor();
-    		if(editorPart == null) return;
-    	}
+    public void setActiveEditor(IEditorPart editorPart){
+    	activeEditor = editorPart;
     	if(!tokenHighlighters.containsKey(editorPart)) 
-    		tokenHighlighters.put(editorPart, new TokenHighlighter(editorPart, true));
-    	//tokenHighlighters.get(editorPart).update(line,column);
+    		tokenHighlighters.put(editorPart, new TokenHighlighter(editorPart,showTokenHighlights));
+    	
+    	
     }
     
     public void updateHighlighters(IEditorPart editorPart,Gaze gaze){
     	if(editorPart == null) editorPart = activeEditor;
-    	//System.out.println("asdf");
-    	if(!tokenHighlighters.containsKey(editorPart)) 
-    		tokenHighlighters.put(editorPart, new TokenHighlighter(editorPart,true));
     	tokenHighlighters.get(editorPart).updateHandleGaze(gaze);
     }
     
     public void showTokenHighLights(){
+    	showTokenHighlights = !showTokenHighlights;
 		if(!tokenHighlighters.containsKey(activeEditor)) 
-    		tokenHighlighters.put(activeEditor, new TokenHighlighter(activeEditor, false));
+    		tokenHighlighters.put(activeEditor, new TokenHighlighter(activeEditor, showTokenHighlights));
 		if(activeEditor == null) return;
     	for(TokenHighlighter tokenHighlighter: tokenHighlighters.values()){
-    		tokenHighlighter.setShow();
+    		tokenHighlighter.setShow(showTokenHighlights);
     	}
     }
 

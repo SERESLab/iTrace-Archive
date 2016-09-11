@@ -53,7 +53,7 @@ public class GazeTransport extends Thread {
                         client.add(currentGaze);
                     currentGaze = eyeTracker.getGaze();
                 }
-                //Activator.getDefault().updateHighlighters(null,currentGaze);
+                Activator.getDefault().updateHighlighters(null,null);
             }
 
             try {

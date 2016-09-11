@@ -257,7 +257,7 @@ public class EyeXTracker implements IEyeTracker {
             Gaze gaze = new Gaze(left_x, right_x, left_y, right_y,
                                  gaze_left_validity, gaze_right_validity,
                                  left_pupil_diameter, right_pupil_diameter,
-                                 new Date(timestamp / 1000));
+                                 timestamp);
             if (recentGazes.size() >= 15)
                 recentGazes.remove();
             recentGazes.add(gaze);
@@ -277,7 +277,7 @@ public class EyeXTracker implements IEyeTracker {
             Gaze modifiedGaze = new Gaze(left_x_mod, right_x_mod, left_y_mod,
                     right_y_mod, gaze_left_validity, gaze_right_validity,
                     left_pupil_diameter, right_pupil_diameter,
-                    new Date(timestamp / 1000));
+                    timestamp);
 
             gaze_points.put(modifiedGaze);
         } catch (InterruptedException e) {

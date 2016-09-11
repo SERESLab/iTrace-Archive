@@ -573,13 +573,15 @@ public class ControlView extends ViewPart implements IPartListener2,
     @Override
     public void partActivated(IWorkbenchPartReference partRef) {
     	if(partRef.getPart(false) instanceof IEditorPart) {
-    		Activator.getDefault().activeEditor = (IEditorPart) partRef.getPart(false);
-    	System.out.println("qwer");
+    		Activator.getDefault().setActiveEditor((IEditorPart)partRef.getPart(false));
     	}
     }
 
     @Override
     public void partBroughtToTop(IWorkbenchPartReference partRef) {
+    	if(partRef.getPart(false) instanceof IEditorPart) {
+    		Activator.getDefault().setActiveEditor((IEditorPart)partRef.getPart(false));
+    	}
     }
 
     @Override
