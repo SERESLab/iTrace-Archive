@@ -137,11 +137,7 @@ public class ControlView extends ViewPart implements IPartListener2,
                         	statusLineManager
                         		.setMessage(String.valueOf(response.getGaze().getSessionTime()));
                         	registerTime = System.currentTimeMillis();
-                        	PlatformUI.getWorkbench()
-                        		.getActiveWorkbenchWindow().getActivePage()
-                        			.getActiveEditor().getEditorSite().getActionBars()
-                        				.getStatusLineManager()
-                        					.setMessage(String.valueOf(response.getGaze().getSessionTime()));
+                        	
                             gazeResponses.add(response);
 
                         } catch (IllegalStateException ise) {
@@ -152,11 +148,7 @@ public class ControlView extends ViewPart implements IPartListener2,
                 }else{
                 	if((System.currentTimeMillis()-registerTime) > 2000){
                 		statusLineManager.setMessage("");
-                		PlatformUI.getWorkbench()
-                		.getActiveWorkbenchWindow().getActivePage()
-                			.getActiveEditor().getEditorSite().getActionBars()
-                				.getStatusLineManager()
-                					.setMessage(String.valueOf(""));
+                		
                 	}
                 }
 
@@ -447,11 +439,6 @@ public class ControlView extends ViewPart implements IPartListener2,
             public void widgetSelected(SelectionEvent e) {
                 stopTracking();
                 statusLineManager.setMessage("");
-                PlatformUI.getWorkbench()
-        		.getActiveWorkbenchWindow().getActivePage()
-        			.getActiveEditor().getEditorSite().getActionBars()
-        				.getStatusLineManager()
-        					.setMessage(String.valueOf(""));
                 for (final Control controls : solversComposite.getChildren()) {
             		Button button = (Button) controls;
             		button.setSelection(false);
@@ -534,14 +521,26 @@ public class ControlView extends ViewPart implements IPartListener2,
 
     @Override
     public void partActivated(IWorkbenchPartReference partRef) {
+    	if(partRef instanceof IEditorReference){
+    		IEditorPart ep = (IEditorPart)partRef.getPart(true);
+    		statusLineManager = ep.getEditorSite().getActionBars().getStatusLineManager();
+    	}
     }
 
     @Override
     public void partBroughtToTop(IWorkbenchPartReference partRef) {
+    	if(partRef instanceof IEditorReference){
+    		IEditorPart ep = (IEditorPart)partRef.getPart(true);
+    		statusLineManager = ep.getEditorSite().getActionBars().getStatusLineManager();
+    	}
     }
 
     @Override
     public void partClosed(IWorkbenchPartReference partRef) {
+    	if(partRef instanceof IEditorReference){
+    		actionBars = getViewSite().getActionBars();
+        	statusLineManager = actionBars.getStatusLineManager();
+    	}
     }
 
     @Override
