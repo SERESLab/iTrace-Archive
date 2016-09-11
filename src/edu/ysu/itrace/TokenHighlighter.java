@@ -3,6 +3,7 @@ package edu.ysu.itrace;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Control;
@@ -42,6 +43,8 @@ public class TokenHighlighter implements PaintListener {
 	@Override
 	public void paintControl(PaintEvent pe) {
 		if(boundingBox != null && show){
+			pe.gc.setBackground(new Color(pe.gc.getDevice(),15,252,212));
+			pe.gc.setForeground(new Color(pe.gc.getDevice(),0,230,172));
 			pe.gc.drawRectangle(boundingBox);
 			pe.gc.setAlpha(125);
 			pe.gc.fillRectangle(boundingBox);

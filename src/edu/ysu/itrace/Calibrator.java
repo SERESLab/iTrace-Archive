@@ -53,19 +53,13 @@ public abstract class Calibrator extends JFrame {
             try {
             	super.setLocation(-10, -10);
             	setSize(16,16);
-            	//setOpacity(0);
             	setBackground(new Color(0,0,255,0));
                 BufferedImage crosshair =
                         Calibrator.getBufferedImage("crosshair.png");
                 JPanel crosshairPanel = new CrosshairPanel();
                 crosshairPanel.setOpaque(false);
                 add(crosshairPanel);
-                //pack();
-                
-                
                 centre = new Point(8,8);
-                
-                //pack();
                 setAlwaysOnTop(true);
             } catch (IOException e) {
                 System.out.println("Failed to load crosshair icon.");
