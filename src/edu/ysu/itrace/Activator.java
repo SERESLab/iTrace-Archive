@@ -5,6 +5,7 @@ import java.util.HashMap;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
@@ -31,6 +32,8 @@ public class Activator extends AbstractUIPlugin {
      * The constructor
      */
     public Activator() {
+    	IEditorPart editorPart = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor();
+    	tokenHighlighters.put(editorPart, new TokenHighlighter(editorPart,showTokenHighlights));
     }
 
     /*
