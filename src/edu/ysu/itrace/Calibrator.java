@@ -2,10 +2,15 @@ package edu.ysu.itrace;
 
 import edu.ysu.itrace.exceptions.*;
 
+import java.awt.BasicStroke;
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.GridLayout;
+import java.awt.Stroke;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -28,16 +33,39 @@ import org.osgi.framework.Bundle;
 
 public abstract class Calibrator extends JFrame {
     private class CrosshairWindow extends JWindow {
+    	private class CrosshairPanel extends JPanel{
+    		public CrosshairPanel(){
+    			setSize(16,16);
+    		}
+    		@Override
+    		public void paintComponent(Graphics g){
+    			Graphics2D g2d = (Graphics2D)g;
+    			g2d.setStroke(new BasicStroke(3));
+    			super.paintComponent(g);
+    			g2d.setColor(new Color(255,0,0,255));
+    			g2d.drawOval(getX()+3, getY()+3, 12, 12);
+    		}
+    	}
+    	
         private Point centre = null;
 
         public CrosshairWindow() {
             try {
+            	super.setLocation(-10, -10);
+            	setSize(16,16);
+            	//setOpacity(0);
+            	setBackground(new Color(0,0,255,0));
                 BufferedImage crosshair =
                         Calibrator.getBufferedImage("crosshair.png");
-                add(new JLabel(new ImageIcon(crosshair)));
-                centre = new Point((int) (crosshair.getWidth() / 2),
-                        (int) (crosshair.getHeight() / 2));
-                pack();
+                JPanel crosshairPanel = new CrosshairPanel();
+                crosshairPanel.setOpaque(false);
+                add(crosshairPanel);
+                //pack();
+                
+                
+                centre = new Point(8,8);
+                
+                //pack();
                 setAlwaysOnTop(true);
             } catch (IOException e) {
                 System.out.println("Failed to load crosshair icon.");
@@ -48,6 +76,7 @@ public abstract class Calibrator extends JFrame {
 
         public void setLocation(int x, int y) {
             super.setLocation(x - centre.x, y - centre.y);
+            
         }
     }
 
