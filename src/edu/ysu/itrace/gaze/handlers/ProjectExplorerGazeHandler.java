@@ -24,6 +24,7 @@ public class ProjectExplorerGazeHandler implements IGazeHandler {
     @Override
     public IGazeResponse handleGaze(int absoluteX, int absoluteY,
             int relativeX, int relativeY, final Gaze gaze) {
+    	
         return new IGazeResponse() {
             @Override
             public String getName() {

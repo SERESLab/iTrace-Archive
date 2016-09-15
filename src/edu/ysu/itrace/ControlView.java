@@ -126,12 +126,13 @@ public class ControlView extends ViewPart implements IPartListener2,
                 // Method returns above if standardTrackingQueue is none.
                 g = standardTrackingQueue.poll();
                 if (g != null) {
-                    Dimension screenRect =
-                            Toolkit.getDefaultToolkit().getScreenSize();
-                    int screenX = (int) (g.getX() * screenRect.width);
-                    int screenY = (int) (g.getY() * screenRect.height);
+                    //Dimension screenRect =
+                           // Toolkit.getDefaultToolkit().getScreenSize();
+                	Rectangle monitorBounds = rootShell.getMonitor().getBounds(); //changed to this but is this really a fix?
+                    int screenX = (int) (g.getX() * monitorBounds.width);//screenRect.width);
+                    int screenY = (int) (g.getY() * monitorBounds.height);//screenRect.height);
                     IGazeResponse response = handleGaze(screenX, screenY, g);
-
+                    
                     if (response != null) {
                         try {
                         	statusLineManager
@@ -677,13 +678,20 @@ public class ControlView extends ViewPart implements IPartListener2,
         childrenQueue.add(rootShell.getChildren());
 
         Rectangle monitorBounds = rootShell.getMonitor().getBounds();
+        //System.out.println(monitorBounds);
 
         while (!childrenQueue.isEmpty()) {
             for (Control child : childrenQueue.remove()) {
                 Rectangle childScreenBounds = child.getBounds();
+                /*look into these next three lines, do they make sense? what are they doing?*/
                 Point screenPos = child.toDisplay(0, 0);
                 childScreenBounds.x = screenPos.x - monitorBounds.x;
                 childScreenBounds.y = screenPos.y - monitorBounds.y;
+                
+               // System.out.println(screenX + " " + screenY);
+               // System.out.println("screen pos: " + screenPos.x + " " + screenPos.y);
+               // System.out.println(childScreenBounds.x + " " + childScreenBounds.y);
+                
                 if (childScreenBounds.contains(screenX, screenY)) {
                     if (child instanceof Composite) {
                         Control[] nextChildren =
