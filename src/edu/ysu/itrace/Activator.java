@@ -72,12 +72,15 @@ public class Activator extends AbstractUIPlugin {
     	if(!tokenHighlighters.containsKey(editorPart)) 
     		tokenHighlighters.put(editorPart, new TokenHighlighter(editorPart,showTokenHighlights));
     	
-    	
     }
     
     public void updateHighlighters(IEditorPart editorPart,Gaze gaze){
     	if(editorPart == null) editorPart = activeEditor;
     	tokenHighlighters.get(editorPart).updateHandleGaze(gaze);
+    }
+    
+    public void removeHighlighter(IEditorPart editorPart){
+    	tokenHighlighters.remove(editorPart);
     }
     
     public void showTokenHighLights(){

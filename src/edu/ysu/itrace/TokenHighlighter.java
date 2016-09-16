@@ -37,6 +37,7 @@ public class TokenHighlighter implements PaintListener {
 	private Point[] points;
 	private int pointIndex;
 	private int numberOfPoints;
+	private int nulls;
 	private boolean show;
 	
 	
@@ -68,8 +69,6 @@ public class TokenHighlighter implements PaintListener {
         int lineOffset = styledText.getOffsetAtLine(lineIndex);
 		String lineContent = styledText.getLine(lineIndex);
 		//System.out.println(lineContent);
-		String[] tokens = lineContent.split(" ");
-		OffsetSpan tokenOffsetSpan = findTokenOffsetSpan(tokens,column,lineOffset);
 		boundingBox = getBoundingBox(lineOffset,lineContent,x,y);
 		
 		//if(tokenOffsetSpan == null) boundingBox = null;
@@ -79,32 +78,40 @@ public class TokenHighlighter implements PaintListener {
 	}
 	
 	public void updateHandleGaze(Gaze gaze){
-		if(gaze != null && show){
+		if(show && !styledText.isDisposed()){
 			Display.getDefault().asyncExec(new Runnable() {
 	               public void run() {
-						Dimension screenRect =
-			                    Toolkit.getDefaultToolkit().getScreenSize();
-			            int screenX = (int) (gaze.getX() * screenRect.width);
-			            int screenY = (int) (gaze.getY() * screenRect.height);
-			            Rectangle monitorBounds = Activator.getDefault().monitorBounds;
-			            Rectangle editorBounds = styledText.getBounds();
-			            Point screenPos = styledText.toDisplay(0, 0);
-			            editorBounds.x = screenPos.x - monitorBounds.x;
-			            editorBounds.y = screenPos.y - monitorBounds.y;
-			            if(editorBounds.contains(screenX, screenY)){
-			            	int relativeX = screenX-editorBounds.x;
-			            	int relativeY = screenY-editorBounds.y;
-			            	
-			            	IStyledTextGazeResponse response = 
-			            		gazeHandler.handleGaze(screenX, screenY, relativeX, relativeY, gaze);
-			            	if(response != null && !boundingBoxContains(relativeX,relativeY)){
-			            		update(response.getLine()-1,response.getCol(), relativeX, relativeY);
+	            	   if(gaze != null){
+	            		   nulls = 0;
+							Dimension screenRect =
+				                    Toolkit.getDefaultToolkit().getScreenSize();
+				            int screenX = (int) (gaze.getX() * screenRect.width);
+				            int screenY = (int) (gaze.getY() * screenRect.height);
+				            Rectangle monitorBounds = Activator.getDefault().monitorBounds;
+				            if(styledText.isDisposed()) return;
+				            Rectangle editorBounds = styledText.getBounds();
+				            Point screenPos = styledText.toDisplay(0, 0);
+				            editorBounds.x = screenPos.x - monitorBounds.x;
+				            editorBounds.y = screenPos.y - monitorBounds.y;
+				            if(editorBounds.contains(screenX, screenY)){
+				            	int relativeX = screenX-editorBounds.x;
+				            	int relativeY = screenY-editorBounds.y;
+				            	
+				            	IStyledTextGazeResponse response = 
+				            		gazeHandler.handleGaze(screenX, screenY, relativeX, relativeY, gaze);
+				            	if(response != null && !boundingBoxContains(relativeX,relativeY)){
+				            		update(response.getLine()-1,response.getCol(), relativeX, relativeY);
+				            	}
+				            }
+			            }else{
+			            	nulls++;
+			            	if(nulls > 1){
+			            		boundingBox = null;
+								styledText.redraw();
 			            	}
-			            }
+						}
 	               }
 				});
-			}else{
-				boundingBox = null;
 			}
 		}
 		
@@ -129,25 +136,13 @@ public class TokenHighlighter implements PaintListener {
 		//if(show) this.start();
 	}
 	
-	private OffsetSpan findTokenOffsetSpan(String[] tokens, int column, int lineOffset){
-		int tokenStartOffset = 0;
-		int tokenIndex = 0;
-		while(tokenIndex < tokens.length && tokenStartOffset+tokens[tokenIndex].length()+1 < column){
-			tokenStartOffset += tokens[tokenIndex].length()+1;
-			tokenIndex++;
-		}
-		if(tokenIndex == tokens.length) return null;
-		OffsetSpan tokenOffsetSpan = new OffsetSpan();
-		tokenOffsetSpan.startOffset = lineOffset+tokenStartOffset;
-		tokenOffsetSpan.endOffset = lineOffset+tokenStartOffset+tokens[tokenIndex].length();
-		return tokenOffsetSpan;
-	}
 	
 	private Rectangle getBoundingBox(int lineOffset, String lineContent, int x, int y){
 		Rectangle box = null;
 		points[pointIndex] = new Point(x,y);
 		pointIndex++;
 		if(pointIndex > numberOfPoints-1) pointIndex = pointIndex%numberOfPoints;
+		if(containsPoints(boundingBox)) return boundingBox;
 		int startOffset = 0;
 		int endOffset;
 		//System.out.println(startOffset + "--" + lineContent.length());
@@ -161,7 +156,9 @@ public class TokenHighlighter implements PaintListener {
 			if(containsPoints(box)) break;
 			startOffset = endOffset+1;
 		}
-		if(box != null && !containsPoints(box)) box = null;
+		if(box != null && !containsPoints(box)){
+			box = null;
+		}
 		return box;
 	}
 	
@@ -192,6 +189,7 @@ public class TokenHighlighter implements PaintListener {
 		this.numberOfPoints = 10;
 		this.points = new Point[numberOfPoints];
 		this.pointIndex = 0;
+		this.nulls = 0;
 		
 		//this.gazeQueue = Activator.getDefault().gazeTransport.createClient();
 		//System.out.println("gazeQueue");

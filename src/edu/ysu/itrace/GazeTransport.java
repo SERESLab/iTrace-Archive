@@ -48,12 +48,16 @@ public class GazeTransport extends Thread {
                 Gaze currentGaze = eyeTracker.getGaze();
                 for (int loops = 0; loops < 15 && currentGaze != null;
                         ++loops) {
+                	//System.out.println(loops);
                 	Activator.getDefault().updateHighlighters(null,currentGaze);
                     for (LinkedBlockingQueue<Gaze> client : clients)
                         client.add(currentGaze);
                     currentGaze = eyeTracker.getGaze();
+                    if(currentGaze == null){
+                    	Activator.getDefault().updateHighlighters(null,null);
+                    }
                 }
-                Activator.getDefault().updateHighlighters(null,null);
+                
             }
 
             try {

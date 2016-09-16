@@ -143,13 +143,6 @@ public class ControlView extends ViewPart implements IPartListener2,
                             
                             if(response instanceof IStyledTextGazeResponse){
                             	IStyledTextGazeResponse styledTextResponse = (IStyledTextGazeResponse)response;
-                            	/*
-	                            Activator.getDefault().updateHighlighters(
-	                            		PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor(),
-	                            		styledTextResponse.getLine()-1,
-	                            		styledTextResponse.getCol()
-	                            		);
-	                           */
                             }
                             
                         } catch (IllegalStateException ise) {
@@ -580,6 +573,12 @@ public class ControlView extends ViewPart implements IPartListener2,
     	if(partRef instanceof IEditorReference){
     		actionBars = getViewSite().getActionBars();
         	statusLineManager = actionBars.getStatusLineManager();
+        	IEditorPart ep = (IEditorPart)partRef.getPart(true);
+        	Activator.getDefault().removeHighlighter(ep);
+        	Activator.getDefault().setActiveEditor(
+        			PlatformUI.getWorkbench().getActiveWorkbenchWindow()
+        			.getActivePage().getActiveEditor()
+        	);
     	}
     }
 
