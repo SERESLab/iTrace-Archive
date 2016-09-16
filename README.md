@@ -35,6 +35,7 @@ applications in code reading, code summarization as well as providing recommenda
 ## Developer Guidelines
 * Master is reserved for stable code.
 * Develop all new features as a new branch.
+  * Name your branch with the issue number (issue###) followed by a dash, followed by a descriptive name of the issue you are implementing in the branch.  For example issue2-calibrationGUI tells us that the branch is implementing something requested in issue 2 and is related to calibration GUI functionality.
   * Keep this branch up to date with master.
 * When a branch is completed, do not merge it into master. Create a pull request
   and possibly assign a reviewer. The code reviewer will merge your code into
