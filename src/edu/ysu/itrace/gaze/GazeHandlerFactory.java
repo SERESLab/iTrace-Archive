@@ -21,18 +21,21 @@ public class GazeHandlerFactory {
      */
     public static IGazeHandler createHandler(Object target,
             IWorkbenchPartReference partRef) {
-        // create gaze handler for a StyledText widget within an EditorPart
+    	
+    	// create gaze handler for a StyledText widget within an EditorPart
         if (target instanceof StyledText &&
                 partRef instanceof IEditorReference) {
             return new StyledTextGazeHandler(target); //can go back to using partRef
         
-        } else if (target instanceof Browser &&
-        		partRef instanceof IEditorReference) {
+        } else if (target instanceof Browser) {
         	//create gaze handler for a Browser Stack overflow and Bug Report widget
-        	return new BrowserGazeHandler(target); //can use partRef if need
+        	//cannot get associated partRef
+        	return new BrowserGazeHandler(target);
 
         } else if (target instanceof Tree &&
-        		partRef instanceof IViewReference) {
+        		partRef instanceof IViewReference &&
+        		partRef.getTitle().equals("Project Explorer")) {
+        	//create gaze handler for a Project Explorer Tree
             return new ProjectExplorerGazeHandler(target, partRef);
         }
 

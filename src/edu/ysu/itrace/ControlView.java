@@ -1,7 +1,5 @@
 package edu.ysu.itrace;
  
-import java.awt.Dimension;
-import java.awt.Toolkit;
 import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
@@ -126,11 +124,10 @@ public class ControlView extends ViewPart implements IPartListener2,
                 // Method returns above if standardTrackingQueue is none.
                 g = standardTrackingQueue.poll();
                 if (g != null) {
-                    //Dimension screenRect =
-                           // Toolkit.getDefaultToolkit().getScreenSize();
-                	Rectangle monitorBounds = rootShell.getMonitor().getBounds(); //changed to this but is this really a fix?
-                    int screenX = (int) (g.getX() * monitorBounds.width);//screenRect.width);
-                    int screenY = (int) (g.getY() * monitorBounds.height);//screenRect.height);
+                	
+                	Rectangle monitorBounds = rootShell.getMonitor().getBounds();
+                    int screenX = (int) (g.getX() * monitorBounds.width);
+                    int screenY = (int) (g.getY() * monitorBounds.height);
                     IGazeResponse response = handleGaze(screenX, screenY, g);
                     
                     if (response != null) {
@@ -209,10 +206,10 @@ public class ControlView extends ViewPart implements IPartListener2,
             rootShell = rootShell.getParent().getShell();
         }
         rootShell.addShellListener(this);
-
+        
         // add listener for determining part visibility
         getSite().getWorkbenchWindow().getPartService().addPartListener(this);
-
+        
         final String DONT_DO_THAT_MSG =
                 "You can't do that until you've "
                         + "selected a tracker in preferences.";
@@ -567,7 +564,7 @@ public class ControlView extends ViewPart implements IPartListener2,
     public void partHidden(IWorkbenchPartReference partRef) {
         HandlerBindManager.unbind(partRef);
     }
-
+    
     @Override
     public void shellActivated(ShellEvent e) {
         gazeHandlerJob.schedule(POLL_GAZES_MS);
@@ -594,7 +591,7 @@ public class ControlView extends ViewPart implements IPartListener2,
     }
 
     /**
-     * Find styled text or browser controls within a part, set it up to be used by iTrace,
+     * Find controls within a part, set it up to be used by iTrace,
      * and extract meta-data from it.
      * 
      * @param partRef partRef that just became visible.
@@ -602,44 +599,71 @@ public class ControlView extends ViewPart implements IPartListener2,
     private void setupControls(IWorkbenchPartReference partRef) {
     	IWorkbenchPart part = partRef.getPart(true);
         Control control = part.getAdapter(Control.class);
+        //set up manager for control and managers for each child control if necessary
+        if (control != null) {
+        	setupControls(part, control);
+        } else {
+        	//Browser - always set up browser managers, no matter the partRef that
+        	//has become visible
+        	//not possible to get Browser control from a partRef
+        	Shell workbenchShell = partRef.getPage().getWorkbenchWindow().getShell();
+        	for (Control ctrl: workbenchShell.getChildren()) {
+        		setupBrowsers(ctrl);
+        	}
+        }
+    }
+    
+    /**
+     * Recursive helper function to find and set up Browser control managers
+     * @param control
+     */
+    private void setupBrowsers(Control control) {
+    
+    	if (control instanceof Browser) {
+    		setupControls(null, control);
+    	}
+    	
+    	//If composite, look through children.
+        if (control instanceof Composite) {
+            Composite composite = (Composite) control;
+
+            Control[] children = composite.getChildren();
+            if (children.length > 0 && children[0] != null) {
+               for (Control curControl : children)
+                   setupBrowsers(curControl);
+            }
+        }
+    }
+    
+    /**
+     * Recursive function for setting up children controls for a control if it is
+     * a composite and setting up the main control's manager.
+     * @param part
+     * @param control
+     */
+    private void setupControls(IWorkbenchPart part, Control control) {
+    	//If composite, setup children controls.
+        if (control instanceof Composite) {
+            Composite composite = (Composite) control;
+
+            Control[] children = composite.getChildren();
+            if (children.length > 0 && children[0] != null) {
+               for (Control curControl : children)
+                   setupControls(part, curControl);
+            }
+        }
         
         if (control instanceof StyledText) {
         	//set up styled text manager if there is one
         	setupStyledText((IEditorPart) part, (StyledText) control);
+        	
         } else if (control instanceof Browser) {
         	//set up browser manager if there is one
-        	//currently doesn't utilize the partRef attached
         	setupBrowser((Browser) control);
         }
-        //TODO: no control set up for ProjectExplorer, since there isn't an need for 
+        //TODO: no control set up for a ProjectExplorer, since there isn't an need for 
         //a Manager right now, might be needed in the future
     }
-    
-    /**
-     * Find browser control, set it up to be used by iTrace,
-     * and extract meta-data from it.
-     * Recursive helper method for setupControls(IWorkbenchPartReference).
-     * 
-     * @param control control that might be a Browser
-     */
-    /*private void setupBrowser(Control control) {
-        	//If composite
-            if (control instanceof Composite) {
-                Composite composite = (Composite) control;
-
-                Control[] children = composite.getChildren();
-                if (children.length > 0 && children[0] != null) {
-                   for (Control curControl : children) 
-                       setupBrowser(curControl);
-                }
-            }
-        	
-           if (control instanceof Browser) {
-        	   Browser browse = (Browser) control;
-        	   setupBrowser(browse);
-           }
-				
-    }*/
     
     /**
      * Recursive helper method for setupControls(IWorkbenchPartReference).
@@ -676,21 +700,17 @@ public class ControlView extends ViewPart implements IPartListener2,
 
         Queue<Control[]> childrenQueue = new LinkedList<Control[]>();
         childrenQueue.add(rootShell.getChildren());
-
+        
         Rectangle monitorBounds = rootShell.getMonitor().getBounds();
-        //System.out.println(monitorBounds);
+        
 
         while (!childrenQueue.isEmpty()) {
             for (Control child : childrenQueue.remove()) {
                 Rectangle childScreenBounds = child.getBounds();
-                /*look into these next three lines, do they make sense? what are they doing?*/
+                
                 Point screenPos = child.toDisplay(0, 0);
                 childScreenBounds.x = screenPos.x - monitorBounds.x;
                 childScreenBounds.y = screenPos.y - monitorBounds.y;
-                
-               // System.out.println(screenX + " " + screenY);
-               // System.out.println("screen pos: " + screenPos.x + " " + screenPos.y);
-               // System.out.println(childScreenBounds.x + " " + childScreenBounds.y);
                 
                 if (childScreenBounds.contains(screenX, screenY)) {
                     if (child instanceof Composite) {

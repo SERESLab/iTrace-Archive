@@ -2,8 +2,10 @@ package edu.ysu.itrace;
 
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchPartReference;
+import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.navigator.resources.ProjectExplorer;
 
 import edu.ysu.itrace.gaze.GazeHandlerFactory;
@@ -14,7 +16,7 @@ import edu.ysu.itrace.gaze.IGazeHandler;
  */
 public class HandlerBindManager {
     public static final String KEY_HANDLER = "gazeHandler";
-
+    
     /**
      * Binds all controls in an IWorkbenchPartReference that is
      * an instance of IEditorPartReference to their appropriate
@@ -35,6 +37,14 @@ public class HandlerBindManager {
         } else {
         	//must be handled on a case to case basis
         	
+        	//Browser - always look through all controls in the shell for browsers and bind them
+        	//regardless of the partRef that has become visible
+        	//not possible to get a Browser control from a partRef
+        	Shell workbenchShell = partRef.getPage().getWorkbenchWindow().getShell();
+        	for (Control ctrl : workbenchShell.getChildren()) {
+        		bind(ctrl); //call recursive helper function to find all browser controls
+        	}
+        	
         	//Project Explorer
         	if (part.getAdapter(ProjectExplorer.class) != null) {
         		ProjectExplorer explorer = part.getAdapter(ProjectExplorer.class);
@@ -44,7 +54,29 @@ public class HandlerBindManager {
         	}
         }
     }
+    
+    /**
+     * Recursive helper function to find and bind Browser controls
+     * @param control
+     */
+    private static void bind(Control control) {
 
+    	if (control instanceof Browser) {
+			bindControl(null, control, false);
+		}
+    	
+    	//If composite, look through children.
+        if (control instanceof Composite) {
+            Composite composite = (Composite) control;
+
+            Control[] children = composite.getChildren();
+            if (children.length > 0 && children[0] != null) {
+               for (Control curControl : children)
+                   bind(curControl);
+            }
+        }
+    }
+    
     /**
      * Unbinds all controls in an IWorkbenchPartReference that is an instance
      * of IEditorPartReference which are currently bound to a gaze handler.
@@ -63,6 +95,14 @@ public class HandlerBindManager {
         } else {
         	//must be handled on a case to case basis
         	
+        	//Browser - always look through all controls in the shell for browsers and unbind them
+        	//regardless of the partRef that has been hidden
+        	//not possible to get Browser control from a partRef
+        	Shell workbenchShell = partRef.getPage().getWorkbenchWindow().getShell();
+        	for (Control ctrl : workbenchShell.getChildren()) {
+        		unbind(ctrl);
+        	}
+        	
         	//Project Explorer
         	if (part.getAdapter(ProjectExplorer.class) != null) {
         		ProjectExplorer explorer = part.getAdapter(ProjectExplorer.class);
@@ -70,6 +110,28 @@ public class HandlerBindManager {
         		Control viewControl = explorer.getCommonViewer().getControl();
         		bindControl(partRef, viewControl, true);
         	}
+        }
+    }
+    
+    /**
+     * Recursive helper function to find and unbind Browser controls
+     * @param control
+     */
+    private static void unbind(Control control) {
+    	
+    	if (control instanceof Browser) {
+			bindControl(null, control, true);
+		}
+    	
+    	//If composite, look through children
+        if (control instanceof Composite) {
+            Composite composite = (Composite) control;
+
+            Control[] children = composite.getChildren();
+            if (children.length > 0 && children[0] != null) {
+               for (Control curControl : children)
+                   unbind(curControl);
+            }
         }
     }
 
