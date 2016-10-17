@@ -3,10 +3,13 @@ package edu.ysu.itrace.trackers;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Insets;
 import java.awt.Toolkit;
+import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -15,6 +18,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 
+import edu.ysu.itrace.CalibrationStatusDisplay;
 import edu.ysu.itrace.Gaze;
 import edu.ysu.itrace.trackers.IEyeTracker;
 import edu.ysu.itrace.exceptions.CalibrationException;
@@ -74,7 +78,9 @@ public class EyeXTracker implements IEyeTracker {
 	        		//do nothing
 	    		 }
 	    	 }
-	        	
+	        
+	    	 
+	    	 /*
 	    	 BufferedImage buffImage = new BufferedImage(
 	    			 500, 300, BufferedImage.TYPE_INT_RGB);
 
@@ -86,6 +92,7 @@ public class EyeXTracker implements IEyeTracker {
 	    				 (int)(pointsNormalized[3*itemCount+j]*300),
 	    				 Color.RED.getRGB()); //right eye
 	    	 }
+	    	 
 
 	    	 JFrame calibFrame = new JFrame();
 	    	 calibFrame.getContentPane().setLayout(new FlowLayout());
@@ -93,8 +100,29 @@ public class EyeXTracker implements IEyeTracker {
 	    			 new JLabel(new ImageIcon(buffImage)));
 	    	 calibFrame.pack();
 	    	 calibFrame.setVisible(true);
+	        */
+	    	 //JOptionPane.showMessageDialog(calibFrame, "Calibration Status");
+	    	 Point2D.Double[] calibrationData = new Point2D.Double[itemCount+1];
+	    	 for (int j = 0; j < itemCount; j+=2) {
+	    		 calibrationData[j] = (new Point2D.Double(pointsNormalized[j],pointsNormalized[itemCount+j]));
+	    		 if(j != itemCount)
+	    			 calibrationData[j+1] = (new Point2D.Double(pointsNormalized[2*itemCount+j],pointsNormalized[3*itemCount+j]));
+	    	 }
+	    	 JFrame calibFrame = new JFrame();
+	    	 CalibrationStatusDisplay calibDisplay = 
+	    			 new CalibrationStatusDisplay(calibFrame,calibPoints,calibrationData);
+	    	 
+	    	 calibFrame.add(calibDisplay);
 	        	
-	    	 JOptionPane.showMessageDialog(calibFrame, "Calibration Status");
+	        calibFrame.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+	        calibFrame.setExtendedState(MAXIMIZED_BOTH);
+	        calibFrame.setMinimumSize(new Dimension(600,300));
+	        Insets insets = calibFrame.getInsets();
+        	int width = calibFrame.getSize().width-(insets.left+insets.right);
+        	int height = calibFrame.getSize().height-(insets.top+insets.bottom);
+        	calibDisplay.windowDimension = new Dimension(width,height);
+	        calibFrame.setVisible(true);
+	        calibDisplay.repaint();
 	    }
 
 	    private native void jniAddPoint(double x, double y)
@@ -183,6 +211,11 @@ public class EyeXTracker implements IEyeTracker {
             System.out.println("IO failure occurred.");
         }
         System.out.println("Done!");
+        try{
+        	eyex_tracker.calibrator.displayCalibrationStatus();
+        } catch (Exception e) {
+        	e.printStackTrace();
+        }
     }
 
     public void clear() {
@@ -194,6 +227,7 @@ public class EyeXTracker implements IEyeTracker {
         try {
         	calibrator.displayCalibrationStatus();
         } catch (Exception e) {
+        	e.printStackTrace();
         	throw new CalibrationException("Cannot display calibration status!");
         }
     }

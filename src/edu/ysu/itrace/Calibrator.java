@@ -83,6 +83,7 @@ public abstract class Calibrator extends JFrame {
     private JLabel[] calibrationPoints = new JLabel[CALIBRATION_POINTS];
     private final int MILISECONDS_BETWEEN_POINTS = 2000;
     private JWindow crosshairWindow = new CrosshairWindow();
+    protected java.awt.geom.Point2D.Double[] calibPoints;
 
     public Calibrator() throws IOException {
         //Create calibration points
@@ -129,6 +130,8 @@ public abstract class Calibrator extends JFrame {
         setUndecorated(true);
         setAlwaysOnTop(true);
         setResizable(false);
+        
+        calibPoints = new java.awt.geom.Point2D.Double[9];
     }
 
     public void calibrate() throws CalibrationException {
@@ -158,6 +161,7 @@ public abstract class Calibrator extends JFrame {
                 double y = (calibrationPoints[i].getLocationOnScreen().y
                         + (0.5 * calibrationPoints[i].getHeight()))
                         / windowBounds.height;
+                calibPoints[i] = new java.awt.geom.Point2D.Double(x,y);
                 useCalibrationPoint(x, y);
             }
             stopCalibration();

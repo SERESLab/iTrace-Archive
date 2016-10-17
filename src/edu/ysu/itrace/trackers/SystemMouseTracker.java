@@ -4,11 +4,17 @@ import edu.ysu.itrace.*;
 import edu.ysu.itrace.exceptions.CalibrationException;
 
 import java.awt.Dimension;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
+import java.awt.Insets;
 import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.io.*;
 import java.util.concurrent.LinkedBlockingQueue;
+
+import javax.swing.JFrame;
+
 import java.util.Date;
 
 /**
@@ -96,7 +102,21 @@ public class SystemMouseTracker implements IEyeTracker {
         }
         
         protected void displayCalibrationStatus() throws Exception {
-        	//Do nothing.
+        	JFrame frame = new JFrame();
+        	CalibrationStatusDisplay calibDisplay = 
+        			new CalibrationStatusDisplay(frame, calibPoints,new java.awt.geom.Point2D.Double[9]);
+        	frame.setMinimumSize(new Dimension(600,300));
+        	
+        	frame.add(calibDisplay);
+        	
+        	frame.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        	frame.setExtendedState(MAXIMIZED_BOTH);
+        	frame.setVisible(true);
+        	Insets insets = frame.getInsets();
+        	int width = frame.getSize().width-(insets.left+insets.right);
+        	int height = frame.getSize().height-(insets.top+insets.bottom);
+        	calibDisplay.windowDimension = new Dimension(width,height);
+        	calibDisplay.repaint();
         }
     }
 
@@ -126,7 +146,9 @@ public class SystemMouseTracker implements IEyeTracker {
         try {
         	calibrator.displayCalibrationStatus();
         } catch (Exception e) {
+        	e.printStackTrace();
         	throw new CalibrationException("Cannot display calibration status!");
+        	
         }
     }
 
