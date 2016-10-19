@@ -3,9 +3,16 @@ package edu.ysu.itrace.trackers;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+
 import java.awt.Insets;
 import java.awt.Toolkit;
 import java.awt.geom.Point2D;
+
+import java.awt.Point;
+import java.awt.Toolkit;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -67,8 +74,29 @@ public class EyeXTracker implements IEyeTracker {
 	    	 
 	    	 if (pointsNormalized == null)
 	    		 throw new IOException("Can't get calibration data!");
+	    	 
+	    	 int zeros = 0;
+	    	 for( double ord: pointsNormalized){
+	    		 if( ord <= 0 || ord > 1) zeros++;
+	    	 }
+	    	 ArrayList<Point2D.Double> points = new ArrayList<Point2D.Double>();
+	    	 ArrayList<Point2D.Double> invalidpoints = new ArrayList<Point2D.Double>();
+	    	//if( zeros > 0 ) throw new IOException("zeros in points: "+zeros+"/"+pointsNormalized.length);
+	    	 
 	    	 int itemCount = pointsNormalized.length/4;
 
+	    	 for( int i=0; i < itemCount; i++ ){
+	    		 
+	    		points.add(new Point2D.Double(pointsNormalized[i],pointsNormalized[i+itemCount]));
+	    		points.add(new Point2D.Double(pointsNormalized[(2*itemCount)+i],pointsNormalized[i+(itemCount*3)]));
+	    	 }
+	    	 
+	    	 Rectangle2D.Double rect = new Rectangle2D.Double(0.0,0.0,1.0,1.0);
+	    	 
+	    	 for(Point2D.Double p: points){
+	    		 if( !rect.contains(p) ) invalidpoints.add(p);
+	    	 }
+	    	 
 	    	 for (int i = 0; i < pointsNormalized.length; i++) {
 	    		 if (pointsNormalized[i] < 0.0001) {
 	    			 pointsNormalized[i] = 0.0001;
@@ -143,6 +171,7 @@ public class EyeXTracker implements IEyeTracker {
             new LinkedBlockingQueue<Gaze>();
     private Calibrator calibrator;
     private double xDrift = 0, yDrift = 0;
+    private long time = 0;
 
     static { System.loadLibrary("libEyeXTracker"); }
 
@@ -248,6 +277,39 @@ public class EyeXTracker implements IEyeTracker {
             double right_x, double right_y, int left_validity,
             int right_validity, double left_pupil_diameter,
             double right_pupil_diameter) {
+    	if(left_validity == 4 && right_validity == 4) return; //Ignore new gaze
+
+        //Left eye out of bounds.
+    	if( left_x >= 1.0 || left_x <= 0.0 ||
+        	left_y >= 1.0 || left_y <= 0.0 )
+        {
+        	//Right eye out of bounds.
+        	if( right_x >= 1.0 || right_x <= 0.0 ||
+                right_y >= 1.0 || right_y <= 0.0)
+        	{
+        		/*
+        		 * Check the time, 
+        		 * if both eyes have been out of bounds for 1 second
+        		 * remove the crosshair.
+        		 */
+        		if( time == 0 ) time = timestamp;
+        		else if( timestamp-time > 1000000 ) calibrator.moveCrosshair(-10, -10);
+        		return;
+        	}
+        	
+        	left_x = right_x;
+            left_y = right_y;
+        }else{
+        	//Right eye out of bounds.
+        	if( right_x >= 1.0 || right_x <= 0.0 ||
+                right_y >= 1.0 || right_y <= 0.0
+            ){
+        		right_x = left_x;
+            	right_y = left_y;
+        	}
+        }
+        time = 0;
+    	//if(previousTrackerTime != null && (timestamp/1000) == (previousTrackerTime/1000)){
         //Drift
         left_x += xDrift;
         right_x += xDrift;
@@ -259,6 +321,8 @@ public class EyeXTracker implements IEyeTracker {
         double y = (left_y + right_y) / 2;
 
         //Clamp x values to [0.0, 1.0].
+        
+        
         if (left_x >= 1.0)
             left_x = 1.0;
         else if (left_x <= 0.0)
@@ -287,6 +351,7 @@ public class EyeXTracker implements IEyeTracker {
                right_x_mod = right_x,
                left_y_mod = left_y,
                right_y_mod = right_y;
+        
         try {
             Gaze gaze = new Gaze(left_x, right_x, left_y, right_y,
                                  gaze_left_validity, gaze_right_validity,
@@ -319,6 +384,19 @@ public class EyeXTracker implements IEyeTracker {
         }
 
         Dimension screen_size = Toolkit.getDefaultToolkit().getScreenSize();
+        
+        double distance = Math.sqrt(Math.pow((left_x_mod-right_x_mod),2)+Math.pow((left_y_mod-right_y_mod),2));
+        System.out.println(distance);
+        if( distance > 0.1 ){
+        	if( left_x_mod < right_x_mod && left_y_mod < right_y_mod ){
+        		left_x_mod = right_x_mod;
+        		left_y_mod = right_y_mod;
+        	}else if( left_x_mod > right_x_mod && left_y_mod > right_y_mod ){
+        		right_x_mod = left_x_mod;
+        		right_y_mod = left_y_mod;
+        	}
+        }
+        
         int screen_x =
                 (int) (screen_size.width * ((left_x_mod + right_x_mod) / 2));
         int screen_y =
