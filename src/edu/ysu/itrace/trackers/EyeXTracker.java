@@ -107,29 +107,6 @@ public class EyeXTracker implements IEyeTracker {
 	    		 }
 	    	 }
 	        
-	    	 
-	    	 /*
-	    	 BufferedImage buffImage = new BufferedImage(
-	    			 500, 300, BufferedImage.TYPE_INT_RGB);
-
-	    	 for (int j = 0; j < itemCount; j++) {
-	    		 buffImage.setRGB((int)(pointsNormalized[j]*500),
-	    				 (int)(pointsNormalized[itemCount+j]*300),
-	    				 Color.GREEN.getRGB()); //left eye
-	    		 buffImage.setRGB((int)(pointsNormalized[2*itemCount+j]*500),
-	    				 (int)(pointsNormalized[3*itemCount+j]*300),
-	    				 Color.RED.getRGB()); //right eye
-	    	 }
-	    	 
-
-	    	 JFrame calibFrame = new JFrame();
-	    	 calibFrame.getContentPane().setLayout(new FlowLayout());
-	    	 calibFrame.getContentPane().add(
-	    			 new JLabel(new ImageIcon(buffImage)));
-	    	 calibFrame.pack();
-	    	 calibFrame.setVisible(true);
-	        */
-	    	 //JOptionPane.showMessageDialog(calibFrame, "Calibration Status");
 	    	 Point2D.Double[] calibrationData = new Point2D.Double[itemCount+1];
 	    	 for (int j = 0; j < itemCount; j+=2) {
 	    		 calibrationData[j] = (new Point2D.Double(pointsNormalized[j],pointsNormalized[itemCount+j]));
@@ -206,7 +183,7 @@ public class EyeXTracker implements IEyeTracker {
             }
 
             eyex_tracker.calibrate();
-
+            
             eyex_tracker.startTracking();
             eyex_tracker.displayCrosshair(true);
             long start = (new Date()).getTime();
@@ -241,7 +218,7 @@ public class EyeXTracker implements IEyeTracker {
         }
         System.out.println("Done!");
         try{
-        	eyex_tracker.calibrator.displayCalibrationStatus();
+        	//eyex_tracker.calibrator.displayCalibrationStatus();
         } catch (Exception e) {
         	e.printStackTrace();
         }
@@ -254,7 +231,7 @@ public class EyeXTracker implements IEyeTracker {
     public void calibrate() throws CalibrationException {
         calibrator.calibrate();
         try {
-        	calibrator.displayCalibrationStatus();
+        	//calibrator.displayCalibrationStatus();
         } catch (Exception e) {
         	e.printStackTrace();
         	throw new CalibrationException("Cannot display calibration status!");

@@ -5,6 +5,7 @@ import edu.ysu.itrace.exceptions.*;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.geom.Point2D;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GraphicsDevice;
@@ -12,12 +13,15 @@ import java.awt.GraphicsEnvironment;
 import java.awt.GridLayout;
 import java.awt.Stroke;
 import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Random;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -25,6 +29,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JWindow;
+import javax.swing.Timer;
 
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Platform;
@@ -73,6 +78,149 @@ public abstract class Calibrator extends JFrame {
             
         }
     }
+    
+    private class CalibrationAnimation extends JPanel implements ActionListener{
+    	private JFrame parent;
+    	private int x,y,circleWidth,circleHeight;
+    	private Point2D.Double[] calibrationPoints;
+    	private Point2D.Double[] posPoints;
+    	private Timer timer;
+    	private double t = 0;
+    	private int originIndex, destinationIndex;
+    	private Dimension windowBounds;
+    	
+    	public void paintComponent(Graphics g){
+    		super.paintComponent(g);
+    		Graphics2D grphx = (Graphics2D)g;
+    		grphx.setColor(Color.black);
+    		for(Point2D.Double point: calibrationPoints){
+    			grphx.fillOval((int)(point.x-25),
+    						   (int)(point.y-25),
+    						   50, 
+    						   50
+    							);
+    							
+    		}
+    		grphx.setColor(Color.white);
+    		grphx.fillOval(x-circleWidth/2,y-circleHeight/2,circleWidth,circleHeight);
+    	}
+    	
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			if(originIndex != destinationIndex){
+				t++;
+				x = (int)(calibrationPoints[originIndex].x +(calibrationPoints[destinationIndex].x-calibrationPoints[originIndex].x)*(t/60));
+				y = (int)(calibrationPoints[originIndex].y +(calibrationPoints[destinationIndex].y-calibrationPoints[originIndex].y)*(t/60));
+				if(t==60){
+					t = 0;
+					originIndex = destinationIndex;
+				}
+			}else{
+				if(t <= 96){
+					t++;
+					circleWidth = 50 - ( int )( Math.sin( t*Math.PI/96 )*45 );
+		            circleHeight = 50 - ( int )( Math.sin( t*Math.PI/96 )*45 );
+		            if(t == 48){
+		            	try {
+		            		Thread.sleep(2000);
+		            		useCalibrationPoint(posPoints[originIndex].x, posPoints[originIndex].y);
+						} catch (Exception e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+		            }
+				}else{
+					destinationIndex = (destinationIndex+1)%10;
+					if(destinationIndex == 9){
+						try {
+							stopCalibration();
+						} catch (Exception e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						timer.stop();
+						parent.dispose();
+					}
+					t = 0;
+				}
+			}
+			repaint();
+		}
+		
+		public void start(){
+			timer.start();
+		}
+		
+		public CalibrationAnimation(JFrame parent, Point2D.Double[] calibrationPoints){
+			this.parent = parent;
+			setBackground(Color.pink);
+			setVisible(true);
+			Random rand = new Random();
+			Point2D.Double tmp;
+			for(int i=8;i>0;i--){
+				int j = rand.nextInt(i);
+				tmp = calibrationPoints[j];
+				calibrationPoints[j] = calibrationPoints[i];
+				calibrationPoints[i] = tmp;
+			}
+			windowBounds = Toolkit.getDefaultToolkit().getScreenSize();
+			posPoints = calibrationPoints;
+			
+			this.calibrationPoints = calibrationPoints;
+			for(Point2D.Double point: this.calibrationPoints){
+				point.x *= windowBounds.getWidth();
+				point.y *= windowBounds.getHeight();
+			}
+			timer = new Timer(20, this);
+			
+			
+			
+			originIndex = 9;
+			destinationIndex = 0;
+			
+			circleWidth = 50;
+			circleHeight = 50;
+			
+			x = (int)(calibrationPoints[originIndex].x);
+			y = (int)(calibrationPoints[originIndex].y);
+		}
+    	
+    }
+    
+    private class CalibrationFrame extends JFrame{
+    	private final Point2D.Double[] calibrationPoints = {
+    		new Point2D.Double(0.1,0.1),
+    		new Point2D.Double(0.1,0.5),
+    		new Point2D.Double(0.1,0.9),
+    		new Point2D.Double(0.5,0.1),
+    		new Point2D.Double(0.5,0.5),
+    		new Point2D.Double(0.5,0.9),
+    		new Point2D.Double(0.9,0.1),
+    		new Point2D.Double(0.9,0.5),
+    		new Point2D.Double(0.9,0.9),
+    		new Point2D.Double(-0.2,-0.2)
+    	};
+    	CalibrationAnimation animation;
+    	
+    	public CalibrationFrame(){
+    		super();
+    		setTitle("calibration");
+    		setUndecorated(true);
+            setAlwaysOnTop(true);
+            setResizable(false);
+            setExtendedState(MAXIMIZED_BOTH);
+            animation = new CalibrationAnimation(this,calibrationPoints);
+            add(animation);
+    	}
+    	
+    	public void start(){
+    		animation.start();
+    	}
+    	
+    	public Point2D.Double[] getCalibrationPoints(){
+    		return calibrationPoints;
+    	}
+    }
 
     private final int CALIBRATION_WIDTH = 3;
     private final int CALIBRATION_HEIGHT = 3;
@@ -83,7 +231,7 @@ public abstract class Calibrator extends JFrame {
     private JLabel[] calibrationPoints = new JLabel[CALIBRATION_POINTS];
     private final int MILISECONDS_BETWEEN_POINTS = 2000;
     private JWindow crosshairWindow = new CrosshairWindow();
-    protected java.awt.geom.Point2D.Double[] calibPoints;
+    protected Point2D.Double[] calibPoints;
 
     public Calibrator() throws IOException {
         //Create calibration points
@@ -135,6 +283,18 @@ public abstract class Calibrator extends JFrame {
     }
 
     public void calibrate() throws CalibrationException {
+    	CalibrationFrame frame = new CalibrationFrame();
+    	frame.setSize(600,300);
+    	calibPoints = frame.getCalibrationPoints();
+    	frame.setVisible(true);
+    	try {
+			startCalibration();
+			frame.start();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	/*
         boolean originalCrosshairVisibility = crosshairWindow.isVisible();
         crosshairWindow.setVisible(false);
 
@@ -178,6 +338,8 @@ public abstract class Calibrator extends JFrame {
         }
 
         crosshairWindow.setVisible(originalCrosshairVisibility);
+        */
+        
     }
 
     private void displayCalibrationPoint(int i) {

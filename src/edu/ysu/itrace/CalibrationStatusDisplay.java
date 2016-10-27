@@ -24,7 +24,7 @@ public class CalibrationStatusDisplay extends JPanel {
 		grphx.setColor(Color.white);
 		
 		for(Point2D.Double point: calibrationPoints){
-			System.out.println(point);
+			//System.out.println(point);
 			Dimension dims = frame.getSize();
 			Insets insets = frame.getInsets();
 			
@@ -33,8 +33,8 @@ public class CalibrationStatusDisplay extends JPanel {
 			
 			windowDimension = new Dimension(width,height);
 			if(point == null) continue;
-			int x = (int)(point.x*windowDimension.getWidth());
-			int y = (int)(point.y*windowDimension.getHeight());
+			int x = (int)(point.x);//*windowDimension.getWidth());
+			int y = (int)(point.y);//*windowDimension.getHeight());
 			grphx.drawOval(x-40,y-40,80,80);
 			grphx.fillOval(x-3, y-3, 6, 6);
 		}
