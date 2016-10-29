@@ -109,8 +109,8 @@ public class SystemMouseTracker implements IEyeTracker {
         	
         	frame.add(calibDisplay);
         	
-        	frame.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-        	frame.setExtendedState(MAXIMIZED_BOTH);
+        	frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        	frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
         	frame.setVisible(true);
         	Insets insets = frame.getInsets();
         	int width = frame.getSize().width-(insets.left+insets.right);
@@ -118,6 +118,24 @@ public class SystemMouseTracker implements IEyeTracker {
         	calibDisplay.windowDimension = new Dimension(width,height);
         	calibDisplay.repaint();
         }
+
+		@Override
+		protected void displayCalibrationStatus(JFrame frame) throws Exception {
+        	CalibrationStatusDisplay calibDisplay = 
+        			new CalibrationStatusDisplay(frame, calibPoints,new java.awt.geom.Point2D.Double[9]);
+        	frame.setMinimumSize(new Dimension(600,300));
+        	
+        	frame.add(calibDisplay);
+        	
+        	frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        	frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+        	frame.setVisible(true);
+        	Insets insets = frame.getInsets();
+        	int width = frame.getSize().width-(insets.left+insets.right);
+        	int height = frame.getSize().height-(insets.top+insets.bottom);
+        	calibDisplay.windowDimension = new Dimension(width,height);
+        	calibDisplay.repaint();
+		}
     }
 
     private LinkedBlockingQueue<Gaze> gazePoints
@@ -144,7 +162,7 @@ public class SystemMouseTracker implements IEyeTracker {
     public void calibrate() throws CalibrationException {
         calibrator.calibrate();
         try {
-        	calibrator.displayCalibrationStatus();
+        	//calibrator.displayCalibrationStatus();
         } catch (Exception e) {
         	e.printStackTrace();
         	throw new CalibrationException("Cannot display calibration status!");
