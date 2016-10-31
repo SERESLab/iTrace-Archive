@@ -40,7 +40,7 @@ public class TobiiTracker implements IEyeTracker {
         private native boolean jniBeginTobiiMainloop();
     }
 
-    private static class Calibrator extends edu.ysu.itrace.Calibrator {
+    private static class Calibrator extends edu.ysu.itrace.calibration.Calibrator {
         private TobiiTracker parent = null;
 
         public Calibrator(TobiiTracker tracker) throws IOException {

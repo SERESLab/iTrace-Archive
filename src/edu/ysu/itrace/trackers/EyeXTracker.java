@@ -49,7 +49,7 @@ public class EyeXTracker implements IEyeTracker {
     }
 	
 	 @SuppressWarnings("serial")
-	private static class Calibrator extends edu.ysu.itrace.Calibrator {
+	private static class Calibrator extends edu.ysu.itrace.calibration.Calibrator {
 		 private EyeXTracker parent = null;
 
 	     public Calibrator(EyeXTracker tracker) throws IOException {

@@ -2,6 +2,7 @@ package edu.ysu.itrace.trackers;
 
 import edu.ysu.itrace.*;
 import edu.ysu.itrace.calibration.CalibrationStatusDisplay;
+import edu.ysu.itrace.calibration.Calibrator;
 import edu.ysu.itrace.exceptions.CalibrationException;
 
 import java.awt.Dimension;

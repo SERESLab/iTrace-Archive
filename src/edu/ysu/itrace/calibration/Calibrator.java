@@ -1,4 +1,4 @@
-package edu.ysu.itrace;
+package edu.ysu.itrace.calibration;
 
 import edu.ysu.itrace.calibration.CrosshairWindow;
 import edu.ysu.itrace.exceptions.*;
