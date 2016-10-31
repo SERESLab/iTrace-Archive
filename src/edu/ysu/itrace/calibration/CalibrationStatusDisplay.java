@@ -1,4 +1,4 @@
-package edu.ysu.itrace;
+package edu.ysu.itrace.calibration;
 
 import java.awt.Color;
 import java.awt.Dimension;

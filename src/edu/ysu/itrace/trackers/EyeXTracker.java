@@ -25,8 +25,8 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 
-import edu.ysu.itrace.CalibrationStatusDisplay;
 import edu.ysu.itrace.Gaze;
+import edu.ysu.itrace.calibration.CalibrationStatusDisplay;
 import edu.ysu.itrace.trackers.IEyeTracker;
 import edu.ysu.itrace.exceptions.CalibrationException;
 import edu.ysu.itrace.exceptions.EyeTrackerConnectException;
@@ -68,66 +68,6 @@ public class EyeXTracker implements IEyeTracker {
 	     protected void useCalibrationPoint(double x, double y) throws Exception {
 	         jniAddPoint(x, y);
 	     }
-	        
-	     protected void displayCalibrationStatus() throws Exception {
-	    	 double[] pointsNormalized = jniGetCalibration();
-	    	 
-	    	 if (pointsNormalized == null)
-	    		 throw new IOException("Can't get calibration data!");
-	    	 
-	    	 int zeros = 0;
-	    	 for( double ord: pointsNormalized){
-	    		 if( ord <= 0 || ord > 1) zeros++;
-	    	 }
-	    	 ArrayList<Point2D.Double> points = new ArrayList<Point2D.Double>();
-	    	 ArrayList<Point2D.Double> invalidpoints = new ArrayList<Point2D.Double>();
-	    	//if( zeros > 0 ) throw new IOException("zeros in points: "+zeros+"/"+pointsNormalized.length);
-	    	 
-	    	 int itemCount = pointsNormalized.length/4;
-
-	    	 for( int i=0; i < itemCount; i++ ){
-	    		 
-	    		points.add(new Point2D.Double(pointsNormalized[i],pointsNormalized[i+itemCount]));
-	    		points.add(new Point2D.Double(pointsNormalized[(2*itemCount)+i],pointsNormalized[i+(itemCount*3)]));
-	    	 }
-	    	 
-	    	 Rectangle2D.Double rect = new Rectangle2D.Double(0.0,0.0,1.0,1.0);
-	    	 
-	    	 for(Point2D.Double p: points){
-	    		 if( !rect.contains(p) ) invalidpoints.add(p);
-	    	 }
-	    	 
-	    	 for (int i = 0; i < pointsNormalized.length; i++) {
-	    		 if (pointsNormalized[i] < 0.0001) {
-	    			 pointsNormalized[i] = 0.0001;
-	    		 } else if (pointsNormalized[i] > 0.9999) {
-	    			 pointsNormalized[i] = 0.9999;
-	    		 } else {
-	        		//do nothing
-	    		 }
-	    	 }
-	        
-	    	 Point2D.Double[] calibrationData = new Point2D.Double[itemCount+1];
-	    	 for (int j = 0; j < itemCount; j+=2) {
-	    		 calibrationData[j] = (new Point2D.Double(pointsNormalized[j],pointsNormalized[itemCount+j]));
-	    		 if(j != itemCount)
-	    			 calibrationData[j+1] = (new Point2D.Double(pointsNormalized[2*itemCount+j],pointsNormalized[3*itemCount+j]));
-	    	 }
-	    	 JFrame calibFrame = new JFrame();
-	    	 CalibrationStatusDisplay calibDisplay = 
-	    			 new CalibrationStatusDisplay(calibFrame,calibPoints,calibrationData);
-	    	 
-	    	 calibFrame.add(calibDisplay);
-	        calibFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-	        calibFrame.setExtendedState(JFrame.MAXIMIZED_BOTH);
-	        calibFrame.setMinimumSize(new Dimension(600,300));
-	        Insets insets = calibFrame.getInsets();
-        	int width = calibFrame.getSize().width-(insets.left+insets.right);
-        	int height = calibFrame.getSize().height-(insets.top+insets.bottom);
-        	calibDisplay.windowDimension = new Dimension(width,height);
-	        calibFrame.setVisible(true);
-	        calibDisplay.repaint();
-	    }
 
 	     protected void displayCalibrationStatus(JFrame frame) throws Exception {
 	    	 double[] pointsNormalized = jniGetCalibration();
@@ -175,7 +115,7 @@ public class EyeXTracker implements IEyeTracker {
 	    	 }
 	    	 JFrame calibFrame = frame;
 	    	 CalibrationStatusDisplay calibDisplay = 
-	    			 new CalibrationStatusDisplay(calibFrame,calibPoints,calibrationData);
+	    			 new CalibrationStatusDisplay(calibFrame,calibrationPoints,calibrationData);
 	    	 
 	    	 calibFrame.add(calibDisplay);
 	        calibFrame.setUndecorated(false);
@@ -187,6 +127,7 @@ public class EyeXTracker implements IEyeTracker {
         	int height = calibFrame.getSize().height-(insets.top+insets.bottom);
         	calibDisplay.windowDimension = new Dimension(width,height);
 	        calibFrame.setVisible(true);
+	        calibFrame.toFront();
 	        calibDisplay.repaint();
 	    }
 	     

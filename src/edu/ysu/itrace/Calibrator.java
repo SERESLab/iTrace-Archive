@@ -1,5 +1,6 @@
 package edu.ysu.itrace;
 
+import edu.ysu.itrace.calibration.CrosshairWindow;
 import edu.ysu.itrace.exceptions.*;
 
 import java.awt.BasicStroke;
@@ -37,39 +38,6 @@ import org.eclipse.swt.graphics.Point;
 import org.osgi.framework.Bundle;
 
 public abstract class Calibrator {
-    private class CrosshairWindow extends JWindow {
-    	private class CrosshairPanel extends JPanel{
-    		public CrosshairPanel(){
-    			setSize(16,16);
-    		}
-    		@Override
-    		public void paintComponent(Graphics g){
-    			Graphics2D g2d = (Graphics2D)g;
-    			g2d.setStroke(new BasicStroke(3));
-    			super.paintComponent(g);
-    			g2d.setColor(new Color(255,0,0,255));
-    			g2d.drawOval(getX()+3, getY()+3, 12, 12);
-    		}
-    	}
-    	
-        private Point centre = null;
-
-        public CrosshairWindow() {
-            super.setLocation(-10, -10);
-            setSize(16,16);
-            setBackground(new Color(0,0,255,0));
-            JPanel crosshairPanel = new CrosshairPanel();
-            crosshairPanel.setOpaque(false);
-            add(crosshairPanel);
-            centre = new Point(8,8);
-            setAlwaysOnTop(true);
-        }
-
-        public void setLocation(int x, int y) {
-            super.setLocation(x - centre.x, y - centre.y);
-            
-        }
-    }
     
     private class CalibrationAnimation extends JPanel implements ActionListener{
     	private JFrame parent;
@@ -210,14 +178,10 @@ public abstract class Calibrator {
     	public void start(){
     		animation.start();
     	}
-    	
-    	public Point2D.Double[] getCalibrationPoints(){
-    		return calibrationPoints;
-    	}
     }
 
     private JWindow crosshairWindow = new CrosshairWindow();
-    private final Point2D.Double[] calibrationPoints = {
+    protected final Point2D.Double[] calibrationPoints = {
     		new Point2D.Double(0.1,0.1),
     		new Point2D.Double(0.1,0.5),
     		new Point2D.Double(0.1,0.9),
@@ -229,18 +193,14 @@ public abstract class Calibrator {
     		new Point2D.Double(0.9,0.9),
     		new Point2D.Double(-0.2,-0.2)
     	};
-    protected Point2D.Double[] calibPoints;
 
     public Calibrator() throws IOException {
-        
-        calibPoints = calibrationPoints;
     }
 
     public void calibrate() throws CalibrationException {
     	///*
     	CalibrationFrame frame = new CalibrationFrame();
     	frame.setSize(600,300);
-    	calibPoints = frame.getCalibrationPoints();
     	frame.setVisible(true);
     	try {
 			frame.start();
@@ -250,30 +210,9 @@ public abstract class Calibrator {
 		}
     }
 
-
-    private static BufferedImage getBufferedImage(String resourceName)
-            throws IOException, URISyntaxException {
-        BufferedImage result = null;
-        Bundle bundle = Platform.getBundle("edu.ysu.itrace");
-        //Eclipse
-        if (bundle != null) {
-            URL fileUrl = bundle.getEntry("res/" + resourceName);
-            URL url = FileLocator.resolve(fileUrl);
-            URI uri = new URI(url.getProtocol(), url.getUserInfo(), url.getHost(),
-            		url.getPort(), url.getPath(), url.getQuery(), url.getRef());
-            result = ImageIO.read(new File(uri));
-        //No eclipse
-        } else {
-            result = ImageIO.read(new File("res/" + resourceName));
-        }
-        return result;
-    }
-
     protected abstract void startCalibration() throws Exception;
     protected abstract void stopCalibration() throws Exception;
-    protected abstract void useCalibrationPoint(double x, double y)
-            throws Exception;
-    protected abstract void displayCalibrationStatus() throws Exception;
+    protected abstract void useCalibrationPoint(double x, double y) throws Exception;
     protected abstract void displayCalibrationStatus(JFrame frame) throws Exception;
     public void moveCrosshair(int screenX, int screenY) {
         crosshairWindow.setLocation(screenX, screenY);

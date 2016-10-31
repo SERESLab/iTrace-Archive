@@ -1,6 +1,7 @@
 package edu.ysu.itrace.trackers;
 
 import edu.ysu.itrace.*;
+import edu.ysu.itrace.calibration.CalibrationStatusDisplay;
 import edu.ysu.itrace.exceptions.CalibrationException;
 
 import java.awt.Dimension;
@@ -100,29 +101,11 @@ public class SystemMouseTracker implements IEyeTracker {
                 throws Exception {
             //Do nothing.
         }
-        
-        protected void displayCalibrationStatus() throws Exception {
-        	JFrame frame = new JFrame();
-        	CalibrationStatusDisplay calibDisplay = 
-        			new CalibrationStatusDisplay(frame, calibPoints,new java.awt.geom.Point2D.Double[9]);
-        	frame.setMinimumSize(new Dimension(600,300));
-        	
-        	frame.add(calibDisplay);
-        	
-        	frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        	frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
-        	frame.setVisible(true);
-        	Insets insets = frame.getInsets();
-        	int width = frame.getSize().width-(insets.left+insets.right);
-        	int height = frame.getSize().height-(insets.top+insets.bottom);
-        	calibDisplay.windowDimension = new Dimension(width,height);
-        	calibDisplay.repaint();
-        }
 
 		@Override
 		protected void displayCalibrationStatus(JFrame frame) throws Exception {
         	CalibrationStatusDisplay calibDisplay = 
-        			new CalibrationStatusDisplay(frame, calibPoints,new java.awt.geom.Point2D.Double[9]);
+        			new CalibrationStatusDisplay(frame, calibrationPoints,new java.awt.geom.Point2D.Double[9]);
         	frame.setMinimumSize(new Dimension(600,300));
         	
         	frame.add(calibDisplay);
@@ -134,6 +117,7 @@ public class SystemMouseTracker implements IEyeTracker {
         	int width = frame.getSize().width-(insets.left+insets.right);
         	int height = frame.getSize().height-(insets.top+insets.bottom);
         	calibDisplay.windowDimension = new Dimension(width,height);
+        	frame.toFront();
         	calibDisplay.repaint();
 		}
     }
