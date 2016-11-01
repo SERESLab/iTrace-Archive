@@ -114,6 +114,7 @@ public class TobiiTracker implements IEyeTracker {
 	        calibFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 	        calibFrame.setExtendedState(JFrame.MAXIMIZED_BOTH);
 	        calibFrame.setMinimumSize(new Dimension(600,300));
+	        calibFrame.setTitle("Calibration: "+new Date());
 	        Insets insets = calibFrame.getInsets();
 	        int width = calibFrame.getSize().width-(insets.left+insets.right);
 	        int height = calibFrame.getSize().height-(insets.top+insets.bottom);

@@ -114,6 +114,7 @@ public class SystemMouseTracker implements IEyeTracker {
         	frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         	frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
         	frame.setVisible(true);
+        	frame.setTitle("Calibration: "+new Date());
         	Insets insets = frame.getInsets();
         	int width = frame.getSize().width-(insets.left+insets.right);
         	int height = frame.getSize().height-(insets.top+insets.bottom);
