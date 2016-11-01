@@ -35,8 +35,10 @@ public class Activator extends AbstractUIPlugin {
      */
     public Activator() {
     	IEditorPart editorPart = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor();
-    	StyledText styledText = (StyledText) editorPart.getAdapter(Control.class);
-    	if(styledText != null) tokenHighlighters.put(editorPart, new TokenHighlighter(styledText,showTokenHighlights));
+    	if(editorPart != null){
+	    	StyledText styledText = (StyledText) editorPart.getAdapter(Control.class);
+	    	if(styledText != null) tokenHighlighters.put(editorPart, new TokenHighlighter(styledText,showTokenHighlights));
+    	}
     }
 
     /*
@@ -72,6 +74,7 @@ public class Activator extends AbstractUIPlugin {
     
     public void setActiveEditor(IEditorPart editorPart){
     	activeEditor = editorPart;
+    	if(activeEditor == null) return;
     	if(!tokenHighlighters.containsKey(editorPart)){
     		StyledText styledText = (StyledText) editorPart.getAdapter(Control.class);
     		if(styledText != null) tokenHighlighters.put(editorPart, new TokenHighlighter(styledText,showTokenHighlights));
@@ -91,13 +94,14 @@ public class Activator extends AbstractUIPlugin {
     
     public void showTokenHighLights(){
     	showTokenHighlights = !showTokenHighlights;
+    	if(activeEditor == null) return;
 		if(!tokenHighlighters.containsKey(activeEditor)){
 			StyledText styledText = (StyledText) activeEditor.getAdapter(Control.class);
 			if(styledText != null)
 				tokenHighlighters.put(activeEditor, new TokenHighlighter(styledText, showTokenHighlights));
 		}
     		
-		if(activeEditor == null) return;
+		
     	for(TokenHighlighter tokenHighlighter: tokenHighlighters.values()){
     		tokenHighlighter.setShow(showTokenHighlights);
     	}
