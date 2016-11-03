@@ -42,6 +42,8 @@ import org.eclipse.ui.IWorkbenchPartReference;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
+import org.eclipse.gef.ui.parts.GraphicalEditor;
+import org.eclipse.gef.GraphicalViewer;
 
 import edu.ysu.itrace.exceptions.CalibrationException;
 import edu.ysu.itrace.exceptions.EyeTrackerConnectException;
@@ -66,6 +68,7 @@ public class ControlView extends ViewPart implements IPartListener2,
     public static final String KEY_AST = "itraceAST";
     public static final String KEY_SO_DOM = "itraceSO";
     public static final String KEY_BR_DOM = "itraceBR";
+    public static final String KEY_CLASSML_DOM = "itraceClassML";
     public static final String FATAL_ERROR_MSG = "A fatal error occurred. "
             + "Restart the plugin and try again. If "
             + "the problem persists, submit a bug report.";

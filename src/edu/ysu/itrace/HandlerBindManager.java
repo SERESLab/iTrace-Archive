@@ -22,7 +22,7 @@ public class HandlerBindManager {
     public static void bind(IWorkbenchPartReference partRef) {
         Shell workbenchShell = partRef.getPage().getWorkbenchWindow().getShell();
         for (Control control : workbenchShell.getChildren())
-        	bindControl(control, false);
+        	bindControl(partRef, control, false);
     }
 
     /**
@@ -34,7 +34,7 @@ public class HandlerBindManager {
     	Shell workbenchShell = partRef.getPage().getWorkbenchWindow()
     			.getShell();
     	for (Control control : workbenchShell.getChildren())
-    		bindControl(control, true);
+    		bindControl(partRef, control, true);
     }
 
     /**
@@ -42,7 +42,7 @@ public class HandlerBindManager {
      * @param control Highest level control.
      * @param unbind If true, unbind instead of bind.
      */
-    private static void bindControl(Control control, boolean unbind) {
+    private static void bindControl(IWorkbenchPartReference partRef, Control control, boolean unbind) {
         //If composite, bind children.
         if (control instanceof Composite) {
             Composite composite = (Composite) control;
@@ -50,7 +50,7 @@ public class HandlerBindManager {
             Control[] children = composite.getChildren();
             if (children.length > 0 && children[0] != null) {
                for (Control curControl : children)
-                   bindControl(curControl, unbind);
+                   bindControl(partRef, curControl, unbind);
             }
         }
         
@@ -59,7 +59,7 @@ public class HandlerBindManager {
             return;
 
         IGazeHandler handler = GazeHandlerFactory.
-                               createHandler(control);
+                               createHandler(control, partRef);
         if (handler != null && !unbind)
             control.setData(KEY_HANDLER, handler);
         else

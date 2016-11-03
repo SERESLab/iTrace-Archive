@@ -16,5 +16,8 @@ Bundle-ClassPath: .,
  lib/functionaljava-4.1.jar,
  lib/gson-2.2.4.jar,
  lib/TETJavaClient.jar
-Import-Package: org.eclipse.jdt.core,
+Import-Package: org.eclipse.draw2d,
+ org.eclipse.gef,
+ org.eclipse.gef.ui.parts,
+ org.eclipse.jdt.core,
  org.eclipse.jdt.core.dom

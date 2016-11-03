@@ -18,10 +18,12 @@ import javax.xml.stream.XMLStreamWriter;
 
 import org.eclipse.core.resources.ResourcesPlugin;
 
+import edu.ysu.itrace.ClassMLManager.UMLEntity;
 import edu.ysu.itrace.AstManager.SourceCodeEntity;
 import edu.ysu.itrace.SOManager.StackOverflowEntity;
 import edu.ysu.itrace.BRManager.BugReportEntity;
 import edu.ysu.itrace.gaze.IGazeResponse;
+import edu.ysu.itrace.gaze.IClassMLGazeResponse;
 import edu.ysu.itrace.gaze.IStackOverflowGazeResponse;
 import edu.ysu.itrace.gaze.IBugReportGazeResponse;
 import edu.ysu.itrace.gaze.IStyledTextGazeResponse;
@@ -193,6 +195,21 @@ public class XMLGazeExportSolver implements IFileExportSolver {
                     responseWriter.writeAttribute("type", bre.type.toString());
                     responseWriter.writeAttribute("type_number", String.valueOf(bre.typeNum));
                     responseWriter.writeEndElement();
+                }
+                else if (response instanceof IClassMLGazeResponse) {
+                	IClassMLGazeResponse classMLResponse = (IClassMLGazeResponse) response;
+                	UMLEntity umle = classMLResponse.getUMLE();
+                	responseWriter.writeStartElement("cd");
+                	responseWriter.writeAttribute("name", umle.entityName.toString());
+                	responseWriter.writeAttribute("umlPart", umle.umlPart.toString());
+                	responseWriter.writeAttribute("umlType", umle.umlType.toString());
+                	responseWriter.writeAttribute("visibility", umle.entityVisibility.toString());
+                	responseWriter.writeAttribute("type", umle.type.toString());
+                	responseWriter.writeAttribute("class", umle.entityClass.toString());
+                	responseWriter.writeAttribute("returnType", umle.returnType.toString());
+                	responseWriter.writeAttribute("sourceClass", umle.sourceClass.toString());
+                	responseWriter.writeAttribute("targetClass", umle.targetClass.toString());
+                	responseWriter.writeEndElement();
                 }
                 
                 else {

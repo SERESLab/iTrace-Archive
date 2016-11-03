@@ -18,6 +18,8 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import com.google.gson.stream.JsonWriter;
 
 import edu.ysu.itrace.AstManager.SourceCodeEntity;
+import edu.ysu.itrace.ClassMLManager.UMLEntity;
+import edu.ysu.itrace.gaze.IClassMLGazeResponse;
 import edu.ysu.itrace.SOManager.StackOverflowEntity;
 import edu.ysu.itrace.BRManager.BugReportEntity;
 import edu.ysu.itrace.gaze.IGazeResponse;
@@ -205,6 +207,34 @@ public class JSONGazeExportSolver implements IFileExportSolver {
                                   	.value(bre.typeNum)
                                   .endObject();
                                   
+                }
+                
+                else if (response instanceof IClassMLGazeResponse) {
+                	IClassMLGazeResponse classMLResponse =
+                			(IClassMLGazeResponse) response;
+                	UMLEntity umle = classMLResponse.getUMLE();
+                	responseWriter.name("cd")
+	                			.beginObject()
+		                			.name("name")
+		                			.value(umle.entityName.toString())
+		                			.name("umlPart")
+		                			.value(umle.umlPart.toString())
+		                			.name("umlType")
+		                			.value(umle.umlType.toString())
+		                			.name("visibility")
+		                			.value(umle.entityVisibility.toString())
+		                			.name("type")
+		                			.value(umle.type.toString())
+		                			.name("class")
+		                			.value(umle.entityClass.toString())
+		                			.name("returnType")
+		                			.value(umle.returnType.toString())
+		                			.name("sourceClass")
+		                			.value(umle.sourceClass.toString())
+		                			.name("targetClass")
+		                			.value(umle.targetClass.toString())
+	                			.endObject();
+                	
                 }
                 
                 else {
