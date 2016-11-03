@@ -40,8 +40,9 @@ public class CalibrationStatusDisplay extends JPanel {
 		}
 		int i = 0;
 		for(Point2D.Double point: calibrationData){
+			System.out.println(point);
 			if(point == null) continue;
-			if( ( point.x <= 0 || point.x >= 1 ) && ( point.y <= 0 || point.y >= 1 ) ){
+			if( ( point.x <= 0.0001 || point.x >= 0.9999 ) && ( point.y <= 0.0001 || point.y >= 0.9999 ) ){
 				i++;
 				continue;
 			}

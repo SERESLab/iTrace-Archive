@@ -59,60 +59,60 @@ public abstract class Calibrator {
     	
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			if(originIndex != destinationIndex){
-				t++;
-				x = (int)(calibrationPoints[originIndex].x +(calibrationPoints[destinationIndex].x-calibrationPoints[originIndex].x)*(t/60));
-				y = (int)(calibrationPoints[originIndex].y +(calibrationPoints[destinationIndex].y-calibrationPoints[originIndex].y)*(t/60));
-				if(t==60){
-					t = 0;
-					originIndex = destinationIndex;
-				}
-			}else{
-				if(t == 0){
+			try{
+				if(originIndex != destinationIndex){
 					t++;
-					try {
-						Thread.sleep(500);
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+					x = (int)(calibrationPoints[originIndex].x +(calibrationPoints[destinationIndex].x-calibrationPoints[originIndex].x)*(t/60));
+					y = (int)(calibrationPoints[originIndex].y +(calibrationPoints[destinationIndex].y-calibrationPoints[originIndex].y)*(t/60));
+					if(t==60){
+						t = 0;
+						originIndex = destinationIndex;
 					}
-				}else if(t <= 128){
-					t++;
-					diameter = 50 - ( int )( Math.sin( t*Math.PI/128 )*40 );
-		            if(t == 64){
-		            	try {
-		            		useCalibrationPoint(calibrationPoints[originIndex].x/windowBounds.getWidth(), calibrationPoints[originIndex].y/windowBounds.getHeight());
-		            		Thread.sleep(1000);
-						} catch (Exception e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-		            }
 				}else{
-					destinationIndex = (destinationIndex+1)%10;
-					if(destinationIndex == 9){
+					if(t == 0){
+						t++;
 						try {
+							Thread.sleep(500);
+						} catch (InterruptedException e) {
+							timer.stop();
 							stopCalibration();
-						} catch (Exception e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
+							throw new CalibrationException("Sleep Interrupted");
 						}
-						
-						timer.stop();
-						parent.dispose();
-						parent = new JFrame();
-						
-						try {
-							displayCalibrationStatus(parent);
-						} catch (Exception e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
+					}else if(t <= 128){
+						t++;
+						diameter = 50 - ( int )( Math.sin( t*Math.PI/128 )*40 );
+			            if(t == 64){
+			            	useCalibrationPoint(calibrationPoints[originIndex].x/windowBounds.getWidth(), calibrationPoints[originIndex].y/windowBounds.getHeight());
+			            	try {
+			            		Thread.sleep(1000);
+							} catch (Exception e) {
+								timer.stop();
+								stopCalibration();
+								throw new CalibrationException("Sleep Interrupted");
+							}
+			            }
+					}else{
+						destinationIndex = (destinationIndex+1)%10;
+						if(destinationIndex == 9){
+							stopCalibration();
+							timer.stop();
+							parent.dispose();
+							parent = new JFrame();
+							try {
+								displayCalibrationStatus(parent);
+							} catch (Exception e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
 						}
+						t = 0;
 					}
-					t = 0;
 				}
+				repaint();
 			}
-			repaint();
+			catch(Exception e){
+				
+			}
 		}
 		
 		public void start(){
