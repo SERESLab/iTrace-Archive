@@ -612,6 +612,10 @@ public class ControlView extends ViewPart implements IPartListener2,
             	StyledText text = (StyledText) editorPart.getAdapter(Control.class); 
             	setupStyledText(editorPart, text);
             }
+            else if(editorPart instanceof GraphicalEditor) { // instance of GraphicalEditor
+                       	GraphicalViewer graphicalViewer = (GraphicalViewer) editorPart.getAdapter(GraphicalViewer.class);
+                       	setupGraphicalViewer(editorPart, graphicalViewer);
+            }
             //ignore anything else
         }
         //set up browser manager if there is one
@@ -676,6 +680,18 @@ public class ControlView extends ViewPart implements IPartListener2,
             browser.setData(KEY_SO_DOM, new SOManager(browser));
         if (browser.getData(KEY_BR_DOM) == null)
         	browser.setData(KEY_BR_DOM, new BRManager(browser));
+    }
+    
+    /**
+     * Recursive helper method for setupControls(IWorkbenchPartReference).
+     * 
+     * @param editor IEditorPart which owns the GraphicalEditor in the next
+     *               parameter.
+     * @param graphicalViewer GraphicalViewer to set up.
+     */
+    private void setupGraphicalViewer(IEditorPart editor, GraphicalViewer graphicalViewer) {
+    	 if(graphicalViewer.getControl().getData(KEY_CLASSML_DOM) == null)
+        	graphicalViewer.getControl().setData(KEY_CLASSML_DOM, new ClassMLManager(graphicalViewer));
     }
     
     /**
