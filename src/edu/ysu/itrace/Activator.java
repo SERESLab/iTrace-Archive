@@ -3,7 +3,9 @@ package edu.ysu.itrace;
 import java.util.HashMap;
 
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.PlatformUI;
@@ -33,7 +35,10 @@ public class Activator extends AbstractUIPlugin {
      */
     public Activator() {
     	IEditorPart editorPart = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor();
-    	tokenHighlighters.put(editorPart, new TokenHighlighter(editorPart,showTokenHighlights));
+    	if(editorPart != null){
+	    	StyledText styledText = (StyledText) editorPart.getAdapter(Control.class);
+	    	if(styledText != null) tokenHighlighters.put(editorPart, new TokenHighlighter(styledText,showTokenHighlights));
+    	}
     }
 
     /*
@@ -69,14 +74,18 @@ public class Activator extends AbstractUIPlugin {
     
     public void setActiveEditor(IEditorPart editorPart){
     	activeEditor = editorPart;
-    	if(!tokenHighlighters.containsKey(editorPart)) 
-    		tokenHighlighters.put(editorPart, new TokenHighlighter(editorPart,showTokenHighlights));
+    	if(activeEditor == null) return;
+    	if(!tokenHighlighters.containsKey(editorPart)){
+    		StyledText styledText = (StyledText) editorPart.getAdapter(Control.class);
+    		if(styledText != null) tokenHighlighters.put(editorPart, new TokenHighlighter(styledText,showTokenHighlights));
+    	}
     	
     }
     
     public void updateHighlighters(IEditorPart editorPart,Gaze gaze){
     	if(editorPart == null) editorPart = activeEditor;
-    	tokenHighlighters.get(editorPart).updateHandleGaze(gaze);
+    	if(tokenHighlighters.containsKey(editorPart))
+    		tokenHighlighters.get(editorPart).updateHandleGaze(gaze);
     }
     
     public void removeHighlighter(IEditorPart editorPart){
@@ -85,9 +94,14 @@ public class Activator extends AbstractUIPlugin {
     
     public void showTokenHighLights(){
     	showTokenHighlights = !showTokenHighlights;
-		if(!tokenHighlighters.containsKey(activeEditor)) 
-    		tokenHighlighters.put(activeEditor, new TokenHighlighter(activeEditor, showTokenHighlights));
-		if(activeEditor == null) return;
+    	if(activeEditor == null) return;
+		if(!tokenHighlighters.containsKey(activeEditor)){
+			StyledText styledText = (StyledText) activeEditor.getAdapter(Control.class);
+			if(styledText != null)
+				tokenHighlighters.put(activeEditor, new TokenHighlighter(styledText, showTokenHighlights));
+		}
+    		
+		
     	for(TokenHighlighter tokenHighlighter: tokenHighlighters.values()){
     		tokenHighlighter.setShow(showTokenHighlights);
     	}

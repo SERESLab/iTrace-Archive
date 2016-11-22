@@ -27,12 +27,8 @@ public class TokenHighlighter implements PaintListener {
 		int endOffset;
 	}
 	
-	
-	private IEditorPart editorPart;
 	private StyledText styledText;
-	private ProjectionViewer projectionViewer;
 	private Rectangle boundingBox;
-	private LinkedBlockingQueue<Gaze> gazeQueue;
 	private StyledTextGazeHandler gazeHandler;
 	private Point[] points;
 	private int pointIndex;
@@ -177,12 +173,8 @@ public class TokenHighlighter implements PaintListener {
 		return false;
 	}
 	
-	public TokenHighlighter(IEditorPart editorPart, boolean show){
-		
-		this.editorPart = editorPart;
-		this.styledText = (StyledText) this.editorPart.getAdapter(Control.class);
-		ITextOperationTarget t = (ITextOperationTarget) editorPart.getAdapter(ITextOperationTarget.class);
-		if(t instanceof ProjectionViewer) projectionViewer = (ProjectionViewer) t;
+	public TokenHighlighter(StyledText styledText, boolean show){
+		this.styledText = styledText;
 		this.styledText.addPaintListener(this);
 		this.gazeHandler = new StyledTextGazeHandler(styledText);
 		this.show = show;
