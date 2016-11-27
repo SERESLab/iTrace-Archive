@@ -49,8 +49,10 @@ import edu.ysu.itrace.filters.fixation.JSONBasicFixationFilter;
 import edu.ysu.itrace.filters.fixation.OldJSONBasicFixationFilter;
 import edu.ysu.itrace.filters.fixation.OldXMLBasicFixationFilter;
 import edu.ysu.itrace.filters.fixation.XMLBasicFixationFilter;
+import edu.ysu.itrace.gaze.IBugReportGazeResponse;
 import edu.ysu.itrace.gaze.IGazeHandler;
 import edu.ysu.itrace.gaze.IGazeResponse;
+import edu.ysu.itrace.gaze.IStackOverflowGazeResponse;
 import edu.ysu.itrace.gaze.IStyledTextGazeResponse;
 import edu.ysu.itrace.solvers.ISolver;
 import edu.ysu.itrace.solvers.JSONGazeExportSolver;
@@ -140,9 +142,18 @@ public class ControlView extends ViewPart implements IPartListener2,
                         	
                             gazeResponses.add(response);
                             
-                            if(response instanceof IStyledTextGazeResponse){
+                            //For testing purposes
+                            /*if (response instanceof IStackOverflowGazeResponse) {
+                            	System.out.println(((IStackOverflowGazeResponse) response).getSOE().part + " "
+                            			+ ((IStackOverflowGazeResponse) response).getSOE().type);
+                            } else if(response instanceof IStyledTextGazeResponse){
                             	IStyledTextGazeResponse styledTextResponse = (IStyledTextGazeResponse)response;
-                            }
+                            	if (styledTextResponse.getSCEs().length != 0)
+                            		System.out.println(styledTextResponse.getSCEs()[0].name);
+                            } else if(response instanceof IBugReportGazeResponse){
+                            	System.out.println(((IBugReportGazeResponse)response).getBRE().part + " " +
+                            			((IBugReportGazeResponse)response).getBRE().type);
+                            }*/
                             
                         } catch (IllegalStateException ise) {
                             System.err.println("Error! Gaze response queue is "
@@ -749,8 +760,8 @@ public class ControlView extends ViewPart implements IPartListener2,
                 Rectangle childScreenBounds = child.getBounds();
                 
                 Point screenPos = child.toDisplay(0, 0);
-                childScreenBounds.x = screenPos.x - monitorBounds.x;
-                childScreenBounds.y = screenPos.y - monitorBounds.y;
+                childScreenBounds.x = (screenPos.x) - monitorBounds.x;
+                childScreenBounds.y = (screenPos.y) - monitorBounds.y;
                 
                 if (childScreenBounds.contains(screenX, screenY)) {
                     if (child instanceof Composite) {
@@ -760,7 +771,6 @@ public class ControlView extends ViewPart implements IPartListener2,
                             childrenQueue.add(nextChildren);
                         }
                     }
-
                     IGazeHandler handler =
                             (IGazeHandler) child
                                     .getData(HandlerBindManager.KEY_HANDLER);
