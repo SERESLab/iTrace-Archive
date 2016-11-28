@@ -22,12 +22,19 @@ import edu.ysu.itrace.gaze.IStackOverflowGazeResponse;
  */
 public class BrowserGazeHandler implements IGazeHandler {
 	private Browser targetBrowser;
+	private double multiplier;
 
 	    /**e
 	     * Constructs a new gaze handler for the target Browser SO/BR page object
 	     */
 	    public BrowserGazeHandler(Object target) {
 	        this.targetBrowser = (Browser) target;
+
+    		//soManager uses screen bounds not affected by scaled text and apps in Windows
+    		//compute the multiplier to adjust the relativeX and relativeY points
+    		int scaledWidth = targetBrowser.getShell().getMonitor().getBounds().width;
+    		int unscaledWidth = Toolkit.getDefaultToolkit().getScreenSize().width;
+    		this.multiplier = unscaledWidth / scaledWidth;
 	    }
 
 	    @Override
@@ -50,12 +57,7 @@ public class BrowserGazeHandler implements IGazeHandler {
         				.getData(ControlView.KEY_SO_DOM);
         	
         		name = soManager.getTitle();
-        		//soManager uses screen bounds not affected by scaled text and apps in Windows
-        		//adjust relativeX and relativeY to not be scaled
-        		int scaledWidth = targetBrowser.getShell().getMonitor().getBounds().width;
-        		int unscaledWidth = Toolkit.getDefaultToolkit().getScreenSize().width;
-        		int multiplier = unscaledWidth / scaledWidth;
-        		SOentity = soManager.getSOE(relativeX*multiplier, relativeY*multiplier);
+        		SOentity = soManager.getSOE((int)(relativeX*multiplier), (int)(relativeY*multiplier));
         		/* If entity is null the gaze fell
         		 * outside the valid text area, so just drop this one.
         		 */
