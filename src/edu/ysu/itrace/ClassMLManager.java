@@ -188,7 +188,7 @@ public class ClassMLManager {
                     	Figure srcFigure = (Figure) srcAnchor.getOwner();
                     	System.out.println(srcFigure.getClass().getName());
                     	
-                    	//ClassFigure srcClassFigure = (ClassFigure) srcFigure;  //casting error
+                    	ClassFigure srcClassFigure = (ClassFigure) srcFigure;  //casting error
                     	
                 		//TODO: Get classname for source anchor
                 		entity.sourceClass = "SourceClass";
@@ -201,7 +201,8 @@ public class ClassMLManager {
                 		//get target anchor's figure
                 		Figure targetFigure = (Figure) targetAnchor.getOwner();
                     	System.out.println(targetFigure.getClass().getName());
-                    	//ClassFigure targetClassFigure = (ClassFigure) targetFigure;  //casting error
+                    	ClassFigure targetClassFigure = (ClassFigure) targetFigure;  //casting error
+                    	System.out.println(targetClassFigure.getNameString());
                     	
                 		//TODO: Get classname for target anchor
                     	entity.targetClass = "TargetClass";
@@ -239,6 +240,8 @@ public class ClassMLManager {
 
                 	entity.entityName = "ClassName";
                 	entity.entityClass = "ClassName";
+                	
+                	
                 
                 	entity.umlPart = UMLEPart.CLASS;
              		entity.umlType = UMLEType.CLASS;
@@ -247,6 +250,8 @@ public class ClassMLManager {
                 	//looking at section of class
                 	//PropertiesFigure, OperationsFigure, or OnionRelationshipsFigure
                 	System.out.println(objFigure.getClass().getName());  //TESTING
+                	
+                	
                 	
                 	entity.entityName = "ClassName";
                 	entity.entityClass = "ClassName";
