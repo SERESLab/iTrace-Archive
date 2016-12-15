@@ -30,12 +30,11 @@ public class ClassMLGazeHandler implements IGazeHandler{
 	    	final String name;
 	        final ClassMLManager.UMLEntity entity;
 	        
-	        //SOMETHING CURRENTLY HAPPENING HERE THAT IS NOT WORKING
 	    	ClassMLManager classMLManager = (ClassMLManager) targetFigureCanvas
 	    			.getData(ControlView.KEY_CLASSML_DOM);  
 	    	
 	    	name = partRef.getPage().getActiveEditor().getTitle();
-	    	entity = classMLManager.getUMLE(relativeX, relativeY);	//This will currently throw a null pointer exception
+	    	entity = classMLManager.getUMLE(relativeX, relativeY);
 	    	
 	    	/* If entity is null the gaze fell
     		 * outside the valid text area, so just drop this one.
