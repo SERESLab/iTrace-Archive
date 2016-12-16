@@ -15,15 +15,9 @@ Bundle-ClassPath: .,
  lib/slf4j-api-1.7.5.jar,
  lib/functionaljava-4.1.jar,
  lib/gson-2.2.4.jar,
-<<<<<<< HEAD
  lib/iTraceOnionUML.jar
 Import-Package: edu.ysu.onionuml.ui.graphics.figures,
  org.eclipse.draw2d,
-=======
- lib/TETJavaClient.jar,
- lib/onionUML.jar
-Import-Package: org.eclipse.draw2d,
->>>>>>> origin/issue48-trackUML-continued
  org.eclipse.gef,
  org.eclipse.gef.ui.parts,
  org.eclipse.jdt.core,

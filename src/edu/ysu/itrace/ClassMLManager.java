@@ -186,7 +186,7 @@ public class ClassMLManager {
                     	//System.out.println("SRC FIGURE: " + srcFigure.getClass().getName());
                     	
                     	
-                    	ClassFigure srcClassFigure = (ClassFigure) srcFigure;  //casting error
+                    	//ClassFigure srcClassFigure = (ClassFigure) srcFigure;  //casting error
                     	
                 		//TODO: Get classname for source anchor
                 		entity.sourceClass = "SourceClass";
@@ -197,15 +197,8 @@ public class ClassMLManager {
                 	
                 	try{
                 		//get target anchor's figure
-<<<<<<< HEAD
                 		//Figure targetFigure = (Figure) targetAnchor.getOwner();
                     	//ClassFigure targetClassFigure = (ClassFigure) targetFigure;  //casting error
-=======
-                		Figure targetFigure = (Figure) targetAnchor.getOwner();
-                    	System.out.println(targetFigure.getClass().getName());
-                    	ClassFigure targetClassFigure = (ClassFigure) targetFigure;  //casting error
-                    	System.out.println(targetClassFigure.getNameString());
->>>>>>> origin/issue48-trackUML-continued
                     	
                     	
                 		//TODO: Get classname for target anchor
@@ -242,8 +235,6 @@ public class ClassMLManager {
 
                 	entity.entityName = "ClassName";
                 	entity.entityClass = "ClassName";
-                	
-                	
                 
                 	entity.umlPart = UMLEPart.CLASS;
              		entity.umlType = UMLEType.CLASS;
@@ -252,14 +243,9 @@ public class ClassMLManager {
                 	//looking at section of class
                 	//PropertiesFigure, OperationsFigure, or OnionRelationshipsFigure
                 	
-<<<<<<< HEAD
                 	ClassSectionFigure csf = (ClassSectionFigure) objFigure;
                 	
                 	entity.entityClass = csf.getClassName();
-=======
-                	
-                	
->>>>>>> origin/issue48-trackUML-continued
                 	entity.entityName = "ClassName";
                 	
                 	entity.umlPart = UMLEPart.CLASS;
