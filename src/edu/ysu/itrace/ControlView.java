@@ -182,7 +182,7 @@ public class ControlView extends ViewPart implements IPartListener2,
                     break;
                 }
 
-                IGazeResponse response = gazeResponses.poll();
+                final IGazeResponse response = gazeResponses.poll();
 
                 if (response != null) {
                 	Display.getDefault().asyncExec(new Runnable(){

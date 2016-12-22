@@ -73,7 +73,7 @@ public class TokenHighlighter implements PaintListener {
 
 	}
 	
-	public void updateHandleGaze(Gaze gaze){
+	public void updateHandleGaze(final Gaze gaze){
 		if(show && !styledText.isDisposed()){
 			Display.getDefault().asyncExec(new Runnable() {
 	               public void run() {
