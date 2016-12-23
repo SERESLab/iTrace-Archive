@@ -23,10 +23,10 @@ public abstract class BasicFixationFilter implements IFilter {
 	private double[] diffVector;
 	private double[] peak;
 	private List<Integer> peakIndices;
-	private int r = 0; //sliding window, set after reading in gazes
-	private double threshold = 0; //set after setting r
-	private double radius = 35;
-	private long durationThresh = 60;
+	private int r = 0; //gaze samples, sliding window, set after reading in gazes
+	private double threshold = 35; //pixels, minimum peak threshold
+	private double radius = 10; //pixels, minimum distance between two fixations
+	private long durationThresh = 60; //ms, minimum duration of a fixation
 
 	//Getters
 	/**
@@ -89,8 +89,8 @@ public abstract class BasicFixationFilter implements IFilter {
 	/**
 	 * Set the threshold for removing peaks
 	 */
-	protected void setThreshold(double thresholdPixels) {
-		this.threshold = thresholdPixels / (16.6 * r);
+	protected void setThreshold(double threshold) {
+		this.threshold = threshold;
 	}
 	
 	/**
@@ -342,8 +342,6 @@ public abstract class BasicFixationFilter implements IFilter {
 		} else {
 			this.r = 1;
 		}
-		//set threshold based on sliding window
-		this.threshold =  35 / (16.6 * r);
 		interpolate();
 		diffVector();
 		peaks();
