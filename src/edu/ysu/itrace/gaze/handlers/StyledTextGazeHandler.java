@@ -70,6 +70,7 @@ public class StyledTextGazeHandler implements IGazeHandler {
             /* An IllegalArgumentException SHOULD mean that the gaze fell
              * outside the valid text area, so just drop this one.
              */
+        	e.printStackTrace();
             return null;
         }
 

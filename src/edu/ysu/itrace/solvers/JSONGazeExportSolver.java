@@ -44,7 +44,7 @@ public class JSONGazeExportSolver implements IFileExportSolver, EventHandler {
     public JSONGazeExportSolver() {
     	UIManager.put("swing.boldMetal", new Boolean(false)); //make UI font plain
     	eventBroker = PlatformUI.getWorkbench().getService(IEventBroker.class);
-    	eventBroker.subscribe("iTrace/newdata", this);
+    	//eventBroker.subscribe("iTrace/newdata", this);
     }
 
     @Override

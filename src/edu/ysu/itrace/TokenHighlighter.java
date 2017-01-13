@@ -88,7 +88,7 @@ public class TokenHighlighter implements PaintListener, EventHandler {
 				                    Toolkit.getDefaultToolkit().getScreenSize();
 				            int screenX = (int) (gaze.getX() * screenRect.width);
 				            int screenY = (int) (gaze.getY() * screenRect.height);
-				            Rectangle monitorBounds = Activator.getDefault().monitorBounds;
+				            Rectangle monitorBounds = ITrace.getDefault().monitorBounds;
 				            if(styledText.isDisposed()) return;
 				            Rectangle editorBounds = styledText.getBounds();
 				            Point screenPos = styledText.toDisplay(0, 0);
@@ -204,7 +204,7 @@ public class TokenHighlighter implements PaintListener, EventHandler {
                 Toolkit.getDefaultToolkit().getScreenSize();
         int screenX = (int) (response.getGaze().getX() * screenRect.width);
         int screenY = (int) (response.getGaze().getY() * screenRect.height);
-        Rectangle monitorBounds = Activator.getDefault().monitorBounds;
+        Rectangle monitorBounds = ITrace.getDefault().monitorBounds;
         if(styledText.isDisposed()) return;
         Rectangle editorBounds = styledText.getBounds();
         Point screenPos = styledText.toDisplay(0, 0);
