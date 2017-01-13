@@ -9,6 +9,9 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.PlatformUI;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventHandler;
 
 import edu.ysu.itrace.gaze.IGazeResponse;
 import edu.ysu.itrace.gaze.IStyledTextGazeResponse;
@@ -18,10 +21,11 @@ import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.eclipse.e4.core.services.events.IEventBroker;
 import org.eclipse.jface.text.ITextOperationTarget;
 import org.eclipse.jface.text.source.projection.ProjectionViewer;
 
-public class TokenHighlighter implements PaintListener {
+public class TokenHighlighter implements PaintListener, EventHandler {
 	private class OffsetSpan{
 		int startOffset;
 		int endOffset;
@@ -35,6 +39,7 @@ public class TokenHighlighter implements PaintListener {
 	private int numberOfPoints;
 	private int nulls;
 	private boolean show;
+	private IEventBroker eventBroker;
 	
 	
 	@Override
@@ -182,8 +187,34 @@ public class TokenHighlighter implements PaintListener {
 		this.points = new Point[numberOfPoints];
 		this.pointIndex = 0;
 		this.nulls = 0;
-		
+		this.eventBroker = PlatformUI.getWorkbench().getService(IEventBroker.class);
+		this.eventBroker.subscribe("iTrace/newstresponse", this);
 		//this.gazeQueue = Activator.getDefault().gazeTransport.createClient();
 		//System.out.println("gazeQueue");
+	}
+
+
+
+	@Override
+	public void handleEvent(Event event) {
+		String[] propertyNames = event.getPropertyNames();
+		//System.out.println(event.getProperty(propertyNames[0]));
+		IStyledTextGazeResponse response = (IStyledTextGazeResponse)event.getProperty(propertyNames[0]);
+		Dimension screenRect =
+                Toolkit.getDefaultToolkit().getScreenSize();
+        int screenX = (int) (response.getGaze().getX() * screenRect.width);
+        int screenY = (int) (response.getGaze().getY() * screenRect.height);
+        Rectangle monitorBounds = Activator.getDefault().monitorBounds;
+        if(styledText.isDisposed()) return;
+        Rectangle editorBounds = styledText.getBounds();
+        Point screenPos = styledText.toDisplay(0, 0);
+        editorBounds.x = screenPos.x - monitorBounds.x;
+        editorBounds.y = screenPos.y - monitorBounds.y;
+        if(editorBounds.contains(screenX, screenY)){
+        	int relativeX = screenX-editorBounds.x;
+        	int relativeY = screenY-editorBounds.y;
+        	update(response.getLine()-1,response.getCol(), relativeX, relativeY);
+        }
+		
 	}
 }

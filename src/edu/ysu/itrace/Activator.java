@@ -22,8 +22,8 @@ public class Activator extends AbstractUIPlugin {
     // The plug-in ID
     public static final String PLUGIN_ID = "edu.ysu.itrace"; //$NON-NLS-1$
     public long sessionStartTime;
-    public GazeTransport gazeTransport;
     public Rectangle monitorBounds;
+    public boolean recording = false;
     private IEditorPart activeEditor;
     // The shared instance
     private static Activator plugin;

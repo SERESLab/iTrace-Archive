@@ -17,6 +17,10 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.e4.core.services.events.IEventBroker;
+import org.eclipse.ui.PlatformUI;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventHandler;
 
 import edu.ysu.itrace.AstManager.SourceCodeEntity;
 import edu.ysu.itrace.SOManager.StackOverflowEntity;
@@ -29,7 +33,7 @@ import edu.ysu.itrace.gaze.IStyledTextGazeResponse;
 /**
  * Solver that simply dumps gaze data to disk in XML format.
  */
-public class XMLGazeExportSolver implements IFileExportSolver {
+public class XMLGazeExportSolver implements IFileExportSolver, EventHandler {
     private static final String EOL = System.getProperty("line.separator");
     private XMLOutputFactory outFactory = XMLOutputFactory.newInstance();
     private XMLStreamWriter responseWriter;
@@ -38,9 +42,12 @@ public class XMLGazeExportSolver implements IFileExportSolver {
     		+ "-yyMMddTHHmmss-SSSS-Z.xml";
     private Dimension screenRect;
     private String sessionID;
+    private IEventBroker eventBroker;
 
     public XMLGazeExportSolver() {
     	UIManager.put("swing.boldMetal", new Boolean(false)); //make UI font plain
+    	eventBroker = PlatformUI.getWorkbench().getService(IEventBroker.class);
+    	eventBroker.subscribe("iTrace/newdata", this);
     }
     
     @Override
@@ -221,6 +228,7 @@ public class XMLGazeExportSolver implements IFileExportSolver {
             throw new RuntimeException("Log file footer could not be written: "
                     + e.getMessage());
         }
+        outFile = null;
     }
     
     @Override
@@ -261,4 +269,12 @@ public class XMLGazeExportSolver implements IFileExportSolver {
     		//do nothing
     	}
     }
+
+	@Override
+	public void handleEvent(Event event) {
+		if(outFile == null) this.init();
+		String[] propertyNames = event.getPropertyNames();
+		IGazeResponse response = (IGazeResponse)event.getProperty(propertyNames[0]);
+		this.process(response);
+	}
 }

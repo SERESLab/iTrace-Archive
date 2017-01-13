@@ -42,6 +42,10 @@ import org.eclipse.ui.IWorkbenchPartReference;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.progress.UIJob;
+import org.eclipse.e4.core.services.events.IEventBroker;
+
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventHandler;
 
 import edu.ysu.itrace.exceptions.CalibrationException;
 import edu.ysu.itrace.exceptions.EyeTrackerConnectException;
@@ -61,8 +65,7 @@ import edu.ysu.itrace.trackers.IEyeTracker;
 /**
  * ViewPart for managing and controlling the plugin.
  */
-public class ControlView extends ViewPart implements IPartListener2,
-        ShellListener {
+public class ControlView extends ViewPart implements IPartListener2, EventHandler{
     private static final int POLL_GAZES_MS = 5;
     public static final String KEY_AST = "itraceAST";
     public static final String KEY_SO_DOM = "itraceSO";
@@ -76,8 +79,7 @@ public class ControlView extends ViewPart implements IPartListener2,
 
     private CopyOnWriteArrayList<Control> grayedControls =
             new CopyOnWriteArrayList<Control>();
-
-    private GazeTransport gazeTransport = null;
+    
     private LinkedBlockingQueue<Gaze> standardTrackingQueue = null;
     private LinkedBlockingQueue<Gaze> crosshairQueue = null;
 
@@ -105,97 +107,7 @@ public class ControlView extends ViewPart implements IPartListener2,
     private IActionBars actionBars;
     private IStatusLineManager statusLineManager;
     private long registerTime = 2000;
-
-
-    /*
-     * Gets gazes from the eye tracker, calls gaze handlers, and adds responses
-     * to the queue for the response handler thread to process.
-     */
-    private UIJob gazeHandlerJob = new UIJob("Tracking Gazes") {
-        {
-            setPriority(INTERACTIVE);
-        }
-
-        @Override
-        public IStatus runInUIThread(IProgressMonitor monitor) {
-            if (standardTrackingQueue == null)
-                return Status.OK_STATUS;
-
-            int loops = 0;
-            Gaze g = null;
-            do {
-                // Method returns above if standardTrackingQueue is none.
-                g = standardTrackingQueue.poll();
-                if (g != null) {
-                    Dimension screenRect =
-                            Toolkit.getDefaultToolkit().getScreenSize();
-                    int screenX = (int) (g.getX() * screenRect.width);
-                    int screenY = (int) (g.getY() * screenRect.height);
-                    IGazeResponse response = handleGaze(screenX, screenY, g);
-
-                    if (response != null) {
-                        try {
-                        	statusLineManager
-                        		.setMessage(String.valueOf(response.getGaze().getSessionTime()));
-                        	registerTime = System.currentTimeMillis();
-                        	
-                            gazeResponses.add(response);
-                            
-                            if(response instanceof IStyledTextGazeResponse){
-                            	IStyledTextGazeResponse styledTextResponse = (IStyledTextGazeResponse)response;
-                            }
-                            
-                        } catch (IllegalStateException ise) {
-                            System.err.println("Error! Gaze response queue is "
-                                    + "full!");
-                        }
-                    }
-                }else{
-                	if((System.currentTimeMillis()-registerTime) > 2000){
-                		statusLineManager.setMessage("");
-                		
-                	}
-                }
-
-                if (trackingInProgress || g != null) {
-                    schedule(POLL_GAZES_MS);
-                } else {
-                    gazeHandlerJob.cancel();
-                }
-                ++loops;
-            } while (loops < 15 && g != null);
-
-            return Status.OK_STATUS;
-        }
-    };
-
-    private class ResponseHandlerThread extends Thread {
-        @Override
-        public void run() {
-            for (ISolver solver : activeSolvers) {
-                solver.init();
-            }
-
-            while (true) {
-                if (!trackingInProgress && gazeResponses.size() <= 0) {
-                    break;
-                }
-
-                IGazeResponse response = gazeResponses.poll();
-
-                if (response != null) {
-                    for (ISolver solver : activeSolvers) {
-                        solver.process(response);
-                    }
-                }
-            }
-            for (ISolver solver : activeSolvers) {
-                solver.dispose();
-            }
-        }
-    }
-
-    private ResponseHandlerThread responseHandlerThread = null;
+    private IEventBroker eventBroker = PlatformUI.getWorkbench().getService(IEventBroker.class);
 
     @Override
     public void createPartControl(Composite parent) {
@@ -204,7 +116,6 @@ public class ControlView extends ViewPart implements IPartListener2,
         while (rootShell.getParent() != null) {
             rootShell = rootShell.getParent().getShell();
         }
-        rootShell.addShellListener(this);
         Activator.getDefault().monitorBounds = rootShell.getMonitor().getBounds();
 
         // add listener for determining part visibility
@@ -283,15 +194,7 @@ public class ControlView extends ViewPart implements IPartListener2,
         highlight_tokens.addSelectionListener(new SelectionAdapter(){
         	@Override
             public void widgetSelected(SelectionEvent e) {
-            	
-                if (tracker == null)
-                    requestTracker();
-                
-                if (tracker != null){
-                	Activator.getDefault().showTokenHighLights();
-                	if (gazeTransport != null)
-                        gazeTransport.createClient();
-                }
+        		activateHighlights();
         	}
         });
         
@@ -303,27 +206,22 @@ public class ControlView extends ViewPart implements IPartListener2,
             	
                 if (tracker == null)
                     requestTracker();
+                try {
+        			tracker.startTracking();
+        		} catch (IOException e1) {
+        			// TODO Auto-generated catch block
+        			e1.printStackTrace();
+        		}
                 
                 if (tracker != null) {
-                	//Activator.getDefault().showTokenHighLights();
-                	if (gazeTransport != null)
-                        crosshairQueue =
-                                gazeTransport.createClient();
-                	
-                	
                     tracker.displayCrosshair(
                             display_crosshair.getSelection());
                     // Create a client for the crosshair so that it will
                     // continue to run when tracking is disabled. Remove when
                     // done.
                     if (display_crosshair.getSelection()) {
-                        if (gazeTransport != null)
-                            crosshairQueue =
-                                    gazeTransport.createClient();
                     } else {
                         if (crosshairQueue != null) {
-                            gazeTransport.removeClient(
-                                    crosshairQueue);
                             crosshairQueue = null;
                         }
                     }
@@ -385,7 +283,6 @@ public class ControlView extends ViewPart implements IPartListener2,
 
         final Composite solversComposite = new Composite(parent, SWT.NONE);
         solversComposite.setLayout(new GridLayout(2, false));
-
         // Configure solvers here.
         jsonSolver = new JSONGazeExportSolver();
         availableSolvers.add(jsonSolver);
@@ -476,6 +373,7 @@ public class ControlView extends ViewPart implements IPartListener2,
             	}
                 for (final ISolver solver: activeSolvers) {
                 	if(activeSolvers.contains(solver)) {
+                		solver.dispose();
         				activeSolvers.remove(solver);
         			}
                 }
@@ -528,10 +426,9 @@ public class ControlView extends ViewPart implements IPartListener2,
 
     @Override
     public void dispose() {
-        if (gazeTransport != null)
-            gazeTransport.quit();
+        //if (gazeTransport != null)
+        //    gazeTransport.quit();
         // Else there's nothing to quit.
-
         if (trackingInProgress) {
             stopTracking();
         }
@@ -605,31 +502,6 @@ public class ControlView extends ViewPart implements IPartListener2,
         HandlerBindManager.unbind(partRef);
     }
 
-    @Override
-    public void shellActivated(ShellEvent e) {
-        gazeHandlerJob.schedule(POLL_GAZES_MS);
-    }
-
-    @Override
-    public void shellClosed(ShellEvent e) {
-        gazeHandlerJob.cancel();
-    }
-
-    @Override
-    public void shellDeactivated(ShellEvent e) {
-        gazeHandlerJob.cancel();
-    }
-
-    @Override
-    public void shellDeiconified(ShellEvent e) {
-        gazeHandlerJob.schedule(POLL_GAZES_MS);
-    }
-
-    @Override
-    public void shellIconified(ShellEvent e) {
-        gazeHandlerJob.cancel();
-    }
-
     /**
      * Find styled text or browser controls within a part, set it up to be used by iTrace,
      * and extract meta-data from it.
@@ -656,8 +528,6 @@ public class ControlView extends ViewPart implements IPartListener2,
         	setupBrowser(control);
         }
     }
-    
-    
 
     /**
      * Find browser control, set it up to be used by iTrace,
@@ -766,11 +636,6 @@ public class ControlView extends ViewPart implements IPartListener2,
             if (tracker != null) {
                 tracker.setXDrift(xDrift.getSelection());
                 tracker.setYDrift(yDrift.getSelection());
-
-                gazeTransport = new GazeTransport(tracker);
-                Activator.getDefault().gazeTransport = gazeTransport;
-                Activator.getDefault().gazeTransport.start();
-                //gazeTransport.start();
                 return true;
             } else {
                 displayError("Either an eye tracker was not selected or an "
@@ -797,6 +662,13 @@ public class ControlView extends ViewPart implements IPartListener2,
             // nothing happened.
             return;
         }
+        eventBroker.subscribe("iTrace/newgaze", this);
+        try {
+			tracker.startTracking();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
         
         if (!sessionInfo.isConfigured()) {
         	displayError("You have not configured your Session Info.");
@@ -812,23 +684,8 @@ public class ControlView extends ViewPart implements IPartListener2,
         } catch(IOException e) {
         	displayError(e.getMessage());
         }
-
-        if (gazeTransport != null) {
-            standardTrackingQueue = gazeTransport.createClient();
-
-            if (standardTrackingQueue != null && responseHandlerThread == null) {
-                responseHandlerThread = new ResponseHandlerThread();
-                responseHandlerThread.start();
-                gazeHandlerJob.schedule(POLL_GAZES_MS);
-                trackingInProgress = true;
-            } else {
-                displayError(FATAL_ERROR_MSG);
-            }
-        } else {
-            // If tracking is in progress, the gaze transport should be some.
-            displayError(FATAL_ERROR_MSG);
-        }
         Activator.getDefault().sessionStartTime = System.nanoTime();
+        trackingInProgress = true;
     }
 
     private void stopTracking() {
@@ -838,26 +695,31 @@ public class ControlView extends ViewPart implements IPartListener2,
         }
 
         for (Control c : grayedControls) {
-            c.setEnabled(true);
+        	if(!c.isDisposed()) c.setEnabled(true);
         }
 
         sessionInfo.reset();
         
         if (tracker != null) {
-            if (gazeTransport != null) {
-                if (gazeTransport.removeClient(
-                        standardTrackingQueue)) {
-                    trackingInProgress = false;
-                    standardTrackingQueue = null;
-                    responseHandlerThread = null;
-                }
-            } else {
-                // If gaze transport is null, it shouldn't be tracking.
-                displayError(FATAL_ERROR_MSG);
-            }
         } else {
             // If there is no tracker, tracking should not be occurring anyways.
             displayError(FATAL_ERROR_MSG);
+        }
+    }
+    
+    private void activateHighlights(){
+    	eventBroker.subscribe("iTrace/newgaze",this);
+        if (tracker == null)
+            requestTracker();
+        try {
+			tracker.startTracking();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+        
+        if (tracker != null){
+        	Activator.getDefault().showTokenHighLights();
         }
     }
 
@@ -866,4 +728,48 @@ public class ControlView extends ViewPart implements IPartListener2,
         error_box.setMessage(message);
         error_box.open();
     }
+
+	@Override
+	public void handleEvent(Event event) {
+		if(event.getTopic() == "iTrace/newgaze"){
+			String[] propertyNames = event.getPropertyNames();
+			Gaze g = (Gaze)event.getProperty(propertyNames[0]);
+			 if (g != null) {
+	             Dimension screenRect =
+	                     Toolkit.getDefaultToolkit().getScreenSize();
+	             int screenX = (int) (g.getX() * screenRect.width);
+	             int screenY = (int) (g.getY() * screenRect.height);
+	             IGazeResponse response;
+	             if(!rootShell.isDisposed()){
+	            	 response = handleGaze(screenX, screenY, g);
+	            	 if (response != null) {
+		                 try {
+		                	 if(trackingInProgress){
+		                		 statusLineManager
+		                 			.setMessage(String.valueOf(response.getGaze().getSessionTime()));
+		                 		registerTime = System.currentTimeMillis();
+		                 		eventBroker.post("iTrace/newdata", response);
+		                	 }
+		                 	
+		                     gazeResponses.add(response);
+		                     
+		                     if(response instanceof IStyledTextGazeResponse){
+		                     	IStyledTextGazeResponse styledTextResponse = (IStyledTextGazeResponse)response;
+		                     	eventBroker.post("iTrace/newstresponse", styledTextResponse);
+		                     }
+		                     
+		                 } catch (IllegalStateException ise) {
+		                     System.err.println("Error! Gaze response queue is "
+		                             + "full!");
+		                 }
+		             }
+		         }else{
+		         	if((System.currentTimeMillis()-registerTime) > 2000){
+		         		statusLineManager.setMessage("");
+		         		
+		         	}
+		         }
+	         }
+		}
+	}
 }
