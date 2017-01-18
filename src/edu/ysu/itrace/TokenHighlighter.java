@@ -165,7 +165,7 @@ public class TokenHighlighter implements PaintListener, EventHandler {
 	
 	private boolean containsPoints(Rectangle box){
 		for(Point p: points){
-			if(p != null && !box.contains(p)) return false;
+			if(p != null && box != null && !box.contains(p)) return false;
 		}
 		return true;
 	}

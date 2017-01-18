@@ -66,7 +66,6 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
     private SessionInfoHandler sessionInfo = new SessionInfoHandler();
     
     private Shell rootShell;
-    private Queue<Control[]> childrenQueue = new LinkedList<Control[]>();
     
     /**
      * The constructor
@@ -81,8 +80,8 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
     	eventBroker.subscribe("iTrace/newgaze", this);
     	jsonSolver = new JSONGazeExportSolver();
     	xmlSolver = new XMLGazeExportSolver();
-    	eventBroker.subscribe("iTrace/newdata", jsonSolver);
-    	eventBroker.subscribe("iTrace/newdata", xmlSolver);
+    	eventBroker.subscribe("iTrace/jsonOutput", jsonSolver);
+    	eventBroker.subscribe("iTrace/xmlOutput", xmlSolver);
     }
 
     /*
@@ -122,19 +121,26 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
     public IEyeTracker getTracker(){
     	return tracker;
     }
+    
     public void setTrackerXDrift(int drift){
     	tracker.setXDrift(drift);
     }
     public void setTrackerYDrift(int drift){
     	tracker.setYDrift(drift);
     }
+    
+    public Shell getRootShell(){
+    	return rootShell;
+    }
     public void setRootShell(Shell shell){
     	rootShell = shell;
     }
+    
     public void setActionBars(IActionBars bars){
     	actionBars = bars;
     	statusLineManager = actionBars.getStatusLineManager();
     }
+    
     public void setLineManager(IStatusLineManager manager){
     	statusLineManager = manager;
     }
@@ -145,11 +151,16 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
     public void displayJsonExportFile(){
     	jsonSolver.displayExportFile();
     }
+    
     public void setXmlOutput(boolean value){
     	xmlOutput = value;
     }
     public void displayXmlExportFile(){
     	xmlSolver.displayExportFile();
+    }
+    
+    public boolean sessionInfoConfigured(){
+    	return sessionInfo.isConfigured();
     }
     
     public void calibrateTracker(){
@@ -158,7 +169,7 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
             try {
                 tracker.calibrate();
             } catch (CalibrationException e1) {
-            	System.out.println(e1.getMessage());
+            	eventBroker.post("iTrace/error", e1.getMessage());
             }
         } else {
             // If tracker is none, requestTracker() would have already
@@ -166,22 +177,16 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
         }
     }
     
-    public boolean sessionInfoConfigured(){
-    	return sessionInfo.isConfigured();
-    }
-    
-    public void startTracking() {
-    	childrenQueue.add(rootShell.getChildren());
+    public boolean startTracking() {
         if (recording) {
-            System.out.println("Tracking is already in progress.");
-            return;
+            eventBroker.post("iTrace/error", "Tracking is already in progress.");
+            return recording;
         }
-        recording = true;
         if (!requestTracker()) {
             // Error handling occurs in requestTracker(). Just return and
             // pretend
             // nothing happened.
-            return;
+            return recording;
         }
         //eventBroker.subscribe("iTrace/newgaze", this);
         try {
@@ -192,8 +197,8 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
 		}
         
         if (!sessionInfo.isConfigured()) {
-        	System.out.println("You have not configured your Session Info.");
-        	return;
+        	eventBroker.post("iTrace/error", "You have not configured your Session Info.");
+        	return recording;
         }
         
         try {
@@ -203,15 +208,19 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
         }
         ITrace.getDefault().sessionStartTime = System.nanoTime();
         recording = true;
+        return recording;
     }
     
-    public void stopTracking() {
+    public boolean stopTracking() {
         if (!recording) {
-            System.out.println("Tracking is not in progress.");
-            return;
+        	eventBroker.post("iTrace/error", "Tracking is not in progress.");
+            return false;
         }
         recording = false;
         sessionInfo.reset();
+        
+        xmlSolver.dispose();
+        jsonSolver.dispose();
         
         if (tracker != null) {
         } else {
@@ -219,7 +228,12 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
             System.out.println("No Tracker");
         }
         statusLineManager.setMessage("");
-        childrenQueue.clear();
+        return true;
+    }
+    
+    public boolean toggleTracking(){
+    	if(recording) return stopTracking();
+    	else return startTracking();
     }
     
     public boolean displayCrosshair(boolean display){
@@ -256,6 +270,21 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
     		if(styledText != null) tokenHighlighters.put(editorPart, new TokenHighlighter(styledText,showTokenHighlights));
     	}
     	
+    }
+    
+    public void displayEyeStatus(){
+    	if (tracker == null)
+            requestTracker();
+        try {
+			tracker.startTracking();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+        if (tracker != null){
+        	EyeStatusWindow statusWindow = new EyeStatusWindow();
+        	statusWindow.setVisible(true);
+        }
     }
     
     public void activateHighlights(){
@@ -322,6 +351,8 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
      * the gaze is not handled.
      */
     private IGazeResponse handleGaze(int screenX, int screenY, Gaze gaze){
+    	Queue<Control[]> childrenQueue = new LinkedList<Control[]>();
+    	childrenQueue.add(rootShell.getChildren());
     	Rectangle monitorBounds = rootShell.getMonitor().getBounds();
         while (!childrenQueue.isEmpty()) {
             for (Control child : childrenQueue.remove()) {
@@ -370,10 +401,11 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
 		                		 statusLineManager
 		                 			.setMessage(String.valueOf(response.getGaze().getSessionTime()));
 		                 		registerTime = System.currentTimeMillis();
-		                 		System.out.println(eventBroker.post("iTrace/newdata", response));
+		                 		if(xmlOutput) eventBroker.post("iTrace/xmlOutput", response);
+		                 		if(jsonOutput) eventBroker.post("iTrace/jsonOutput", response);
 		                	 }
 		                     
-		                     if(response instanceof IStyledTextGazeResponse){
+		                     if(response instanceof IStyledTextGazeResponse && response != null){
 		                     	IStyledTextGazeResponse styledTextResponse = (IStyledTextGazeResponse)response;
 		                     	eventBroker.post("iTrace/newstresponse", styledTextResponse);
 		                     }

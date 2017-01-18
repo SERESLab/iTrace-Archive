@@ -42,8 +42,13 @@ public class StyledTextGazeHandler implements IGazeHandler {
             		.getData(ControlView.KEY_AST);
             lineIndex = targetStyledText.getLineIndex(relativeY);
             int lineOffset = targetStyledText.getOffsetAtLine(lineIndex);
-            int offset = targetStyledText.getOffsetAtLocation(new Point(
-                    relativeX, relativeY));
+            int offset;
+            try{
+            	offset = targetStyledText.getOffsetAtLocation(new Point(
+            		relativeX, relativeY));
+            }catch(IllegalArgumentException ex){
+            	return null;
+            }
             col = offset - lineOffset;
 
             // (0, 0) relative to the control in absolute screen

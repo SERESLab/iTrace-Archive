@@ -15,6 +15,9 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 
+import org.eclipse.e4.core.services.events.IEventBroker;
+import org.eclipse.ui.PlatformUI;
+
 import edu.ysu.itrace.*;
 import edu.ysu.itrace.exceptions.CalibrationException;
 import edu.ysu.itrace.exceptions.EyeTrackerConnectException;
@@ -111,6 +114,7 @@ public class TobiiTracker implements IEyeTracker {
     private Calibrator calibrator;
     private double xDrift = 0, yDrift = 0;
     private Long previousTrackerTime;
+    private IEventBroker eventBroker;
 
     static { System.loadLibrary("TobiiTracker"); }
 
@@ -126,6 +130,7 @@ public class TobiiTracker implements IEyeTracker {
             this.close();
             throw new EyeTrackerConnectException();
         }
+        eventBroker = PlatformUI.getWorkbench().getService(IEventBroker.class);
     }
 
     public static void main(String[] args) {
@@ -285,6 +290,7 @@ public class TobiiTracker implements IEyeTracker {
                     timestamp);
 
             gaze_points.put(modifiedGaze);
+            eventBroker.post("iTrace/newgaze", modifiedGaze);
         } catch (InterruptedException e) {
             //Ignore this point.
         }

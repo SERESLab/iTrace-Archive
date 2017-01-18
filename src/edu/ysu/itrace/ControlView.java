@@ -2,8 +2,10 @@ package edu.ysu.itrace;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.eclipse.e4.core.services.events.IEventBroker;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.custom.StyledText;
@@ -26,7 +28,10 @@ import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.IPartListener2;
 import org.eclipse.ui.IWorkbenchPartReference;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.ide.FileStoreEditorInput;
 import org.eclipse.ui.part.ViewPart;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventHandler;
 
 import edu.ysu.itrace.filters.IFilter;
 import edu.ysu.itrace.filters.fixation.JSONBasicFixationFilter;
@@ -36,7 +41,7 @@ import edu.ysu.itrace.filters.fixation.XMLBasicFixationFilter;
 /**
  * ViewPart for managing and controlling the plugin.
  */
-public class ControlView extends ViewPart implements IPartListener2{
+public class ControlView extends ViewPart implements IPartListener2, EventHandler{
     public static final String KEY_AST = "itraceAST";
     public static final String KEY_SO_DOM = "itraceSO";
     public static final String KEY_BR_DOM = "itraceBR";
@@ -49,15 +54,19 @@ public class ControlView extends ViewPart implements IPartListener2{
     private CopyOnWriteArrayList<Control> grayedControls =
             new CopyOnWriteArrayList<Control>();
     
-
+    private ArrayList<IEditorReference> setupEditors = new ArrayList<IEditorReference>();
+    
     private Spinner xDrift;
     private Spinner yDrift;
     
     private CopyOnWriteArrayList<IFilter> availableFilters =
     		new CopyOnWriteArrayList<IFilter>();
+    private IEventBroker eventBroker;
 
     @Override
     public void createPartControl(Composite parent) {
+    	eventBroker = PlatformUI.getWorkbench().getService(IEventBroker.class);
+    	eventBroker.subscribe("iTrace/error", this);
         // find root shell
         rootShell = parent.getShell();
         while (rootShell.getParent() != null) {
@@ -75,10 +84,12 @@ public class ControlView extends ViewPart implements IPartListener2{
 
         // set up UI
         parent.setLayout(new RowLayout());
-
+        
+        //Button Composite start.
         final Composite buttonComposite = new Composite(parent, SWT.NONE);
         buttonComposite.setLayout(new GridLayout(2, false));
 
+        //Calibration Button
         Button calibrateButton = new Button(buttonComposite, SWT.PUSH);
         calibrateButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true,
                 true, 1, 1));
@@ -90,25 +101,56 @@ public class ControlView extends ViewPart implements IPartListener2{
             }
         });
         
-        final Button startButton = new Button(buttonComposite, SWT.PUSH);
-        startButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true,
+        //Tracking start and stop button.
+        final Button trackingButton = new Button(buttonComposite, SWT.PUSH);
+        trackingButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true,
                 1, 1));
-        startButton.setText("Start Tracking");
-        startButton.addSelectionListener(new SelectionAdapter() {
+        trackingButton.setText("Start Tracking");
+        trackingButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
             	for (Control c : grayedControls) {
                     c.setEnabled(false);
                 }
+            	
             	ITrace.getDefault().setActionBars(getViewSite().getActionBars());
-            	ITrace.getDefault().startTracking();
+            	if(ITrace.getDefault().toggleTracking()){
+            		if(trackingButton.getText() == "Start Tracking") trackingButton.setText("Stop Tracking");
+                	else trackingButton.setText("Start Tracking");
+            	}
+            	
             }
         });
-
+        
+      //Session Info Button
+        final Button infoButton = new Button(buttonComposite, SWT.PUSH);
+        infoButton.setText("Session Info");
+        infoButton.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+            	ITrace.getDefault().configureSessionInfo();
+            }
+        });  
+        grayedControls.addIfAbsent(infoButton);
+        
+        //Eye Status Button
+        final Button statusButton = new Button(buttonComposite, SWT.PUSH);
+        statusButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true,
+                1, 1));
+        statusButton.setText("Eye Status");
+        statusButton.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+            	ITrace.getDefault().displayEyeStatus();
+            }
+        });
+        //Button Composite End.
+        
         final String DONT_CHANGE_THAT_MSG =
                 "Don't change this value until "
                         + "you've selected a tracker in preferences.";
-
+        
+        //Tuning Composite Start.
         final Composite tuningComposite = new Composite(parent, SWT.NONE);
         tuningComposite.setLayout(new RowLayout(SWT.VERTICAL));
 
@@ -176,7 +218,9 @@ public class ControlView extends ViewPart implements IPartListener2{
         yDrift.setMaximum(100);
         yDrift.setSelection(0);
         this.yDrift = yDrift;
-
+        //Tuning composite end.
+        
+        //Solvers composite begin.
         final Composite solversComposite = new Composite(parent, SWT.NONE);
         solversComposite.setLayout(new GridLayout(2, false));
         // Configure solvers here.
@@ -254,39 +298,7 @@ public class ControlView extends ViewPart implements IPartListener2{
             }
        });
        grayedControls.addIfAbsent(xmlSolverConfig);
-        
-            
-            
-        //Session Info Button
-        final Button infoButton = new Button(buttonComposite, SWT.PUSH);
-        infoButton.setText("Session Info");
-        infoButton.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-            	ITrace.getDefault().configureSessionInfo();
-            }
-        });  
-        grayedControls.addIfAbsent(infoButton);
-        
-        //Stop Tracking Button
-        final Button stopButton = new Button(buttonComposite, SWT.PUSH);
-        stopButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true,
-                1, 1));
-        stopButton.setText("Stop Tracking");
-        stopButton.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-            	ITrace.getDefault().stopTracking();
-            	for (Control c : grayedControls) {
-                	if(!c.isDisposed()) c.setEnabled(true);
-                }
-                
-                for (final Control controls : solversComposite.getChildren()) {
-            		Button button = (Button) controls;
-            		button.setSelection(false);
-            	}
-            }
-        });
+       //Solver Composite end. 
         
         //Configure Filters Here
         OldJSONBasicFixationFilter oldjsonBFFilter =
@@ -302,6 +314,7 @@ public class ControlView extends ViewPart implements IPartListener2{
         availableFilters.add(oldxmlBFFilter);
         availableFilters.add(xmlBFFilter);
         
+        //Filter composite begin.
         final Composite filterComposite = new Composite(parent, SWT.NONE);
         filterComposite.setLayout(new GridLayout(2, false));
         
@@ -330,6 +343,7 @@ public class ControlView extends ViewPart implements IPartListener2{
         	});
         	grayedControls.add(filterButton);
         }
+        //Filter composite end.
     }
 
     @Override
@@ -364,6 +378,7 @@ public class ControlView extends ViewPart implements IPartListener2{
     @Override
     public void partClosed(IWorkbenchPartReference partRef) {
     	if(partRef instanceof IEditorReference){
+    		setupEditors.remove(partRef);
     		ITrace.getDefault().setActionBars(getViewSite().getActionBars());
         	IEditorPart ep = (IEditorPart)partRef.getPart(true);
         	ITrace.getDefault().removeHighlighter(ep);
@@ -390,7 +405,6 @@ public class ControlView extends ViewPart implements IPartListener2{
     public void partVisible(IWorkbenchPartReference partRef) {
         setupControls(partRef);
         HandlerBindManager.bind(partRef);
-        ITrace.getDefault().setRootShell(rootShell);
     }
 
     @Override
@@ -406,17 +420,19 @@ public class ControlView extends ViewPart implements IPartListener2{
      */
     private void setupControls(IWorkbenchPartReference partRef) {
         //set up styled text manager if there is one
-    	System.out.println("asdf");
     	IEditorReference[] editors = PlatformUI.getWorkbench()
                 .getActiveWorkbenchWindow().getActivePage()
                 .getEditorReferences();
         for (IEditorReference editor : editors) {
-            IEditorPart editorPart = editor.getEditor(true);
-            if (editorPart.getAdapter(Control.class) instanceof StyledText) { //make sure editorPart contains an instance of StyledText
-            	StyledText text = (StyledText) editorPart.getAdapter(Control.class); 
-            	setupStyledText(editorPart, text);
-            }
-            //ignore anything else
+        	if(!setupEditors.contains(editor)){
+        		setupEditors.add(editor);
+	            IEditorPart editorPart = editor.getEditor(true);
+	            if (editorPart.getAdapter(Control.class) instanceof StyledText) { //make sure editorPart contains an instance of StyledText
+	            	StyledText text = (StyledText) editorPart.getAdapter(Control.class); 
+	            	setupStyledText(editorPart, text);
+	            }
+	            //ignore anything else
+        	}
         }
         //set up browser manager if there is one
         Shell workbenchShell = partRef.getPage().getWorkbenchWindow().
@@ -461,6 +477,10 @@ public class ControlView extends ViewPart implements IPartListener2{
      */
     private void setupStyledText(IEditorPart editor, StyledText control) {
         StyledText styledText = (StyledText) control;
+        if(editor.getEditorInput() instanceof FileStoreEditorInput){
+        	displayError("Please import file into workspace.");
+        	return;
+        }
         if (styledText.getData(KEY_AST) == null)
             styledText.setData(KEY_AST, new AstManager(editor, styledText));
     }
@@ -485,5 +505,12 @@ public class ControlView extends ViewPart implements IPartListener2{
         error_box.setMessage(message);
         error_box.open();
     }
+
+	@Override
+	public void handleEvent(Event event) {
+		String[] propertyNames = event.getPropertyNames();
+		String message = (String)event.getProperty(propertyNames[0]);
+		displayError(message);
+	}
 
 }
