@@ -302,12 +302,6 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
         }
     }
     
-    public void updateHighlighters(IEditorPart editorPart,Gaze gaze){
-    	if(editorPart == null) editorPart = activeEditor;
-    	if(tokenHighlighters.containsKey(editorPart))
-    		tokenHighlighters.get(editorPart).updateHandleGaze(gaze);
-    }
-    
     public void removeHighlighter(IEditorPart editorPart){
     	tokenHighlighters.remove(editorPart);
     }

@@ -77,44 +77,6 @@ public class TokenHighlighter implements PaintListener, EventHandler {
 		styledText.redraw();
 
 	}
-	
-	public void updateHandleGaze(Gaze gaze){
-		if(show && !styledText.isDisposed()){
-			Display.getDefault().asyncExec(new Runnable() {
-	               public void run() {
-	            	   if(gaze != null){
-	            		   nulls = 0;
-							Dimension screenRect =
-				                    Toolkit.getDefaultToolkit().getScreenSize();
-				            int screenX = (int) (gaze.getX() * screenRect.width);
-				            int screenY = (int) (gaze.getY() * screenRect.height);
-				            Rectangle monitorBounds = ITrace.getDefault().monitorBounds;
-				            if(styledText.isDisposed()) return;
-				            Rectangle editorBounds = styledText.getBounds();
-				            Point screenPos = styledText.toDisplay(0, 0);
-				            editorBounds.x = screenPos.x - monitorBounds.x;
-				            editorBounds.y = screenPos.y - monitorBounds.y;
-				            if(editorBounds.contains(screenX, screenY)){
-				            	int relativeX = screenX-editorBounds.x;
-				            	int relativeY = screenY-editorBounds.y;
-				            	
-				            	IStyledTextGazeResponse response = 
-				            		gazeHandler.handleGaze(screenX, screenY, relativeX, relativeY, gaze);
-				            	if(response != null && !boundingBoxContains(relativeX,relativeY)){
-				            		update(response.getLine()-1,response.getCol(), relativeX, relativeY);
-				            	}
-				            }
-			            }else{
-			            	nulls++;
-			            	if(nulls > 1){
-			            		boundingBox = null;
-								styledText.redraw();
-			            	}
-						}
-	               }
-				});
-			}
-		}
 		
 	public boolean boundingBoxContains(int x,int y){
 		if(boundingBox != null) return boundingBox.contains(x,y);
