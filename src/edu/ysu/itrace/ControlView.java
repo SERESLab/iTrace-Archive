@@ -109,14 +109,20 @@ public class ControlView extends ViewPart implements IPartListener2, EventHandle
         trackingButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-            	for (Control c : grayedControls) {
-                    c.setEnabled(false);
-                }
-            	
             	ITrace.getDefault().setActionBars(getViewSite().getActionBars());
             	if(ITrace.getDefault().toggleTracking()){
-            		if(trackingButton.getText() == "Start Tracking") trackingButton.setText("Stop Tracking");
-                	else trackingButton.setText("Start Tracking");
+            		if(trackingButton.getText() == "Start Tracking"){
+            			trackingButton.setText("Stop Tracking");
+            			for (Control c : grayedControls) {
+                            c.setEnabled(false);
+                        }
+            		}
+                	else{
+                		trackingButton.setText("Start Tracking");
+                		for (Control c : grayedControls) {
+                            c.setEnabled(true);
+                        }
+                	}
             	}
             	
             }

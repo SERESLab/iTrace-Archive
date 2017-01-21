@@ -26,14 +26,9 @@ import org.eclipse.jface.text.ITextOperationTarget;
 import org.eclipse.jface.text.source.projection.ProjectionViewer;
 
 public class TokenHighlighter implements PaintListener, EventHandler {
-	private class OffsetSpan{
-		int startOffset;
-		int endOffset;
-	}
 	
 	private StyledText styledText;
 	private Rectangle boundingBox;
-	private StyledTextGazeHandler gazeHandler;
 	private Point[] points;
 	private int pointIndex;
 	private int numberOfPoints;
@@ -108,7 +103,6 @@ public class TokenHighlighter implements PaintListener, EventHandler {
 		if(containsPoints(boundingBox)) return boundingBox;
 		int startOffset = 0;
 		int endOffset;
-		//System.out.println(startOffset + "--" + lineContent.length());
 		while(startOffset < lineContent.length()){
 			while(startOffset < lineContent.length() && checkChar(lineContent.charAt(startOffset))) 
 				startOffset++;
@@ -116,6 +110,7 @@ public class TokenHighlighter implements PaintListener, EventHandler {
 			while(endOffset < lineContent.length()-1 && !checkChar(lineContent.charAt(endOffset+1))) 
 				endOffset++;
 			box = styledText.getTextBounds(lineOffset+startOffset, lineOffset+endOffset);
+			
 			if(containsPoints(box)) break;
 			startOffset = endOffset+1;
 		}
@@ -143,7 +138,6 @@ public class TokenHighlighter implements PaintListener, EventHandler {
 	public TokenHighlighter(StyledText styledText, boolean show){
 		this.styledText = styledText;
 		this.styledText.addPaintListener(this);
-		this.gazeHandler = new StyledTextGazeHandler(styledText);
 		this.show = show;
 		this.numberOfPoints = 10;
 		this.points = new Point[numberOfPoints];
@@ -162,10 +156,9 @@ public class TokenHighlighter implements PaintListener, EventHandler {
 		String[] propertyNames = event.getPropertyNames();
 		//System.out.println(event.getProperty(propertyNames[0]));
 		IStyledTextGazeResponse response = (IStyledTextGazeResponse)event.getProperty(propertyNames[0]);
-		Dimension screenRect =
-                Toolkit.getDefaultToolkit().getScreenSize();
-        int screenX = (int) (response.getGaze().getX() * screenRect.width);
-        int screenY = (int) (response.getGaze().getY() * screenRect.height);
+		Rectangle mBounds = ITrace.getDefault().getRootShell().getBounds();
+        int screenX = (int) (response.getGaze().getX() * mBounds.width);
+        int screenY = (int) (response.getGaze().getY() * mBounds.height);
         Rectangle monitorBounds = ITrace.getDefault().monitorBounds;
         if(styledText.isDisposed()) return;
         Rectangle editorBounds = styledText.getBounds();

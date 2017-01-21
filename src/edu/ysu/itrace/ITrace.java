@@ -189,12 +189,6 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
             return recording;
         }
         //eventBroker.subscribe("iTrace/newgaze", this);
-        try {
-			tracker.startTracking();
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
         
         if (!sessionInfo.isConfigured()) {
         	eventBroker.post("iTrace/error", "You have not configured your Session Info.");
@@ -216,7 +210,6 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
         	eventBroker.post("iTrace/error", "Tracking is not in progress.");
             return false;
         }
-        recording = false;
         sessionInfo.reset();
         
         xmlSolver.dispose();
@@ -228,6 +221,8 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
             System.out.println("No Tracker");
         }
         statusLineManager.setMessage("");
+
+        recording = false;
         return true;
     }
     
@@ -239,12 +234,6 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
     public boolean displayCrosshair(boolean display){
     	if (tracker == null)
             requestTracker();
-        try {
-			tracker.startTracking();
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
         if (tracker != null) {
         	tracker.displayCrosshair(display);
         	return display;
@@ -275,12 +264,6 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
     public void displayEyeStatus(){
     	if (tracker == null)
             requestTracker();
-        try {
-			tracker.startTracking();
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
         if (tracker != null){
         	EyeStatusWindow statusWindow = new EyeStatusWindow();
         	statusWindow.setVisible(true);
@@ -290,12 +273,7 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
     public void activateHighlights(){
     	if (tracker == null)
             requestTracker();
-        try {
-			tracker.startTracking();
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
+		
         
         if (tracker != null){
         	showTokenHighLights();
@@ -382,12 +360,11 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
 			String[] propertyNames = event.getPropertyNames();
 			Gaze g = (Gaze)event.getProperty(propertyNames[0]);
 			 if (g != null) {
-	             Dimension screenRect =
-	                     Toolkit.getDefaultToolkit().getScreenSize();
-	             int screenX = (int) (g.getX() * screenRect.width);
-	             int screenY = (int) (g.getY() * screenRect.height);
-	             IGazeResponse response;
 	             if(!rootShell.isDisposed()){
+	            	 Rectangle monitorBounds = rootShell.getMonitor().getBounds();
+	            	 int screenX = (int) (g.getX() * monitorBounds.width);
+		             int screenY = (int) (g.getY() * monitorBounds.height);
+		             IGazeResponse response;
 	            	 response = handleGaze(screenX, screenY, g);
 	            	 
 	            	 if (response != null) {
