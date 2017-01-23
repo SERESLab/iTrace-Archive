@@ -109,7 +109,7 @@ public class Gaze {
         return nanoTime;
     }
     public long getSessionTime(){
-    	return nanoTime - Activator.getDefault().sessionStartTime;
+    	return nanoTime - ITrace.getDefault().sessionStartTime;
     }
     public String getTimestamp(){
     	return timestampString;

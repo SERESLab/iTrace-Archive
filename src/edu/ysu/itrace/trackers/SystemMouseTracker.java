@@ -19,6 +19,8 @@ import javax.swing.JFrame;
 
 import java.util.Date;
 
+import org.eclipse.e4.core.services.events.IEventBroker;
+import org.eclipse.ui.PlatformUI;
 /**
  * Tracker which follows the mouse cursor. Useful for testing when no eye
  * tracker is present.
@@ -33,9 +35,11 @@ public class SystemMouseTracker implements IEyeTracker {
 
         private SystemMouseTracker parent = null;
         private volatile RunState running = RunState.STOPPED;
-
+        private IEventBroker eventBroker;
+        
         public TrackerThread(SystemMouseTracker parent) {
             this.parent = parent;
+            this.eventBroker = PlatformUI.getWorkbench().getService(IEventBroker.class);
         }
 
         public void startTracking() {
@@ -75,6 +79,8 @@ public class SystemMouseTracker implements IEyeTracker {
                 parent.calibrator.moveCrosshair(cursorPosition.x,
                                                 cursorPosition.y);
                 parent.gazePoints.add(gaze);
+                //if(Activator.getDefault().recording)
+                	eventBroker.post("iTrace/newgaze", gaze);
                 try {
                     Thread.sleep(25);
                 } catch (InterruptedException e) {

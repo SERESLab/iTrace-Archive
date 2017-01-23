@@ -25,6 +25,9 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 
+import org.eclipse.e4.core.services.events.IEventBroker;
+import org.eclipse.ui.PlatformUI;
+
 import edu.ysu.itrace.Gaze;
 import edu.ysu.itrace.calibration.CalibrationStatusDisplay;
 import edu.ysu.itrace.trackers.IEyeTracker;
@@ -151,6 +154,7 @@ public class EyeXTracker implements IEyeTracker {
     private Calibrator calibrator;
     private double xDrift = 0, yDrift = 0;
     private long time = 0;
+    private IEventBroker eventBroker;
 
     static { System.loadLibrary("libEyeXTracker"); }
 
@@ -166,6 +170,7 @@ public class EyeXTracker implements IEyeTracker {
             this.close();
             throw new EyeTrackerConnectException();
         }
+        eventBroker = PlatformUI.getWorkbench().getService(IEventBroker.class);
     }
 
     public static void main(String[] args) {
@@ -358,6 +363,7 @@ public class EyeXTracker implements IEyeTracker {
                     timestamp);
 
             gaze_points.put(modifiedGaze);
+            eventBroker.post("iTrace/newgaze", modifiedGaze);
         } catch (InterruptedException e) {
             //Ignore this point.
         }
