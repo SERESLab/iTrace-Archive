@@ -9,6 +9,9 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.PlatformUI;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventHandler;
 
 import edu.ysu.itrace.gaze.IGazeResponse;
 import edu.ysu.itrace.gaze.IStyledTextGazeResponse;
@@ -18,23 +21,20 @@ import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.eclipse.e4.core.services.events.IEventBroker;
 import org.eclipse.jface.text.ITextOperationTarget;
 import org.eclipse.jface.text.source.projection.ProjectionViewer;
 
-public class TokenHighlighter implements PaintListener {
-	private class OffsetSpan{
-		int startOffset;
-		int endOffset;
-	}
+public class TokenHighlighter implements PaintListener, EventHandler {
 	
 	private StyledText styledText;
 	private Rectangle boundingBox;
-	private StyledTextGazeHandler gazeHandler;
 	private Point[] points;
 	private int pointIndex;
 	private int numberOfPoints;
 	private int nulls;
 	private boolean show;
+	private IEventBroker eventBroker;
 	
 	
 	@Override
@@ -72,44 +72,6 @@ public class TokenHighlighter implements PaintListener {
 		styledText.redraw();
 
 	}
-	
-	public void updateHandleGaze(final Gaze gaze){
-		if(show && !styledText.isDisposed()){
-			Display.getDefault().asyncExec(new Runnable() {
-	               public void run() {
-	            	   if(gaze != null){
-	            		   nulls = 0;
-							Dimension screenRect =
-				                    Toolkit.getDefaultToolkit().getScreenSize();
-				            int screenX = (int) (gaze.getX() * screenRect.width);
-				            int screenY = (int) (gaze.getY() * screenRect.height);
-				            Rectangle monitorBounds = Activator.getDefault().monitorBounds;
-				            if(styledText.isDisposed()) return;
-				            Rectangle editorBounds = styledText.getBounds();
-				            Point screenPos = styledText.toDisplay(0, 0);
-				            editorBounds.x = screenPos.x - monitorBounds.x;
-				            editorBounds.y = screenPos.y - monitorBounds.y;
-				            if(editorBounds.contains(screenX, screenY)){
-				            	int relativeX = screenX-editorBounds.x;
-				            	int relativeY = screenY-editorBounds.y;
-				            	
-				            	IStyledTextGazeResponse response = 
-				            		gazeHandler.handleGaze(screenX, screenY, relativeX, relativeY, gaze);
-				            	if(response != null && !boundingBoxContains(relativeX,relativeY)){
-				            		update(response.getLine()-1,response.getCol(), relativeX, relativeY);
-				            	}
-				            }
-			            }else{
-			            	nulls++;
-			            	if(nulls > 1){
-			            		boundingBox = null;
-								styledText.redraw();
-			            	}
-						}
-	               }
-				});
-			}
-		}
 		
 	public boolean boundingBoxContains(int x,int y){
 		if(boundingBox != null) return boundingBox.contains(x,y);
@@ -141,7 +103,6 @@ public class TokenHighlighter implements PaintListener {
 		if(containsPoints(boundingBox)) return boundingBox;
 		int startOffset = 0;
 		int endOffset;
-		//System.out.println(startOffset + "--" + lineContent.length());
 		while(startOffset < lineContent.length()){
 			while(startOffset < lineContent.length() && checkChar(lineContent.charAt(startOffset))) 
 				startOffset++;
@@ -149,6 +110,7 @@ public class TokenHighlighter implements PaintListener {
 			while(endOffset < lineContent.length()-1 && !checkChar(lineContent.charAt(endOffset+1))) 
 				endOffset++;
 			box = styledText.getTextBounds(lineOffset+startOffset, lineOffset+endOffset);
+			
 			if(containsPoints(box)) break;
 			startOffset = endOffset+1;
 		}
@@ -160,7 +122,7 @@ public class TokenHighlighter implements PaintListener {
 	
 	private boolean containsPoints(Rectangle box){
 		for(Point p: points){
-			if(p != null && !box.contains(p)) return false;
+			if(p != null && box != null && !box.contains(p)) return false;
 		}
 		return true;
 	}
@@ -176,14 +138,38 @@ public class TokenHighlighter implements PaintListener {
 	public TokenHighlighter(StyledText styledText, boolean show){
 		this.styledText = styledText;
 		this.styledText.addPaintListener(this);
-		this.gazeHandler = new StyledTextGazeHandler(styledText);
 		this.show = show;
 		this.numberOfPoints = 10;
 		this.points = new Point[numberOfPoints];
 		this.pointIndex = 0;
 		this.nulls = 0;
-		
+		this.eventBroker = PlatformUI.getWorkbench().getService(IEventBroker.class);
+		this.eventBroker.subscribe("iTrace/newstresponse", this);
 		//this.gazeQueue = Activator.getDefault().gazeTransport.createClient();
 		//System.out.println("gazeQueue");
+	}
+
+
+
+	@Override
+	public void handleEvent(Event event) {
+		String[] propertyNames = event.getPropertyNames();
+		//System.out.println(event.getProperty(propertyNames[0]));
+		IStyledTextGazeResponse response = (IStyledTextGazeResponse)event.getProperty(propertyNames[0]);
+		Rectangle mBounds = ITrace.getDefault().getRootShell().getBounds();
+        int screenX = (int) (response.getGaze().getX() * mBounds.width);
+        int screenY = (int) (response.getGaze().getY() * mBounds.height);
+        Rectangle monitorBounds = ITrace.getDefault().monitorBounds;
+        if(styledText.isDisposed()) return;
+        Rectangle editorBounds = styledText.getBounds();
+        Point screenPos = styledText.toDisplay(0, 0);
+        editorBounds.x = screenPos.x - monitorBounds.x;
+        editorBounds.y = screenPos.y - monitorBounds.y;
+        if(editorBounds.contains(screenX, screenY)){
+        	int relativeX = screenX-editorBounds.x;
+        	int relativeY = screenY-editorBounds.y;
+        	update(response.getLine()-1,response.getCol(), relativeX, relativeY);
+        }
+		
 	}
 }

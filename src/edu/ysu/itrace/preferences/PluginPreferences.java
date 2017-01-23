@@ -12,7 +12,7 @@ import org.eclipse.swt.widgets.List;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
-import edu.ysu.itrace.Activator;
+import edu.ysu.itrace.ITrace;
 import edu.ysu.itrace.EyeTrackerFactory;
 import edu.ysu.itrace.EyeTrackerFactory.TrackerType;
 
@@ -51,7 +51,7 @@ public class PluginPreferences extends PreferencePage
 
     @Override
     protected IPreferenceStore doGetPreferenceStore() {
-        return Activator.getDefault().getPreferenceStore();
+        return ITrace.getDefault().getPreferenceStore();
     }
 
     @Override
