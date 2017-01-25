@@ -10,6 +10,8 @@ import java.util.Queue;
 import org.eclipse.e4.core.services.events.IEventBroker;
 import org.eclipse.jface.action.IStatusLineManager;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.text.ITextOperationTarget;
+import org.eclipse.jface.text.source.projection.ProjectionViewer;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
@@ -72,10 +74,18 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
      */
     public ITrace() {
     	IEditorPart editorPart = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor();
+    	/*
     	if(editorPart != null){
 	    	StyledText styledText = (StyledText) editorPart.getAdapter(Control.class);
-	    	if(styledText != null) tokenHighlighters.put(editorPart, new TokenHighlighter(styledText,showTokenHighlights));
+	    	if(styledText != null){
+				ITextOperationTarget t = (ITextOperationTarget) activeEditor.getAdapter(ITextOperationTarget.class);
+				if(t instanceof ProjectionViewer){
+					ProjectionViewer projectionViewer = (ProjectionViewer)t;
+					tokenHighlighters.put(activeEditor, new TokenHighlighter(styledText, showTokenHighlights, projectionViewer));
+				}
+			}
     	}
+    	*/
     	eventBroker = PlatformUI.getWorkbench().getService(IEventBroker.class);
     	eventBroker.subscribe("iTrace/newgaze", this);
     	jsonSolver = new JSONGazeExportSolver();
@@ -256,7 +266,13 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
     	if(activeEditor == null) return;
     	if(!tokenHighlighters.containsKey(editorPart)){
     		StyledText styledText = (StyledText) editorPart.getAdapter(Control.class);
-    		if(styledText != null) tokenHighlighters.put(editorPart, new TokenHighlighter(styledText,showTokenHighlights));
+    		if(styledText != null){
+				ITextOperationTarget t = (ITextOperationTarget) activeEditor.getAdapter(ITextOperationTarget.class);
+				if(t instanceof ProjectionViewer){
+					ProjectionViewer projectionViewer = (ProjectionViewer)t;
+					tokenHighlighters.put(activeEditor, new TokenHighlighter(styledText, showTokenHighlights, projectionViewer));
+				}
+			}
     	}
     	
     }
@@ -289,8 +305,13 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
     	if(activeEditor == null) return;
 		if(!tokenHighlighters.containsKey(activeEditor)){
 			StyledText styledText = (StyledText) activeEditor.getAdapter(Control.class);
-			if(styledText != null)
-				tokenHighlighters.put(activeEditor, new TokenHighlighter(styledText, showTokenHighlights));
+			if(styledText != null){
+				ITextOperationTarget t = (ITextOperationTarget) activeEditor.getAdapter(ITextOperationTarget.class);
+				if(t instanceof ProjectionViewer){
+					ProjectionViewer projectionViewer = (ProjectionViewer)t;
+					tokenHighlighters.put(activeEditor, new TokenHighlighter(styledText, showTokenHighlights, projectionViewer));
+				}
+			}
 		}
     	for(TokenHighlighter tokenHighlighter: tokenHighlighters.values()){
     		tokenHighlighter.setShow(showTokenHighlights);

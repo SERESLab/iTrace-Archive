@@ -28,6 +28,7 @@ import org.eclipse.jface.text.source.projection.ProjectionViewer;
 public class TokenHighlighter implements PaintListener, EventHandler {
 	
 	private StyledText styledText;
+	private ProjectionViewer projviewer;
 	private Rectangle boundingBox;
 	private Point[] points;
 	private int pointIndex;
@@ -60,10 +61,10 @@ public class TokenHighlighter implements PaintListener, EventHandler {
 	}
 	
 	public void update(int lineIndex, int column, int x, int y){
-		
-        //System.out.println(lineIndex + "    " + column);
-        int lineOffset = styledText.getOffsetAtLine(lineIndex);
-		String lineContent = styledText.getLine(lineIndex);
+        
+        int lineOffset = styledText.getOffsetAtLine(projviewer.modelLine2WidgetLine(lineIndex));
+		String lineContent = styledText.getLine(projviewer.modelLine2WidgetLine(lineIndex));
+		//System.out.println(lineOffset);
 		//System.out.println(lineContent);
 		boundingBox = getBoundingBox(lineOffset,lineContent,x,y);
 		
@@ -135,11 +136,12 @@ public class TokenHighlighter implements PaintListener, EventHandler {
 		return false;
 	}
 	
-	public TokenHighlighter(StyledText styledText, boolean show){
+	public TokenHighlighter(StyledText styledText, boolean show, ProjectionViewer projviewer){
 		this.styledText = styledText;
+		this.projviewer = projviewer;
 		this.styledText.addPaintListener(this);
 		this.show = show;
-		this.numberOfPoints = 10;
+		this.numberOfPoints = 1;
 		this.points = new Point[numberOfPoints];
 		this.pointIndex = 0;
 		this.nulls = 0;
@@ -159,12 +161,12 @@ public class TokenHighlighter implements PaintListener, EventHandler {
 		Rectangle mBounds = ITrace.getDefault().getRootShell().getBounds();
         int screenX = (int) (response.getGaze().getX() * mBounds.width);
         int screenY = (int) (response.getGaze().getY() * mBounds.height);
-        Rectangle monitorBounds = ITrace.getDefault().monitorBounds;
+        //Rectangle monitorBounds = ITrace.getDefault().monitorBounds;
         if(styledText.isDisposed()) return;
         Rectangle editorBounds = styledText.getBounds();
         Point screenPos = styledText.toDisplay(0, 0);
-        editorBounds.x = screenPos.x - monitorBounds.x;
-        editorBounds.y = screenPos.y - monitorBounds.y;
+        editorBounds.x = screenPos.x - mBounds.x;
+        editorBounds.y = screenPos.y - mBounds.y;
         if(editorBounds.contains(screenX, screenY)){
         	int relativeX = screenX-editorBounds.x;
         	int relativeY = screenY-editorBounds.y;

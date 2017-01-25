@@ -45,8 +45,12 @@ public class StyledTextGazeHandler implements IGazeHandler {
             		.getData(ControlView.KEY_AST);
             projectionViewer = astManager.getProjectionViewer();
             int lineOffset = targetStyledText.getOffsetAtLine(targetStyledText.getLineIndex(relativeY));
-            int offset = targetStyledText.getOffsetAtLocation(new Point(
-                    relativeX, relativeY));
+            int offset;
+            try{
+            	offset = targetStyledText.getOffsetAtLocation(new Point(relativeX, relativeY));
+            }catch(IllegalArgumentException ex){
+            	return null;
+            }
             col = offset - lineOffset;
             lineIndex = projectionViewer.widgetLine2ModelLine(targetStyledText.getLineIndex(relativeY));
 
