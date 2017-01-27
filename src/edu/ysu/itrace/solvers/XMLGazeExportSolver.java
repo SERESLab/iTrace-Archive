@@ -158,7 +158,7 @@ public class XMLGazeExportSolver implements IFileExportSolver, EventHandler {
                     responseWriter.writeStartElement("sces");
                     for (SourceCodeEntity sce : styledResponse.getSCEs()) {
                         responseWriter.writeStartElement("sce");
-                        responseWriter.writeAttribute("name", sce.name);
+                        responseWriter.writeAttribute("name", sce.getName());
                         responseWriter.writeAttribute("type", sce.type.toString());
                         responseWriter.writeAttribute("how", sce.how.toString());
                         responseWriter.writeAttribute("total_length",

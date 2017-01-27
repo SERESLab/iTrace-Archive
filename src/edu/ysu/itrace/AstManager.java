@@ -45,6 +45,8 @@ import org.eclipse.swt.events.KeyListener;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.progress.UIJob;
+import org.eclipse.jface.text.ITextOperationTarget;
+import org.eclipse.jface.text.source.projection.ProjectionViewer;
 
 /**
  * Keeps updated information about the source code viewed in one StyledText.
@@ -71,6 +73,9 @@ public class AstManager {
     public enum SCEHow {
     	DECLARE,
     	USE,
+    	LINE_COMMENT,
+    	BLOCK_COMMENT,
+    	DOC_COMMENT
     }
 
     /**
@@ -83,6 +88,30 @@ public class AstManager {
         public int totalLength;
         public int startLine, endLine;
         public int startCol, endCol;
+        
+        
+        private int startModelOffset;
+        
+        public String getName(){
+        	if( type != SCEType.COMMENT )
+        		return name;
+        	else{
+        		int widgetOffsetStart = projectionViewer.modelOffset2WidgetOffset(startModelOffset);
+                int widgetOffsetEnd = widgetOffsetStart+totalLength;
+                if( widgetOffsetStart >= 0 && widgetOffsetEnd >= 0)
+                	return styledText.getText(widgetOffsetStart,widgetOffsetEnd);
+                else{
+                	int offsetStart = startModelOffset;
+                	while(widgetOffsetStart < 0){
+                		offsetStart++;
+                		widgetOffsetStart = projectionViewer.modelOffset2WidgetOffset(offsetStart);
+                	}
+                	int shownLineIndex = styledText.getLineAtOffset(offsetStart);
+                	return styledText.getLine(shownLineIndex);
+                }
+        	}
+        		
+        }
     }
 
     /**
@@ -108,6 +137,7 @@ public class AstManager {
 
     private IEditorPart editor;
     private StyledText styledText;
+    private ProjectionViewer projectionViewer;
     private ReloadAstJob reloadAstJob;
     private LinkedList<SourceCodeEntity> sourceCodeEntities;
     private String editorPath;
@@ -128,6 +158,9 @@ public class AstManager {
         }
         this.editor = editor;
         this.styledText = styledText;
+        //This is the only why I know to get the ProjectionViewer. Perhaps there is better way. ~Ben
+        ITextOperationTarget t = (ITextOperationTarget) editor.getAdapter(ITextOperationTarget.class);
+        if(t instanceof ProjectionViewer) projectionViewer = (ProjectionViewer)t;
         hookupAutoReload();
         reload();
     }
@@ -138,6 +171,9 @@ public class AstManager {
      */
     public String getPath() {
         return editorPath;
+    }
+    public ProjectionViewer getProjectionViewer(){
+    	return projectionViewer;
     }
 
     /**
@@ -348,8 +384,25 @@ public class AstManager {
                 Comment comment = (Comment) comment_obj;
                 SourceCodeEntity sce = new SourceCodeEntity();
                 sce.type = SCEType.COMMENT;
-                sce.how = SCEHow.DECLARE; //needs something here for export otherwise exception thrown (declare might not be appropriate)-Jenna
-                sce.name = comment.toString();
+                if(comment.isLineComment()) sce.how = SCEHow.LINE_COMMENT;
+                else if(comment.isBlockComment()) sce.how = SCEHow.BLOCK_COMMENT;
+                else sce.how = SCEHow.DOC_COMMENT;
+                //The projectionViewer is used to convert the ASTNode's model offset to a Widget offset. ~Ben
+                sce.startModelOffset = comment.getStartPosition();
+                sce.totalLength = comment.getLength();
+                int widgetOffsetStart = projectionViewer.modelOffset2WidgetOffset(comment.getStartPosition());
+                int widgetOffsetEnd = widgetOffsetStart+comment.getLength();
+                if( widgetOffsetStart >= 0 && widgetOffsetEnd >= 0)
+                	sce.name = styledText.getText(widgetOffsetStart,widgetOffsetEnd);
+                else{
+                	int offsetStart = comment.getStartPosition();
+                	while(widgetOffsetStart < 0){
+                		offsetStart++;
+                		widgetOffsetStart = projectionViewer.modelOffset2WidgetOffset(offsetStart);
+                	}
+                	int shownLineIndex = styledText.getLineAtOffset(offsetStart);
+                	sce.name = styledText.getLine(shownLineIndex);
+                }
                 determineSCEPosition(compileUnit, comment, sce);
                 sourceCodeEntities.add(sce);
             }
