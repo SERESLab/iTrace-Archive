@@ -27,6 +27,7 @@ import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.IPartListener2;
+import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchPartReference;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.FileStoreEditorInput;
@@ -39,6 +40,7 @@ import edu.ysu.itrace.filters.fixation.JSONBasicFixationFilter;
 import edu.ysu.itrace.filters.fixation.OldJSONBasicFixationFilter;
 import edu.ysu.itrace.filters.fixation.OldXMLBasicFixationFilter;
 import edu.ysu.itrace.filters.fixation.XMLBasicFixationFilter;
+
 /**
  * ViewPart for managing and controlling the plugin.
  */
@@ -62,6 +64,7 @@ public class ControlView extends ViewPart implements IPartListener2, EventHandle
     
     private CopyOnWriteArrayList<IFilter> availableFilters =
     		new CopyOnWriteArrayList<IFilter>();
+
     private IEventBroker eventBroker;
 
     @Override
@@ -73,12 +76,13 @@ public class ControlView extends ViewPart implements IPartListener2, EventHandle
         while (rootShell.getParent() != null) {
             rootShell = rootShell.getParent().getShell();
         }
+
         ITrace.getDefault().setRootShell(rootShell);
         ITrace.getDefault().monitorBounds = rootShell.getMonitor().getBounds();
 
         // add listener for determining part visibility
         getSite().getWorkbenchWindow().getPartService().addPartListener(this);
-
+        
         final String DONT_DO_THAT_MSG =
                 "You can't do that until you've "
                         + "selected a tracker in preferences.";
@@ -419,60 +423,80 @@ public class ControlView extends ViewPart implements IPartListener2, EventHandle
         HandlerBindManager.unbind(partRef);
     }
 
+
     /**
-     * Find styled text or browser controls within a part, set it up to be used by iTrace,
+     * Find controls within a part, set it up to be used by iTrace,
      * and extract meta-data from it.
      * 
-     * @param partRef Highest-level part reference possible.
+     * @param partRef partRef that just became visible.
      */
     private void setupControls(IWorkbenchPartReference partRef) {
-        //set up styled text manager if there is one
-    	IEditorReference[] editors = PlatformUI.getWorkbench()
-                .getActiveWorkbenchWindow().getActivePage()
-                .getEditorReferences();
-        for (IEditorReference editor : editors) {
-        	if(!setupEditors.contains(editor)){
-        		setupEditors.add(editor);
-	            IEditorPart editorPart = editor.getEditor(true);
-	            if (editorPart.getAdapter(Control.class) instanceof StyledText) { //make sure editorPart contains an instance of StyledText
-	            	StyledText text = (StyledText) editorPart.getAdapter(Control.class); 
-	            	setupStyledText(editorPart, text);
-	            }
-	            //ignore anything else
+    	IWorkbenchPart part = partRef.getPart(true);
+        Control control = part.getAdapter(Control.class);
+        //set up manager for control and managers for each child control if necessary
+        if (control != null) {
+        	setupControls(part, control);
+        } else {
+        	//Browser - always set up browser managers, no matter the partRef that
+        	//has become visible
+        	//not possible to get Browser control from a partRef
+        	Shell workbenchShell = partRef.getPage().getWorkbenchWindow().getShell();
+        	for (Control ctrl: workbenchShell.getChildren()) {
+        		setupBrowsers(ctrl);
         	}
         }
-        //set up browser manager if there is one
-        Shell workbenchShell = partRef.getPage().getWorkbenchWindow().
-                getShell();
-        for (Control control : workbenchShell.getChildren()) {
-        	setupBrowser(control);
+    }
+    
+    /**
+     * Recursive helper function to find and set up Browser control managers
+     * @param control
+     */
+    private void setupBrowsers(Control control) {
+    
+    	if (control instanceof Browser) {
+    		setupControls(null, control);
+    	}
+    	
+    	//If composite, look through children.
+        if (control instanceof Composite) {
+            Composite composite = (Composite) control;
+
+            Control[] children = composite.getChildren();
+            if (children.length > 0 && children[0] != null) {
+               for (Control curControl : children)
+                   setupBrowsers(curControl);
+            }
         }
     }
-
+    
     /**
-     * Find browser control, set it up to be used by iTrace,
-     * and extract meta-data from it.
-     * Recursive helper method for setupControls(IWorkbenchPartReference).
-     * 
-     * @param control control that might be a Browser
+     * Recursive function for setting up children controls for a control if it is
+     * a composite and setting up the main control's manager.
+     * @param part
+     * @param control
      */
-    private void setupBrowser(Control control) {
-        	//If composite
-            if (control instanceof Composite) {
-                Composite composite = (Composite) control;
+    private void setupControls(IWorkbenchPart part, Control control) {
+    	//If composite, setup children controls.
+        if (control instanceof Composite) {
+            Composite composite = (Composite) control;
 
-                Control[] children = composite.getChildren();
-                if (children.length > 0 && children[0] != null) {
-                   for (Control curControl : children) 
-                       setupBrowser(curControl);
-                }
+            Control[] children = composite.getChildren();
+            if (children.length > 0 && children[0] != null) {
+               for (Control curControl : children)
+                   setupControls(part, curControl);
             }
+        }
+        
+        if (control instanceof StyledText) {
+        	//set up styled text manager if there is one
+        	setupStyledText((IEditorPart) part, (StyledText) control);
         	
-           if (control instanceof Browser) {
-        	   Browser browse = (Browser) control;
-        	   setupBrowser(browse);
-           }
-				
+        } else if (control instanceof Browser) {
+        	//set up browser manager if there is one
+        	setupBrowser((Browser) control);
+        }
+        //TODO: no control set up for a ProjectExplorer, since there isn't an need for 
+        //a Manager right now, might be needed in the future
     }
     
     /**
@@ -480,14 +504,9 @@ public class ControlView extends ViewPart implements IPartListener2, EventHandle
      * 
      * @param editor IEditorPart which owns the StyledText in the next
      *               parameter.
-     * @param control StyledText to set up.
+     * @param styledText StyledText to set up.
      */
-    private void setupStyledText(IEditorPart editor, StyledText control) {
-        StyledText styledText = (StyledText) control;
-        if(editor.getEditorInput() instanceof FileStoreEditorInput){
-        	displayError("Please import file into workspace.");
-        	return;
-        }
+    private void setupStyledText(IEditorPart editor, StyledText styledText) {
         if (styledText.getData(KEY_AST) == null)
             styledText.setData(KEY_AST, new AstManager(editor, styledText));
     }
@@ -497,16 +516,16 @@ public class ControlView extends ViewPart implements IPartListener2, EventHandle
      * 
      * @param editor IEditorPart which owns the Browser in the next
      *               parameter.
-     * @param control Browser to set up.
+     * @param control browser to set up.
      */
-    private void setupBrowser(Browser control) {
-        Browser browser = (Browser) control;
+    private void setupBrowser(Browser browser) {
         if (browser.getData(KEY_SO_DOM) == null)
             browser.setData(KEY_SO_DOM, new SOManager(browser));
         if (browser.getData(KEY_BR_DOM) == null)
         	browser.setData(KEY_BR_DOM, new BRManager(browser));
     }
     
+
     private void displayError(String message) {
         MessageBox error_box = new MessageBox(rootShell, SWT.ICON_ERROR);
         error_box.setMessage(message);

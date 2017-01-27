@@ -3,10 +3,14 @@ package edu.ysu.itrace.trackers;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Insets;
 import java.awt.Toolkit;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -19,6 +23,7 @@ import org.eclipse.e4.core.services.events.IEventBroker;
 import org.eclipse.ui.PlatformUI;
 
 import edu.ysu.itrace.*;
+import edu.ysu.itrace.calibration.CalibrationStatusDisplay;
 import edu.ysu.itrace.exceptions.CalibrationException;
 import edu.ysu.itrace.exceptions.EyeTrackerConnectException;
 
@@ -38,7 +43,7 @@ public class TobiiTracker implements IEyeTracker {
         private native boolean jniBeginTobiiMainloop();
     }
 
-    private static class Calibrator extends edu.ysu.itrace.Calibrator {
+    private static class Calibrator extends edu.ysu.itrace.calibration.Calibrator {
         private TobiiTracker parent = null;
 
         public Calibrator(TobiiTracker tracker) throws IOException {
@@ -58,42 +63,68 @@ public class TobiiTracker implements IEyeTracker {
                 throws Exception {
             jniAddPoint(x, y);
         }
-        
-        protected void displayCalibrationStatus() throws Exception {
-        	double[] pointsNormalized = jniGetCalibration();
-        	int itemCount = pointsNormalized.length/4;
 
-        	for (int i = 0; i < pointsNormalized.length; i++) {
-        		if (pointsNormalized[i] < 0.0001) {
-        			pointsNormalized[i] = 0.0001;
-        		} else if (pointsNormalized[i] > .9999) {
-        			pointsNormalized[i] = .9999;
-        		} else {
-        			//do nothing
-        		}
-        	}
-        	
-        	BufferedImage buffImage = new BufferedImage(
-        			500, 300, BufferedImage.TYPE_INT_RGB);
+	     protected void displayCalibrationStatus(JFrame frame) throws Exception {
+	    	 double[] pointsNormalized = jniGetCalibration();
+	    	 
+	    	 if (pointsNormalized == null)
+	    		 throw new IOException("Can't get calibration data!");
+	    	 
+	    	 int zeros = 0;
+	    	 for( double ord: pointsNormalized){
+	    		 if( ord <= 0 || ord > 1) zeros++;
+	    	 }
+	    	 ArrayList<Point2D.Double> points = new ArrayList<Point2D.Double>();
+	    	 ArrayList<Point2D.Double> invalidpoints = new ArrayList<Point2D.Double>();
+	    	//if( zeros > 0 ) throw new IOException("zeros in points: "+zeros+"/"+pointsNormalized.length);
+	    	 
+	    	 int itemCount = pointsNormalized.length/4;
 
-        	for (int j = 0; j < itemCount; j++) {
-        		buffImage.setRGB((int)(pointsNormalized[j]*500),
-        				(int)(pointsNormalized[itemCount+j]*300),
-        				Color.GREEN.getRGB()); //left eye
-        		buffImage.setRGB((int)(pointsNormalized[2*itemCount+j]*500),
-        				(int)(pointsNormalized[3*itemCount+j]*300),
-        				Color.RED.getRGB()); //right eye
-        	}
-
-        	JFrame calibFrame = new JFrame();
-        	calibFrame.getContentPane().setLayout(new FlowLayout());
-        	calibFrame.getContentPane().add(
-        			new JLabel(new ImageIcon(buffImage)));
-        	calibFrame.pack();
-        	calibFrame.setVisible(true);
-        	
-        	JOptionPane.showMessageDialog(calibFrame, "Calibration Status");
-        }
+	    	 for( int i=0; i < itemCount; i++ ){
+	    		 
+	    		points.add(new Point2D.Double(pointsNormalized[i],pointsNormalized[i+itemCount]));
+	    		points.add(new Point2D.Double(pointsNormalized[(2*itemCount)+i],pointsNormalized[i+(itemCount*3)]));
+	    	 }
+	    	 
+	    	 Rectangle2D.Double rect = new Rectangle2D.Double(0.0,0.0,1.0,1.0);
+	    	 
+	    	 for(Point2D.Double p: points){
+	    		 if( !rect.contains(p) ) invalidpoints.add(p);
+	    	 }
+	    	 
+	    	 for (int i = 0; i < pointsNormalized.length; i++) {
+	    		 if (pointsNormalized[i] < 0.0001) {
+	    			 pointsNormalized[i] = 0.0001;
+	    		 } else if (pointsNormalized[i] > 0.9999) {
+	    			 pointsNormalized[i] = 0.9999;
+	    		 } else {
+	        		//do nothing
+	    		 }
+	    	 }
+	        
+	    	 Point2D.Double[] calibrationData = new Point2D.Double[itemCount+1];
+	    	 for (int j = 0; j < itemCount; j+=2) {
+	    		 calibrationData[j] = (new Point2D.Double(pointsNormalized[j],pointsNormalized[itemCount+j]));
+	    		 if(j != itemCount)
+	    			 calibrationData[j+1] = (new Point2D.Double(pointsNormalized[2*itemCount+j],pointsNormalized[3*itemCount+j]));
+	    	 }
+	    	 JFrame calibFrame = frame;
+	    	 CalibrationStatusDisplay calibDisplay = 
+	    			 new CalibrationStatusDisplay(calibFrame,calibrationPoints,calibrationData);
+	    	 
+	    	 calibFrame.add(calibDisplay);
+	        calibFrame.setUndecorated(false);
+	        calibFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+	        calibFrame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+	        calibFrame.setMinimumSize(new Dimension(600,300));
+	        calibFrame.setTitle("Calibration: "+new Date());
+	        Insets insets = calibFrame.getInsets();
+	        int width = calibFrame.getSize().width-(insets.left+insets.right);
+	        int height = calibFrame.getSize().height-(insets.top+insets.bottom);
+       		calibDisplay.windowDimension = new Dimension(width,height);
+	        calibFrame.setVisible(true);
+	        calibDisplay.repaint();
+	    }
 
         private native void jniAddPoint(double x, double y)
                 throws RuntimeException, IOException;
@@ -114,6 +145,7 @@ public class TobiiTracker implements IEyeTracker {
     private Calibrator calibrator;
     private double xDrift = 0, yDrift = 0;
     private Long previousTrackerTime;
+    private long time = 0;
     private IEventBroker eventBroker;
 
     static { System.loadLibrary("TobiiTracker"); }
@@ -192,11 +224,6 @@ public class TobiiTracker implements IEyeTracker {
 
     public void calibrate() throws CalibrationException {
         calibrator.calibrate();
-        try {
-        	calibrator.displayCalibrationStatus();
-        } catch (Exception e) {
-        	throw new CalibrationException("Cannot display calibration status!");
-        }
     }
 
     public Gaze getGaze() {
@@ -223,6 +250,41 @@ public class TobiiTracker implements IEyeTracker {
         	//Set previousGaze to new gaze 
         	previousTrackerTime = timestamp;
         }
+    	
+    	if(left_validity == 4 && right_validity == 4) return; //Ignore new gaze
+
+        //Left eye out of bounds.
+    	if( left_x >= 1.0 || left_x <= 0.0 ||
+        	left_y >= 1.0 || left_y <= 0.0 )
+        {
+        	//Right eye out of bounds.
+        	if( right_x >= 1.0 || right_x <= 0.0 ||
+                right_y >= 1.0 || right_y <= 0.0)
+        	{
+        		/*
+        		 * Check the time, 
+        		 * if both eyes have been out of bounds for 1 second
+        		 * remove the crosshair.
+        		 */
+        		if( time == 0 ) time = timestamp;
+        		else if( timestamp-time > 1000000 ) calibrator.moveCrosshair(-10, -10);
+        		return;
+        	}
+        	
+        	left_x = right_x;
+            left_y = right_y;
+        }else{
+        	//Right eye out of bounds.
+        	if( right_x >= 1.0 || right_x <= 0.0 ||
+                right_y >= 1.0 || right_y <= 0.0
+            ){
+        		right_x = left_x;
+            	right_y = left_y;
+        	}
+        }
+        time = 0;
+    	
+    	
         //Drift
         left_x += xDrift;
         right_x += xDrift;

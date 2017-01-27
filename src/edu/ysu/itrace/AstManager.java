@@ -190,7 +190,7 @@ public class AstManager {
         //location. They are already sorted from most specific to least
         //specific.
         for (SourceCodeEntity sce : sourceCodeEntities) {
-            boolean found = true;
+        	boolean found = true;
             if (lineNumber < sce.startLine || lineNumber > sce.endLine)
                 found = false;
             if (lineNumber == sce.startLine && colNumber < sce.startCol)
@@ -219,7 +219,7 @@ public class AstManager {
         if (compUnit == null)
             return;
 
-        ASTParser parser = ASTParser.newParser(AST.JLS4);
+        ASTParser parser = ASTParser.newParser(AST.JLS8);
         parser.setKind(ASTParser.K_COMPILATION_UNIT);
         parser.setProject(jProject);
         parser.setSource(compUnit);
