@@ -24,6 +24,12 @@
             name="itrace controller"
             restorable="true">
       </view>
+      <view
+      	class="edu.ysu.itrace.VisualizationControlView"
+      	id="edu.ysu.itrace.visualizationcontrolview"
+      	name = "iTrace Visualization"
+      	restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.editors">
