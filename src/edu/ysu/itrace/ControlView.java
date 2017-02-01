@@ -66,6 +66,7 @@ public class ControlView extends ViewPart implements IPartListener2, EventHandle
     		new CopyOnWriteArrayList<IFilter>();
 
     private IEventBroker eventBroker;
+    private StyledTextPaintListener stpl = new StyledTextPaintListener();
 
     @Override
     public void createPartControl(Composite parent) {
@@ -375,7 +376,8 @@ public class ControlView extends ViewPart implements IPartListener2, EventHandle
     		IEditorPart ep = (IEditorPart)partRef.getPart(true);
     		ITrace.getDefault().setLineManager(ep.getEditorSite().getActionBars().getStatusLineManager());
     		StyledText st = (StyledText)ep.getAdapter(Control.class);
-    		st.addPaintListener(new StyledTextPaintListener());
+    		st.removePaintListener(stpl);
+    		st.addPaintListener(stpl);
     	}
     }
 
