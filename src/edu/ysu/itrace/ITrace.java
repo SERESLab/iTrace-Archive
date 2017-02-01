@@ -276,6 +276,9 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
     	}
     	
     }
+    public IEditorPart getActiveEditor(){
+    	return activeEditor;
+    }
     
     public void displayEyeStatus(){
     	if (tracker == null)

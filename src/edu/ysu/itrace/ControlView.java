@@ -374,6 +374,8 @@ public class ControlView extends ViewPart implements IPartListener2, EventHandle
     		ITrace.getDefault().setActiveEditor((IEditorPart)partRef.getPart(false));
     		IEditorPart ep = (IEditorPart)partRef.getPart(true);
     		ITrace.getDefault().setLineManager(ep.getEditorSite().getActionBars().getStatusLineManager());
+    		StyledText st = (StyledText)ep.getAdapter(Control.class);
+    		st.addPaintListener(new StyledTextPaintListener());
     	}
     }
 
@@ -382,6 +384,8 @@ public class ControlView extends ViewPart implements IPartListener2, EventHandle
     	if(partRef.getPart(false) instanceof IEditorPart) {
     		ITrace.getDefault().setActiveEditor((IEditorPart)partRef.getPart(false));
     		IEditorPart ep = (IEditorPart)partRef.getPart(true);
+    		//StyledText st = (StyledText)ep.getAdapter(Control.class);
+    		//System.out.println(st.getLineCount());
     		ITrace.getDefault().setLineManager(ep.getEditorSite().getActionBars().getStatusLineManager());;
     	}
     }
@@ -406,6 +410,10 @@ public class ControlView extends ViewPart implements IPartListener2, EventHandle
 
     @Override
     public void partOpened(IWorkbenchPartReference partRef) {
+    	if(partRef.getPart(false) instanceof IEditorPart) {
+    		IEditorPart ep = (IEditorPart)partRef.getPart(true);
+    		
+    	}
     }
 
     @Override
