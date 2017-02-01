@@ -92,6 +92,7 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
     	xmlSolver = new XMLGazeExportSolver();
     	eventBroker.subscribe("iTrace/jsonOutput", jsonSolver);
     	eventBroker.subscribe("iTrace/xmlOutput", xmlSolver);
+    	new EngineSocket();
     }
 
     /*
