@@ -30,6 +30,12 @@
       	name = "iTrace Visualization"
       	restorable="true">
       </view>
+      <view
+      	class="edu.ysu.itrace.VisualizationGraphicsPanel"
+      	id="edu.ysu.itrace.visualizationgraphicspanel"
+      	name = "iTrace Vis"
+      	restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.editors">
