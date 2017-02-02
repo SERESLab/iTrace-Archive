@@ -26,14 +26,18 @@ public class GazeMap implements PaintListener {
 		if(!(t instanceof ProjectionViewer)) return;
 		ProjectionViewer projectionViewer = (ProjectionViewer)t;
 		Point prevPoint = null;
-		pe.gc.setLineWidth(5);
+		pe.gc.setLineWidth(st.getLineHeight()/3);
 		//pe.gc.setForeground(new Color(pe.gc.getDevice(),50,200,150));
 		pe.gc.setAlpha(75);
 		for(int i=0;i<coordinates.length;i++){
 			pe.gc.setForeground(new Color(pe.gc.getDevice(),255-(i%255),0+(i%255),255));
 			FileCoordinate coordinate = coordinates[i];
 			Point currentPoint = new Point(coordinate.x, coordinate.y);
-			if(prevPoint != null) pe.gc.drawLine(currentPoint.x+origin.x, currentPoint.y+origin.y, prevPoint.x+origin.x, prevPoint.y+origin.y);
+			if(prevPoint != null) pe.gc.drawLine(
+					(int)(st.getLineHeight()*((double)(currentPoint.x+origin.x)/15)),
+					(int)(st.getLineHeight()*((double)(currentPoint.y+origin.y)/15)), 
+					(int)(st.getLineHeight()*((double)(prevPoint.x+origin.x)/15)),
+					(int)(st.getLineHeight()*((double)(prevPoint.y+origin.y)/15)));
 			prevPoint = currentPoint;
 		}
 
