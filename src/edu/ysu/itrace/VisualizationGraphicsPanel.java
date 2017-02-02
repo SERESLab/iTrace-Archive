@@ -66,7 +66,7 @@ public class VisualizationGraphicsPanel extends ViewPart implements PaintListene
 			//pe.gc.drawText(""+line, 10, i*height+origin.y);
 		}
 		pe.gc.setBackground(new Color(pe.gc.getDevice(),0,0,0));
-		pe.gc.setLineWidth(5);
+		pe.gc.setLineWidth(height/3);
 		if(lines == null) return;
 		Point prevPoint = null;
 		for(int i=0; i<lines.length;i++){
