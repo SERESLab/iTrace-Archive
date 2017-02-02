@@ -51,7 +51,7 @@ public class VisualizationGraphicsPanel extends ViewPart implements PaintListene
 		int range = (lowerIndex+1)-upperIndex;
 		int height = st.getLineHeight();
 		Point origin = st.getLocationAtOffset(st.getOffsetAtLine(upperIndex));
-		pe.gc.setBackground(new Color(pe.gc.getDevice(),100,150,200));
+		pe.gc.setBackground(new Color(pe.gc.getDevice(),100,100,100));
 		pe.gc.setForeground(new Color(pe.gc.getDevice(),0,0,0));
 		
 		int caretLine = projectionViewer.widgetLine2ModelLine(st.getLineAtOffset(st.getCaretOffset()))+1;
@@ -62,7 +62,7 @@ public class VisualizationGraphicsPanel extends ViewPart implements PaintListene
 			if(line == caretLine) pe.gc.setBackground(new Color(pe.gc.getDevice(),150,200,250));
 			pe.gc.fillRectangle(0, i*height+origin.y, size.width-2, height);
 			pe.gc.drawRectangle(0, i*height+origin.y, size.width-2, height);
-			if(line == caretLine) pe.gc.setBackground(new Color(pe.gc.getDevice(),100,150,200));
+			if(line == caretLine) pe.gc.setBackground(new Color(pe.gc.getDevice(),100,100,100));
 			//pe.gc.drawText(""+line, 10, i*height+origin.y);
 		}
 		pe.gc.setBackground(new Color(pe.gc.getDevice(),0,0,0));
@@ -70,6 +70,7 @@ public class VisualizationGraphicsPanel extends ViewPart implements PaintListene
 		if(lines == null) return;
 		Point prevPoint = null;
 		for(int i=0; i<lines.length;i++){
+			pe.gc.setForeground(new Color(pe.gc.getDevice(),255-(i%255),0+(i%255),255));
 			int line = lines[i].line;
 			Point startingPoint = new Point(0,0);
 			//System.out.println(projectionViewer.widgetLine2ModelLine(upperIndex)+1);
@@ -91,23 +92,19 @@ public class VisualizationGraphicsPanel extends ViewPart implements PaintListene
 				}else{
 					startingPoint.y = (projectionViewer.modelLine2WidgetLine(line)-upperIndex-1)*height+origin.y+(height/2);
 				}
-				if(prevPoint != null && startingPoint.y == prevPoint.y) 
-					pe.gc.setForeground(new Color(pe.gc.getDevice(),100,100,100));
+				
 			}else{
 				startingPoint.y = projectionViewer.modelLine2WidgetLine(line - upperIndex-1)*height+origin.y+(height/2);
 				//System.out.println(startingPoint.y);
 			}
 			startingPoint.x = (int)((double)size.width/lines.length)*i;
 			
-			if(prevPoint != null){
+			if(prevPoint != null)
 				pe.gc.drawLine(startingPoint.x, startingPoint.y, prevPoint.x, prevPoint.y);
-			}else{
-				pe.gc.fillRectangle(startingPoint.x, startingPoint.y, 5, 5);
-			}
+			
 			//if(startingPoint.y < 0 && startingPoint.y != -5)
 				//System.out.println(""+line+ '\t'+ startingPoint);
 			prevPoint = startingPoint;
-			pe.gc.setForeground(new Color(pe.gc.getDevice(),0,0,0));
 		}
 		
 		
