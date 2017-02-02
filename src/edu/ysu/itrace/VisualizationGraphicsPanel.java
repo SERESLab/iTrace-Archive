@@ -97,7 +97,7 @@ public class VisualizationGraphicsPanel extends ViewPart implements PaintListene
 				startingPoint.y = projectionViewer.modelLine2WidgetLine(line - upperIndex-1)*height+origin.y+(height/2);
 				//System.out.println(startingPoint.y);
 			}
-			startingPoint.x = (int)((double)size.width/lines.length)*i;
+			startingPoint.x = (int)((double)(size.width*i)/lines.length);
 			
 			if(prevPoint != null)
 				pe.gc.drawLine(startingPoint.x, startingPoint.y, prevPoint.x, prevPoint.y);
