@@ -400,7 +400,8 @@ public class AstManager {
                 		offsetStart++;
                 		widgetOffsetStart = projectionViewer.modelOffset2WidgetOffset(offsetStart);
                 	}
-                	int shownLineIndex = styledText.getLineAtOffset(offsetStart);
+                	widgetOffsetStart = projectionViewer.modelOffset2WidgetOffset(offsetStart);
+                	int shownLineIndex = styledText.getLineAtOffset(widgetOffsetStart);
                 	sce.name = styledText.getLine(shownLineIndex);
                 }
                 determineSCEPosition(compileUnit, comment, sce);
