@@ -45,4 +45,8 @@ public interface IStyledTextGazeResponse extends IGazeResponse {
      * Return the y position of the first character on the line
      */
     public int getLineBaseY();
+    
+    public int getRelativeX();
+    
+    public int getRelativeY();
 }

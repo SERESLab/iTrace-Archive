@@ -69,7 +69,6 @@ public class VisualizationGraphicsPanel extends ViewPart implements PaintListene
 		pe.gc.setLineWidth(5);
 		if(lines == null) return;
 		Point prevPoint = null;
-		System.out.println(projectionViewer.modelLine2WidgetLine(17));
 		for(int i=0; i<lines.length;i++){
 			int line = lines[i].line;
 			Point startingPoint = new Point(0,0);

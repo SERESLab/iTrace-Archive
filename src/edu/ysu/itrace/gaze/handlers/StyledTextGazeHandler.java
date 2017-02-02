@@ -155,6 +155,16 @@ public class StyledTextGazeHandler implements IGazeHandler {
                 return path;
             }
 
+			@Override
+			public int getRelativeX() {
+				return relativeX;
+			}
+
+			@Override
+			public int getRelativeY() {
+				return relativeY;
+			}
+
         };
     }
 }
