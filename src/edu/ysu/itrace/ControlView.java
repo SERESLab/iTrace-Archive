@@ -378,6 +378,7 @@ public class ControlView extends ViewPart implements IPartListener2, EventHandle
     		StyledText st = (StyledText)ep.getAdapter(Control.class);
     		st.removePaintListener(stpl);
     		st.addPaintListener(stpl);
+    		st.addPaintListener(new GazeMap());
     	}
     }
 

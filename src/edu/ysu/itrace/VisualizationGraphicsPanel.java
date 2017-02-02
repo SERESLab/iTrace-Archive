@@ -39,7 +39,7 @@ public class VisualizationGraphicsPanel extends ViewPart implements PaintListene
 	@Override
 	public void paintControl(PaintEvent pe) {
 		Rectangle size = graphicsCanvas.getBounds();
-		int[] lines = ITrace.getDefault().lines;
+		FileCoordinate[] lines = ITrace.getDefault().lines;
 		IEditorPart ep = ITrace.getDefault().getActiveEditor();
 		StyledText st = (StyledText)ep.getAdapter(Control.class);
 		if(st == null) return;
@@ -54,31 +54,61 @@ public class VisualizationGraphicsPanel extends ViewPart implements PaintListene
 		pe.gc.setBackground(new Color(pe.gc.getDevice(),100,150,200));
 		pe.gc.setForeground(new Color(pe.gc.getDevice(),0,0,0));
 		
+		int caretLine = projectionViewer.widgetLine2ModelLine(st.getLineAtOffset(st.getCaretOffset()))+1;
+		
 		for(int i=0;i<range+1;i++){
 			int line = projectionViewer.widgetLine2ModelLine(upperIndex+i)+1;
 			if(line == 0) continue;
+			if(line == caretLine) pe.gc.setBackground(new Color(pe.gc.getDevice(),150,200,250));
 			pe.gc.fillRectangle(0, i*height+origin.y, size.width-2, height);
 			pe.gc.drawRectangle(0, i*height+origin.y, size.width-2, height);
+			if(line == caretLine) pe.gc.setBackground(new Color(pe.gc.getDevice(),100,150,200));
 			//pe.gc.drawText(""+line, 10, i*height+origin.y);
 		}
 		pe.gc.setBackground(new Color(pe.gc.getDevice(),0,0,0));
 		pe.gc.setLineWidth(5);
 		if(lines == null) return;
 		Point prevPoint = null;
+		System.out.println(projectionViewer.modelLine2WidgetLine(17));
 		for(int i=0; i<lines.length;i++){
-			int line = lines[i];
-			//System.out.println(line);
+			int line = lines[i].line;
 			Point startingPoint = new Point(0,0);
-			if(line < upperIndex) startingPoint.y = -5;
-			else if(line > lowerIndex) startingPoint.y = size.height+5;
-			else{
-				startingPoint.y = (line - upperIndex)*height+origin.y+(height/2);
+			//System.out.println(projectionViewer.widgetLine2ModelLine(upperIndex)+1);
+			if(line < projectionViewer.widgetLine2ModelLine(upperIndex)+1){
+				//System.out.println(line);
+				startingPoint.y = -5;
+			}
+			else if(line > projectionViewer.widgetLine2ModelLine(lowerIndex)+1){
+				startingPoint.y = size.height+5;
+			}
+			else if(line != projectionViewer.modelLine2WidgetLine(line)){
+				if(projectionViewer.modelLine2WidgetLine(line) == -1){
+					
+					while(projectionViewer.modelLine2WidgetLine(line) == -1 && line != -1) line--;
+					line++;
+					startingPoint.y = projectionViewer.modelLine2WidgetLine(line - upperIndex-1)*height+origin.y+(height/2);
+					
+					if(startingPoint.y < 0) startingPoint.y = -startingPoint.y;
+				}else{
+					startingPoint.y = (projectionViewer.modelLine2WidgetLine(line)-upperIndex-1)*height+origin.y+(height/2);
+				}
+				if(prevPoint != null && startingPoint.y == prevPoint.y) 
+					pe.gc.setForeground(new Color(pe.gc.getDevice(),100,100,100));
+			}else{
+				startingPoint.y = projectionViewer.modelLine2WidgetLine(line - upperIndex-1)*height+origin.y+(height/2);
 				//System.out.println(startingPoint.y);
 			}
 			startingPoint.x = (int)((double)size.width/lines.length)*i;
-			if(prevPoint != null) pe.gc.drawLine(startingPoint.x, startingPoint.y, prevPoint.x, prevPoint.y);
-			else pe.gc.fillRectangle(startingPoint.x, startingPoint.y, 5, 5);
+			
+			if(prevPoint != null){
+				pe.gc.drawLine(startingPoint.x, startingPoint.y, prevPoint.x, prevPoint.y);
+			}else{
+				pe.gc.fillRectangle(startingPoint.x, startingPoint.y, 5, 5);
+			}
+			//if(startingPoint.y < 0 && startingPoint.y != -5)
+				//System.out.println(""+line+ '\t'+ startingPoint);
 			prevPoint = startingPoint;
+			pe.gc.setForeground(new Color(pe.gc.getDevice(),0,0,0));
 		}
 		
 		

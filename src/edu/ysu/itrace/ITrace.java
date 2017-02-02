@@ -48,7 +48,8 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
     public static final String PLUGIN_ID = "edu.ysu.itrace"; //$NON-NLS-1$
     public long sessionStartTime;
     public Rectangle monitorBounds;
-    public int[] lines;
+    public FileCoordinate[] lines = null;
+    public boolean displayGazeMap = true;
     // The shared instance
     private static ITrace plugin;
     private IEditorPart activeEditor;

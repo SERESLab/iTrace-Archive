@@ -26,7 +26,7 @@ public class VisualizationControlView extends ViewPart {
 			String chosenFileName = fileDialog.open();
 			System.out.println(chosenFileName);
 			try {
-				int[] lines = XmlDataParser.parseFile(chosenFileName);
+				FileCoordinate[] lines = XmlDataParser.parseFile(chosenFileName);
 				ITrace.getDefault().lines = lines;
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
