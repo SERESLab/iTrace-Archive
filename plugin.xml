@@ -24,6 +24,12 @@
             name="itrace controller"
             restorable="true">
       </view>
+      <view
+            class="edu.ysu.itrace.SocketStatusView"
+            id="edu.ysu.itrace.socketstatusview"
+            name="Socket Status"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.editors">

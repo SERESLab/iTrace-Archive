@@ -38,7 +38,7 @@ void MouseTracker::trackMouse(){
     QDataStream outStream(&block, QIODevice::WriteOnly);
     outStream.setVersion(QDataStream::Qt_5_8);
     stringstream ss;
-    ss << cursor.x() << "," << cursor.y() << '\n';
+    ss << "iTraceData," << cursor.x() << "," << cursor.y() << '\n';
     outStream.writeRawData(ss.str().c_str(), 100);
     for(int i=0; i<clients.size(); i++){
         //qDebug() << "Writing to client " << i;
