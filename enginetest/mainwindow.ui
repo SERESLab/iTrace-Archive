@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>383</width>
+    <height>77</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -24,16 +24,16 @@
      </rect>
     </property>
     <property name="text">
-     <string>PushButton</string>
+     <string>Start Server</string>
     </property>
    </widget>
    <widget class="QTextBrowser" name="textBrowser">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>40</y>
-      <width>256</width>
-      <height>192</height>
+      <x>80</x>
+      <y>0</y>
+      <width>301</width>
+      <height>21</height>
      </rect>
     </property>
    </widget>
@@ -43,8 +43,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>400</width>
-     <height>21</height>
+     <width>383</width>
+     <height>19</height>
     </rect>
    </property>
   </widget>
