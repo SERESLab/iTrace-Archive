@@ -39,12 +39,12 @@ public class EngineSocket{
 						if(reader.ready()){
 							data = reader.readLine();
 							int end = data.length()-1;
-							while(end-1 > 0 && (int)data.charAt(end-1) < 128) end--;
-							int startingIndex = data.indexOf("iTraceData");
-							if(startingIndex != -1){
-								data = data.substring(startingIndex, data.length());
+							//while(end-1 > 0 && (int)data.charAt(end-1) < 128) end--;
+							//int startingIndex = data.indexOf("iTraceData");
+							//if(startingIndex != -1){
+								//data = data.substring(startingIndex, data.length());
 								eventBroker.post("SocketData", data);
-							}
+							//}
 						}
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
