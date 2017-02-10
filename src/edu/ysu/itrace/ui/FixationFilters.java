@@ -1,3 +1,5 @@
+package edu.ysu.itrace.ui;
+
 import javax.swing.*;
 
 public abstract class FixationFilters{
