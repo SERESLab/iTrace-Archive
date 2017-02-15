@@ -49,4 +49,6 @@ public interface IStyledTextGazeResponse extends IGazeResponse {
     public int getRelativeX();
     
     public int getRelativeY();
+    
+    public int getOriginOffset();
 }

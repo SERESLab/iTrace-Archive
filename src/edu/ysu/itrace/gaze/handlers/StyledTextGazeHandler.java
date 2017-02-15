@@ -36,6 +36,7 @@ public class StyledTextGazeHandler implements IGazeHandler {
         final int fontHeight;
         final AstManager.SourceCodeEntity[] entities;
         final String path;
+        final int originOffset;
         
 
         try {
@@ -44,6 +45,7 @@ public class StyledTextGazeHandler implements IGazeHandler {
             AstManager astManager = (AstManager) targetStyledText
             		.getData(ControlView.KEY_AST);
             projectionViewer = astManager.getProjectionViewer();
+            originOffset = targetStyledText.getOffsetAtLocation(new Point(0,0));
             int lineOffset = targetStyledText.getOffsetAtLine(targetStyledText.getLineIndex(relativeY));
             int offset;
             try{
@@ -164,6 +166,12 @@ public class StyledTextGazeHandler implements IGazeHandler {
 			public int getRelativeY() {
 				return relativeY;
 			}
+
+			@Override
+			public int getOriginOffset() {
+				return originOffset;
+			}
+			
 
         };
     }

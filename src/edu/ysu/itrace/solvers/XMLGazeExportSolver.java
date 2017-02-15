@@ -159,6 +159,8 @@ public class XMLGazeExportSolver implements IFileExportSolver, EventHandler {
                             String.valueOf(styledResponse.getRelativeX()));
                     responseWriter.writeAttribute("relative_y",
                             String.valueOf(styledResponse.getRelativeY()));
+                    responseWriter.writeAttribute("origin_offset",
+                            String.valueOf(styledResponse.getOriginOffset()));
                     responseWriter.writeStartElement("sces");
                     for (SourceCodeEntity sce : styledResponse.getSCEs()) {
                         responseWriter.writeStartElement("sce");
