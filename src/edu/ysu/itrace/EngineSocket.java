@@ -28,7 +28,7 @@ public class EngineSocket{
 		try{
 			socket = new Socket("localhost", 8080);
 			reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-			System.out.println(socket.isConnected());
+			//System.out.println("Connected: " + socket.isConnected());
 			
 			timer.schedule(new TimerTask(){
 
@@ -36,15 +36,17 @@ public class EngineSocket{
 				public void run() {
 					
 					try {
+						//System.out.println("Ready: " + reader.ready());
 						if(reader.ready()){
 							data = reader.readLine();
-							int end = data.length()-1;
+							//System.out.println("New Data" + '\t' + data);
+							//int end = data.length()-1;
 							//while(end-1 > 0 && (int)data.charAt(end-1) < 128) end--;
-							int startingIndex = data.indexOf("iTraceData");
-							if(startingIndex != -1){
-								data = data.substring(startingIndex, data.length());
-								eventBroker.post("SocketData", data);
-							}
+							//int startingIndex = data.indexOf("iTraceData");
+							//if(startingIndex != -1){
+								//data = data.substring(startingIndex, startingIndex+20);
+							eventBroker.post("SocketData", data);
+							//}
 						}
 					} catch (IOException e) {
 						// TODO Auto-generated catch block

@@ -34,6 +34,7 @@ public class SocketStatusView extends ViewPart implements EventHandler, PaintLis
 	public void handleEvent(Event event) {
 		String[] names = event.getPropertyNames();
 		data = (String)event.getProperty(names[0]);
+		//System.out.println(data);
 		canvas.redraw();
 		
 	}

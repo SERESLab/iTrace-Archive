@@ -38,26 +38,37 @@ void MouseTracker::trackMouse(){
     QDataStream outStream(&block, QIODevice::WriteOnly);
     outStream.setVersion(QDataStream::Qt_5_8);
     stringstream ss;
+    qDebug() << 1;
     ss << "iTraceData," << cursor.x() << "," << cursor.y() << '\n';
-    //qDebug() << ss.gcount();
-    outStream.writeRawData(ss.str().c_str(), 100);
+    //qDebug() << ss.str().c_str();
+    //qDebug() << outStream.status();
+    int a = outStream.writeRawData(ss.str().c_str(), ss.str().length()+1);
+    //if(a == -1)
+    qDebug() << 1.5 << '\t'  << a;
     for(int i=0; i<clients.size(); i++){
-        //qDebug() << "Writing to client " << i;
+        qDebug() << 2;
         QTcpSocket * client = clients[i];
+        qDebug() << 3;
         client->write(block);
+        qDebug() << 4;
         client->flush();
+        qDebug() << 5;
     }
 }
 
 void MouseTracker::newConnections(){
-    qDebug() << (server->hasPendingConnections());
+    //qDebug() << (server->hasPendingConnections());
     while(server->hasPendingConnections()){
         QTcpSocket * client = server->nextPendingConnection();
         if(!client) continue;
-        qDebug() << "Have Client,";
+        //qDebug() << "Have Client,";
         connect(client,SIGNAL(disconnected()), client, SLOT(deleteLater()));
-        qDebug() << "is connected";
+        //qDebug() << "is connected";
         clients.push_back(client);
-        qDebug() << "added to clients";
+        //qDebug() << "added to clients";
     }
+}
+
+void MouseTracker::removedConnection(){
+
 }

@@ -34,7 +34,7 @@ public:
 public slots:
     void trackMouse();
     void newConnections();
-    //void removedConnection();
+    void removedConnection();
 
 
 };

@@ -66,7 +66,7 @@ public:
 
     void retranslateUi(QMainWindow *MainWindow)
     {
-        MainWindow->setWindowTitle(QApplication::translate("MainWindow", "MainWindow", Q_NULLPTR));
+        MainWindow->setWindowTitle(QApplication::translate("MainWindow", "iTrace Engine", Q_NULLPTR));
         pushButton->setText(QApplication::translate("MainWindow", "Start Server", Q_NULLPTR));
     } // retranslateUi
 
