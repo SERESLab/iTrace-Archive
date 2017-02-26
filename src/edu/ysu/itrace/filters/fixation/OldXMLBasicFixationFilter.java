@@ -68,7 +68,7 @@ public class OldXMLBasicFixationFilter extends BasicFixationFilter { //for the A
 			if(file.getName().lastIndexOf(".") > 0) {
 				int i = file.getName().lastIndexOf(".");
 				if (file.getName().substring(i+1).equals("xml")) {
-					if (file.exists()) { System.out.println("here");
+					if (file.exists()) {
 						try {
 							XMLInputFactory factory = XMLInputFactory.newInstance();
 							XMLStreamReader reader = factory.createXMLStreamReader(

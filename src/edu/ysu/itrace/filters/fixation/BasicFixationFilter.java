@@ -26,7 +26,7 @@ public abstract class BasicFixationFilter implements IFilter {
 	private int r = 0; //gaze samples, sliding window, set after reading in gazes
 	private double threshold = 35; //pixels, minimum peak threshold
 	private double radius = 10; //pixels, minimum distance between two fixations
-	private long durationThresh = 60; //ms, minimum duration of a fixation
+	private long durationThresh = 50; //ms, minimum duration of a fixation
 
 	//Getters
 	/**
@@ -326,11 +326,13 @@ public abstract class BasicFixationFilter implements IFilter {
 	 * Removed gazes below a certain duration threshold
 	 */
 	public void removeShortFixations() {
+		ArrayList<Fixation> toremove = new ArrayList<Fixation>();
 		for (int i = 0; i < processedGazes.size(); i++) {
 			if (processedGazes.get(i).getDuration() < durationThresh) {
-				processedGazes.remove(i);
+				toremove.add(processedGazes.get(i));
 			}
 		}
+		processedGazes.removeAll(toremove);
 	}
 	
 	//Overridden function
