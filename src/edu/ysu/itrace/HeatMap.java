@@ -28,10 +28,13 @@ public class HeatMap implements PaintListener {
 	@Override
 	public void paintControl(PaintEvent pe) {
 		if(!ITrace.getDefault().displayHeatMap || ITrace.getDefault().lines == null) return;
-
+		
+		IEditorPart ep = ITrace.getDefault().getActiveEditor();
+		
 		FileCoordinate[] coordinates = ITrace.getDefault().lines;
 		lineFrequencies.clear();
 		for(FileCoordinate coordinate: coordinates){
+			if(!coordinate.filename.equals(ep.getEditorInput().getName())) continue;
 			if(lineFrequencies.containsKey(coordinate.line)){
 				(lineFrequencies.get(coordinate.line)).add(coordinate);
 			}else{
@@ -42,10 +45,8 @@ public class HeatMap implements PaintListener {
 		
 		int largestValue = 0;
 		
-		IEditorPart ep = ITrace.getDefault().getActiveEditor();
 		StyledText st = (StyledText)ep.getAdapter(Control.class);
 		if(st == null) return;
-		
 		ITextOperationTarget t = (ITextOperationTarget) ep.getAdapter(ITextOperationTarget.class);
 		if(!(t instanceof ProjectionViewer)) return;
 		ProjectionViewer projViewer = (ProjectionViewer)t;

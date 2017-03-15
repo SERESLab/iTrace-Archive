@@ -24,10 +24,9 @@ public class XmlDataParser {
 			Element element = (Element) node;
 			String line = element.getAttribute("line");
 			String column = element.getAttribute("char_index");
-			String x = element.getAttribute("relative_x");
-			String y = element.getAttribute("relative_y");
-			//System.out.println(line);
-			lines[i] = new FileCoordinate(Integer.parseInt(line),Integer.parseInt(column),Integer.parseInt(x),Integer.parseInt(y));
+			String name = element.getAttribute("name");
+			String path = element.getAttribute("path");
+			lines[i] = new FileCoordinate(name, Integer.parseInt(line),Integer.parseInt(column));
 		}
 		return lines;
 	}

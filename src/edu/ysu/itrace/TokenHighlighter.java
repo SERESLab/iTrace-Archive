@@ -60,7 +60,7 @@ public class TokenHighlighter implements PaintListener, EventHandler {
 	}
 	
 	public void update(int lineIndex, int column, int x, int y){
-        
+        if(projviewer.modelLine2WidgetLine(lineIndex) == -1 || projviewer.modelLine2WidgetLine(lineIndex) >= styledText.getLineCount()) return;
         int lineOffset = styledText.getOffsetAtLine(projviewer.modelLine2WidgetLine(lineIndex));
 		String lineContent = styledText.getLine(projviewer.modelLine2WidgetLine(lineIndex));
 		boundingBox = getBoundingBox(lineOffset,column,lineContent,x,y);
