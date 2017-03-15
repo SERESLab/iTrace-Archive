@@ -49,7 +49,8 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
     public long sessionStartTime;
     public Rectangle monitorBounds;
     public FileCoordinate[] lines = null;
-    public boolean displayGazeMap = true;
+    public boolean displayGazeMap = false;
+    public boolean displayHeatMap = false;
     // The shared instance
     private static ITrace plugin;
     private IEditorPart activeEditor;

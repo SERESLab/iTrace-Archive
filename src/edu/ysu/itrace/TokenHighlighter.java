@@ -33,7 +33,6 @@ public class TokenHighlighter implements PaintListener, EventHandler {
 	private Point[] points;
 	private int pointIndex;
 	private int numberOfPoints;
-	private int nulls;
 	private boolean show;
 	private IEventBroker eventBroker;
 	
@@ -64,12 +63,7 @@ public class TokenHighlighter implements PaintListener, EventHandler {
         
         int lineOffset = styledText.getOffsetAtLine(projviewer.modelLine2WidgetLine(lineIndex));
 		String lineContent = styledText.getLine(projviewer.modelLine2WidgetLine(lineIndex));
-		//System.out.println(lineOffset);
-		//System.out.println(lineContent);
-		boundingBox = getBoundingBox(lineOffset,lineContent,x,y);
-		
-		//if(tokenOffsetSpan == null) boundingBox = null;
-		//else boundingBox = styledText.getTextBounds(tokenOffsetSpan.startOffset,tokenOffsetSpan.endOffset);
+		boundingBox = getBoundingBox(lineOffset,column,lineContent,x,y);
 		styledText.redraw();
 
 	}
@@ -96,36 +90,17 @@ public class TokenHighlighter implements PaintListener, EventHandler {
 	}
 	
 	
-	private Rectangle getBoundingBox(int lineOffset, String lineContent, int x, int y){
+	private Rectangle getBoundingBox(int lineOffset, int column, String lineContent, int x, int y){
 		Rectangle box = null;
-		points[pointIndex] = new Point(x,y);
-		pointIndex++;
-		if(pointIndex > numberOfPoints-1) pointIndex = pointIndex%numberOfPoints;
-		if(containsPoints(boundingBox)) return boundingBox;
-		int startOffset = 0;
-		int endOffset;
-		while(startOffset < lineContent.length()){
-			while(startOffset < lineContent.length() && checkChar(lineContent.charAt(startOffset))) 
-				startOffset++;
-			endOffset = startOffset;
-			while(endOffset < lineContent.length()-1 && !checkChar(lineContent.charAt(endOffset+1))) 
-				endOffset++;
-			box = styledText.getTextBounds(lineOffset+startOffset, lineOffset+endOffset);
-			
-			if(containsPoints(box)) break;
-			startOffset = endOffset+1;
-		}
-		if(box != null && !containsPoints(box)){
-			box = null;
-		}
+		
+		if(column > lineContent.length() || column-1 < 0 || checkChar(lineContent.charAt(column-1))) return box;
+		
+		int startOffset = column-2;
+		while(startOffset-1 > -1 && !checkChar(lineContent.charAt(startOffset-1))) startOffset--;
+		int endOffset = column;
+		while(endOffset+1 < lineContent.length() && !checkChar(lineContent.charAt(endOffset+1))) endOffset++;
+		box = styledText.getTextBounds(lineOffset+startOffset, lineOffset+endOffset);
 		return box;
-	}
-	
-	private boolean containsPoints(Rectangle box){
-		for(Point p: points){
-			if(p != null && box != null && !box.contains(p)) return false;
-		}
-		return true;
 	}
 	
 	private boolean checkChar(char c){
@@ -144,11 +119,8 @@ public class TokenHighlighter implements PaintListener, EventHandler {
 		this.numberOfPoints = 1;
 		this.points = new Point[numberOfPoints];
 		this.pointIndex = 0;
-		this.nulls = 0;
 		this.eventBroker = PlatformUI.getWorkbench().getService(IEventBroker.class);
 		this.eventBroker.subscribe("iTrace/newstresponse", this);
-		//this.gazeQueue = Activator.getDefault().gazeTransport.createClient();
-		//System.out.println("gazeQueue");
 	}
 
 
@@ -170,7 +142,7 @@ public class TokenHighlighter implements PaintListener, EventHandler {
         if(editorBounds.contains(screenX, screenY)){
         	int relativeX = screenX-editorBounds.x;
         	int relativeY = screenY-editorBounds.y;
-        	update(response.getLine()-1,response.getCol(), relativeX, relativeY);
+        	update(response.getLine()-1,response.getCharIndex(), relativeX, relativeY);
         }
 		
 	}

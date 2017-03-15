@@ -379,6 +379,7 @@ public class ControlView extends ViewPart implements IPartListener2, EventHandle
     		st.removePaintListener(stpl);
     		st.addPaintListener(stpl);
     		st.addPaintListener(new GazeMap());
+    		st.addPaintListener(new HeatMap());
     	}
     }
 

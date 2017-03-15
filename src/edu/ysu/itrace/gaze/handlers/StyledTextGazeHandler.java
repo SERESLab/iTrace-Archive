@@ -36,7 +36,7 @@ public class StyledTextGazeHandler implements IGazeHandler {
         final int fontHeight;
         final AstManager.SourceCodeEntity[] entities;
         final String path;
-        final int originOffset;
+        final int charIndex;
         
 
         try {
@@ -45,7 +45,7 @@ public class StyledTextGazeHandler implements IGazeHandler {
             AstManager astManager = (AstManager) targetStyledText
             		.getData(ControlView.KEY_AST);
             projectionViewer = astManager.getProjectionViewer();
-            originOffset = targetStyledText.getOffsetAtLocation(new Point(0,0));
+            //originOffset = targetStyledText.getOffsetAtLocation(new Point(0,0));
             int lineOffset = targetStyledText.getOffsetAtLine(targetStyledText.getLineIndex(relativeY));
             int offset;
             try{
@@ -53,7 +53,14 @@ public class StyledTextGazeHandler implements IGazeHandler {
             }catch(IllegalArgumentException ex){
             	return null;
             }
-            col = offset - lineOffset;
+            String content = targetStyledText.getLine(targetStyledText.getLineAtOffset(lineOffset));
+            int tabs = 0;
+            for(int i=0;i<content.length();i++){
+            	if(content.charAt(i) == '\t') tabs++;
+            }
+            
+            col = (offset - lineOffset - tabs) + (tabs * targetStyledText.getTabs()) + 1;
+            charIndex = (offset - lineOffset);
             lineIndex = projectionViewer.widgetLine2ModelLine(targetStyledText.getLineIndex(relativeY));
 
             // (0, 0) relative to the control in absolute screen
@@ -168,8 +175,8 @@ public class StyledTextGazeHandler implements IGazeHandler {
 			}
 
 			@Override
-			public int getOriginOffset() {
-				return originOffset;
+			public int getCharIndex() {
+				return charIndex;
 			}
 			
 

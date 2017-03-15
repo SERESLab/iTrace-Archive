@@ -19,12 +19,11 @@ public class XmlDataParser {
 		dataDoc.getDocumentElement().normalize();
 		NodeList nodes = dataDoc.getElementsByTagName("response");
 		FileCoordinate[] lines = new FileCoordinate[nodes.getLength()];
-		System.out.println(nodes.getLength());
 		for(int i=0; i<nodes.getLength(); i++){
 			Node node = nodes.item(i);
 			Element element = (Element) node;
 			String line = element.getAttribute("line");
-			String column = element.getAttribute("col");
+			String column = element.getAttribute("char_index");
 			String x = element.getAttribute("relative_x");
 			String y = element.getAttribute("relative_y");
 			//System.out.println(line);
