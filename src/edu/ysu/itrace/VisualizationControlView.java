@@ -76,7 +76,11 @@ public class VisualizationControlView extends ViewPart {
 			ITrace.getDefault().displayHeatMap = displayHeatMapButton.getSelection();
 			
 			for(IEditorReference er: PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getEditorReferences()){
-				er.getEditor(false).getAdapter(Control.class).redraw();;	
+				IEditorPart ep = er.getEditor(false);
+				if(ep == null) continue;
+				StyledText st = (StyledText)ep.getAdapter(Control.class);
+				if(st == null) continue;
+				st.redraw();	
 			}
 		}
 		
