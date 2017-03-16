@@ -16,6 +16,10 @@ import org.eclipse.ui.IEditorPart;
 
 public class HeatMap implements PaintListener {
 	HashMap<Integer,ArrayList<FileCoordinate>> lineFrequencies = new HashMap<Integer,ArrayList<FileCoordinate>>();
+	private IEditorPart ep;
+	private StyledText st;
+	private ProjectionViewer projViewer;
+	
 	
 	private boolean checkChar(char c){
 		char[] delimeters = {' ', '\t','(',')','[',']','{','}','.',','};
@@ -25,16 +29,26 @@ public class HeatMap implements PaintListener {
 		return false;
 	}
 	
+	public HeatMap(IEditorPart ep){
+		this.ep = ep;
+		st = (StyledText)ep.getAdapter(Control.class);
+		if(st == null) return;
+		ITextOperationTarget t = (ITextOperationTarget) ep.getAdapter(ITextOperationTarget.class);
+		if(!(t instanceof ProjectionViewer)) return;
+		projViewer = (ProjectionViewer)t;
+		
+		st.addPaintListener(this);
+	}
+	
 	@Override
 	public void paintControl(PaintEvent pe) {
 		if(!ITrace.getDefault().displayHeatMap || ITrace.getDefault().lines == null) return;
 		
-		IEditorPart ep = ITrace.getDefault().getActiveEditor();
 		
 		FileCoordinate[] coordinates = ITrace.getDefault().lines;
 		lineFrequencies.clear();
 		for(FileCoordinate coordinate: coordinates){
-			if(!coordinate.filename.equals(ep.getEditorInput().getName())) continue;
+			if(coordinate == null || !coordinate.filename.equals(ep.getEditorInput().getName())) continue;
 			if(lineFrequencies.containsKey(coordinate.line)){
 				(lineFrequencies.get(coordinate.line)).add(coordinate);
 			}else{
@@ -45,13 +59,7 @@ public class HeatMap implements PaintListener {
 		
 		int largestValue = 0;
 		
-		StyledText st = (StyledText)ep.getAdapter(Control.class);
-		if(st == null) return;
-		ITextOperationTarget t = (ITextOperationTarget) ep.getAdapter(ITextOperationTarget.class);
-		if(!(t instanceof ProjectionViewer)) return;
-		ProjectionViewer projViewer = (ProjectionViewer)t;
-		
-		pe.gc.setAlpha(50);
+		pe.gc.setAlpha(100);
 		ArrayList<ArrayList<Point>> tokenIndices = new ArrayList<ArrayList<Point>>();
 		ArrayList<int[]> magnitudes = new ArrayList<int[]>();
 		

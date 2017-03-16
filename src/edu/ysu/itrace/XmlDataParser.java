@@ -22,6 +22,7 @@ public class XmlDataParser {
 		for(int i=0; i<nodes.getLength(); i++){
 			Node node = nodes.item(i);
 			Element element = (Element) node;
+			if(!element.getAttribute("type").equals("java")) continue;
 			String line = element.getAttribute("line");
 			String column = element.getAttribute("char_index");
 			String name = element.getAttribute("name");

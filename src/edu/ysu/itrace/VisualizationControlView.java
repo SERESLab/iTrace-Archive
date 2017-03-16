@@ -1,15 +1,20 @@
 package edu.ysu.itrace;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IEditorReference;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 
@@ -44,6 +49,15 @@ public class VisualizationControlView extends ViewPart {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			
+			for(IEditorReference er: PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getEditorReferences()){
+				IEditorPart ep = er.getEditor(false);
+				if(ep == null) continue;
+				StyledText st = (StyledText)ep.getAdapter(Control.class);
+				if(st == null) continue;
+				st.redraw();	
+			}
+				
 		}
 		
 	}
@@ -60,6 +74,10 @@ public class VisualizationControlView extends ViewPart {
 		public void widgetSelected(SelectionEvent arg0) {
 			ITrace.getDefault().displayGazeMap = displayGazeMapButton.getSelection();
 			ITrace.getDefault().displayHeatMap = displayHeatMapButton.getSelection();
+			
+			for(IEditorReference er: PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getEditorReferences()){
+				er.getEditor(false).getAdapter(Control.class).redraw();;	
+			}
 		}
 		
 	}

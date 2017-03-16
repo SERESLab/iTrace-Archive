@@ -72,7 +72,7 @@ public class VisualizationGraphicsPanel extends ViewPart implements PaintListene
 		if(lines == null) return;
 		Point prevPoint = null;
 		for(int i=0; i<lines.length;i++){
-			if(!lines[i].filename.equals(ep.getEditorInput().getName())){
+			if(lines[i] == null || !lines[i].filename.equals(ep.getEditorInput().getName())){
 				prevPoint = null;
 				continue;
 			}

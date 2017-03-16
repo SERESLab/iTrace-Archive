@@ -55,6 +55,8 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
     private static ITrace plugin;
     private IEditorPart activeEditor;
     private HashMap<IEditorPart,TokenHighlighter> tokenHighlighters = new HashMap<IEditorPart,TokenHighlighter>();
+    private HashMap<IEditorPart,GazeMap> gazeMaps = new HashMap<IEditorPart,GazeMap>();
+    private HashMap<IEditorPart,HeatMap> heatMaps = new HashMap<IEditorPart,HeatMap>();
     private boolean showTokenHighlights = false;
     
     private IEyeTracker tracker = null;
@@ -76,19 +78,6 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
      * The constructor
      */
     public ITrace() {
-    	IEditorPart editorPart = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor();
-    	/*
-    	if(editorPart != null){
-	    	StyledText styledText = (StyledText) editorPart.getAdapter(Control.class);
-	    	if(styledText != null){
-				ITextOperationTarget t = (ITextOperationTarget) activeEditor.getAdapter(ITextOperationTarget.class);
-				if(t instanceof ProjectionViewer){
-					ProjectionViewer projectionViewer = (ProjectionViewer)t;
-					tokenHighlighters.put(activeEditor, new TokenHighlighter(styledText, showTokenHighlights, projectionViewer));
-				}
-			}
-    	}
-    	*/
     	eventBroker = PlatformUI.getWorkbench().getService(IEventBroker.class);
     	eventBroker.subscribe("iTrace/newgaze", this);
     	jsonSolver = new JSONGazeExportSolver();
@@ -108,6 +97,7 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
         EyeTrackerFactory.setTrackerType(EyeTrackerFactory.TrackerType.valueOf(
                 prefStore.getString(PluginPreferences.EYE_TRACKER_TYPE)));
         activeEditor = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor();
+        
     }
 
     /*
@@ -277,6 +267,12 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
 				}
 			}
     	}
+    	if(!gazeMaps.containsKey(editorPart)){
+    		gazeMaps.put(activeEditor, new GazeMap(editorPart));
+    	}
+    	if(!heatMaps.containsKey(editorPart)){
+    		heatMaps.put(activeEditor, new HeatMap(editorPart));
+    	}
     	
     }
     public IEditorPart getActiveEditor(){
@@ -304,6 +300,8 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
     
     public void removeHighlighter(IEditorPart editorPart){
     	tokenHighlighters.remove(editorPart);
+    	gazeMaps.remove(editorPart);
+    	heatMaps.remove(editorPart);
     }
     
     public void showTokenHighLights(){

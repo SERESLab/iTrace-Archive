@@ -378,8 +378,6 @@ public class ControlView extends ViewPart implements IPartListener2, EventHandle
     		StyledText st = (StyledText)ep.getAdapter(Control.class);
     		st.removePaintListener(stpl);
     		st.addPaintListener(stpl);
-    		st.addPaintListener(new GazeMap());
-    		st.addPaintListener(new HeatMap());
     	}
     }
 
@@ -416,7 +414,9 @@ public class ControlView extends ViewPart implements IPartListener2, EventHandle
     public void partOpened(IWorkbenchPartReference partRef) {
     	if(partRef.getPart(false) instanceof IEditorPart) {
     		IEditorPart ep = (IEditorPart)partRef.getPart(true);
-    		
+    		StyledText st = (StyledText)ep.getAdapter(Control.class);
+    		st.removePaintListener(stpl);
+    		st.addPaintListener(stpl);
     	}
     }
 

@@ -12,28 +12,35 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.IEditorPart;
 
 public class GazeMap implements PaintListener {
-
+	IEditorPart ep;
+	StyledText st;
+	ProjectionViewer projectionViewer;
+	public GazeMap(IEditorPart ep){
+		this.ep = ep;
+		st = (StyledText)ep.getAdapter(Control.class);
+		if(st == null) return;
+		
+		ITextOperationTarget t = (ITextOperationTarget) ep.getAdapter(ITextOperationTarget.class);
+		if(!(t instanceof ProjectionViewer)) return;
+		projectionViewer = (ProjectionViewer)t;
+		
+		st.addPaintListener(this);
+	}
+	
 	@Override
 	public void paintControl(PaintEvent pe) {
 		if(!ITrace.getDefault().displayGazeMap || ITrace.getDefault().lines == null) return;
 		
 		FileCoordinate[] coordinates = ITrace.getDefault().lines;
-		IEditorPart ep = ITrace.getDefault().getActiveEditor();
-		StyledText st = (StyledText)ep.getAdapter(Control.class);
-		if(st == null) return;
-		
-		Point origin = st.getLocationAtOffset(0);
-		ITextOperationTarget t = (ITextOperationTarget) ep.getAdapter(ITextOperationTarget.class);
-		if(!(t instanceof ProjectionViewer)) return;
-		ProjectionViewer projectionViewer = (ProjectionViewer)t;
 		
 		Point prevPoint = null;
 		
 		pe.gc.setLineWidth(st.getLineHeight()/5);
 		pe.gc.setAlpha(75);
-		pe.gc.setBackground(new Color(pe.gc.getDevice(),0,0,0));		for(int i=0;i<coordinates.length;i++){
+		pe.gc.setBackground(new Color(pe.gc.getDevice(),0,0,0));		
+		for(int i=0;i<coordinates.length;i++){
 			FileCoordinate coordinate = coordinates[i];
-			if(!coordinate.filename.equals(ep.getEditorInput().getName())){
+			if(coordinate == null || !coordinate.filename.equals(ep.getEditorInput().getName())){
 				prevPoint = null;
 				continue;
 			}
