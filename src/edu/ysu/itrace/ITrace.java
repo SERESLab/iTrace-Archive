@@ -397,7 +397,7 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
 		                 		if(jsonOutput) eventBroker.post("iTrace/jsonOutput", response);
 		                	 }
 		                     
-		                     if(response instanceof IStyledTextGazeResponse && response != null){
+		                     if(response instanceof IStyledTextGazeResponse && response != null && showTokenHighlights){
 		                     	IStyledTextGazeResponse styledTextResponse = (IStyledTextGazeResponse)response;
 		                     	eventBroker.post("iTrace/newstresponse", styledTextResponse);
 		                     }
