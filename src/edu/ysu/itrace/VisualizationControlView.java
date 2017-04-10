@@ -1,5 +1,6 @@
 package edu.ysu.itrace;
 
+import org.eclipse.e4.core.services.events.IEventBroker;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.SelectionEvent;
@@ -19,13 +20,16 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 
 public class VisualizationControlView extends ViewPart {
-	Button chooseFileButton;
-	Button displayGazeMapButton;
-	Button displayHeatMapButton;
-	Label filenameLabel;
+	private Button chooseFileButton;
+	private Button displayGazeMapButton;
+	private Button displayHeatMapButton;
+	private Button animateGazeMapButton;
+	private Label filenameLabel;
 	
-	Shell chooseFileShell = new Shell();
-	Shell rootShell;
+	private Shell chooseFileShell = new Shell();
+	private Shell rootShell;
+	
+	private IEventBroker eventBroker;
 	
 	class ChooseFile implements SelectionListener{		
 		@Override
@@ -86,10 +90,26 @@ public class VisualizationControlView extends ViewPart {
 		
 	}
 	SetDisplays setDisplays = new SetDisplays();
+	
+	class ToggleAnimation implements SelectionListener{
+
+		@Override
+		public void widgetDefaultSelected(SelectionEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void widgetSelected(SelectionEvent arg0) {
+			ITrace.getDefault().animateGazeMap = animateGazeMapButton.getSelection();
+			eventBroker.post("GazeMapAnimation", null);
+		}
+	}
+		
 
 	@Override
 	public void createPartControl(Composite parent) {
-		
+		eventBroker = PlatformUI.getWorkbench().getService(IEventBroker.class);
 		chooseFileShell.setSize(400,400);
 		
 		final Composite topComposite = new Composite(parent, SWT.NONE);
@@ -115,6 +135,10 @@ public class VisualizationControlView extends ViewPart {
 		displayHeatMapButton = new Button(optionComposite, SWT.CHECK);
 		displayHeatMapButton.setText("Display Heat Map");
 		displayHeatMapButton.addSelectionListener(setDisplays);
+		
+		animateGazeMapButton = new Button(optionComposite, SWT.CHECK);
+		animateGazeMapButton.setText("Animate Gaze Map");
+		animateGazeMapButton.addSelectionListener(new ToggleAnimation());
 		
 		final Composite legendComposite = new Composite(topComposite, SWT.NONE);
 		legendComposite.setLayout(new GridLayout(5,false));

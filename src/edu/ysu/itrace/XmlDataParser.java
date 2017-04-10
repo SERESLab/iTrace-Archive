@@ -19,6 +19,7 @@ public class XmlDataParser {
 		dataDoc.getDocumentElement().normalize();
 		NodeList nodes = dataDoc.getElementsByTagName("response");
 		FileCoordinate[] lines = new FileCoordinate[nodes.getLength()];
+		System.out.println(nodes.getLength());
 		for(int i=0; i<nodes.getLength(); i++){
 			Node node = nodes.item(i);
 			Element element = (Element) node;
@@ -27,6 +28,7 @@ public class XmlDataParser {
 			String column = element.getAttribute("char_index");
 			String name = element.getAttribute("name");
 			String path = element.getAttribute("path");
+			
 			lines[i] = new FileCoordinate(name, Integer.parseInt(line),Integer.parseInt(column));
 		}
 		return lines;

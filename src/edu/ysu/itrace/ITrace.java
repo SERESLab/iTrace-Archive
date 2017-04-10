@@ -51,6 +51,7 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
     public FileCoordinate[] lines = null;
     public boolean displayGazeMap = false;
     public boolean displayHeatMap = false;
+    public boolean animateGazeMap = false;
     // The shared instance
     private static ITrace plugin;
     private IEditorPart activeEditor;
@@ -265,14 +266,15 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
 					ProjectionViewer projectionViewer = (ProjectionViewer)t;
 					tokenHighlighters.put(activeEditor, new TokenHighlighter(styledText, showTokenHighlights, projectionViewer));
 				}
+				if(!gazeMaps.containsKey(editorPart)){
+		    		gazeMaps.put(activeEditor, new GazeMap(editorPart));
+		    	}
+		    	if(!heatMaps.containsKey(editorPart)){
+		    		heatMaps.put(activeEditor, new HeatMap(editorPart));
+		    	}
 			}
     	}
-    	if(!gazeMaps.containsKey(editorPart)){
-    		gazeMaps.put(activeEditor, new GazeMap(editorPart));
-    	}
-    	if(!heatMaps.containsKey(editorPart)){
-    		heatMaps.put(activeEditor, new HeatMap(editorPart));
-    	}
+    	
     	
     }
     public IEditorPart getActiveEditor(){

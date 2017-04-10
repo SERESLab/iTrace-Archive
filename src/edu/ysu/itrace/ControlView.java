@@ -376,6 +376,7 @@ public class ControlView extends ViewPart implements IPartListener2, EventHandle
     		IEditorPart ep = (IEditorPart)partRef.getPart(true);
     		ITrace.getDefault().setLineManager(ep.getEditorSite().getActionBars().getStatusLineManager());
     		StyledText st = (StyledText)ep.getAdapter(Control.class);
+    		if(st == null) return;
     		st.removePaintListener(stpl);
     		st.addPaintListener(stpl);
     	}
@@ -415,6 +416,7 @@ public class ControlView extends ViewPart implements IPartListener2, EventHandle
     	if(partRef.getPart(false) instanceof IEditorPart) {
     		IEditorPart ep = (IEditorPart)partRef.getPart(true);
     		StyledText st = (StyledText)ep.getAdapter(Control.class);
+    		if(st == null) return;
     		st.removePaintListener(stpl);
     		st.addPaintListener(stpl);
     	}
