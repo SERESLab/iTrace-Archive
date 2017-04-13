@@ -11,10 +11,14 @@ Here are the instructions for building the Tobii Tracker extension.
  - JDK for your platform and architecture
 
 ### Build Boost
- - Either install the Boost 1.40 package through your operating system's
-   package manager or run the build_boost.sh script.
-   - Required boost packages: system, filesystem, thread, regex.
-   - build_boost.sh can be used in MSYS in Windows environements.
+ - Download Boost from: http://www.boost.org/users/download/
+ - Extract the files to the directory of your choosing.
+ - Open a command prompt in that location.
+ - Run these commands:
+   - bootstrap gcc
+   - b2 toolset=gcc
+ - Afterward copy the subfolder boost into MinGW/include and the contents of stage/lib into MinGW/lib. 
+   - Or add those locations to the include and lib paths of MinGW
 
 ### Download the Tobii SDK v3.0
  - Download from: http://www.tobii.com/en/eye-tracking-research/global/landingpages/analysis-sdk-30/
@@ -25,12 +29,8 @@ Here are the instructions for building the Tobii Tracker extension.
 ### Building TobiiTracker
  - Create a directory build/ within this directory.
  - Open a UNIX shell or Windows command line and enter the build/ directory.
- - Run: cmake .. -DBoost_DIR=/usr/local/ -DBoost_INCLUDE_DIR=/usr/local/include/
-   - Naturally, if boost is installed elsewhere, change the above Boost paths
-   - You may need to use CMake's -G flag to specify what type of build files to
-     create
- - Example:
-   - cmake .. -DBoost_DIR=C:Users/bwalters/Downloads/boost_1_40_0 -DBoost_INCLUDE_DIR=C:Users/bwalters/Downloads/boost_1_40_0 -G "MinGW Makefiles"
+ - Run the following commands:
+   - cmake .. -G "MinGW Makefiles"
    - mingw32-make
  - Copy the .so/.dll file created by make to the project root as
    libTobiiTracker.so on UNIX systems or TobiiTracker.dll on NT systems.
