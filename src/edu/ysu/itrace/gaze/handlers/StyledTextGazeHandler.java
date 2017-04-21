@@ -24,6 +24,24 @@ public class StyledTextGazeHandler implements IGazeHandler {
     public StyledTextGazeHandler(Object target) {
         this.targetStyledText = (StyledText) target;
     }
+    
+    private boolean checkChar(char c){
+		char[] delimeters = {' ', '\n', '\t','(',')','[',']','{','}','.',',', '<','>'};
+		for(char delimeter: delimeters){
+			if(c == delimeter) return true;
+		}
+		return false;
+	}
+    
+    private boolean checkCharSubToken(char c){
+    	char[] delimeters = {' ', '\n', '\t','(',')','[',']','{','}','.',',', '<','>'};
+    	for(char delimeter: delimeters){
+    		if(c == delimeter) return true;
+    	}
+		if((int)c > 64 && (int)c < 91) return true;
+		if(c == '_') return true;
+		return false;
+	}
 
     @Override
     public IStyledTextGazeResponse handleGaze(int absoluteX, int absoluteY,
@@ -53,7 +71,44 @@ public class StyledTextGazeHandler implements IGazeHandler {
             }
             col = offset - lineOffset;
             lineIndex = projectionViewer.widgetLine2ModelLine(targetStyledText.getLineIndex(relativeY));
-
+            String contents = targetStyledText.getLine(lineIndex);
+            int begin, end;
+            int tokenBegin;
+            String token; 
+            String subtoken = "";
+            if(!checkChar(contents.charAt(col))){
+            	
+            	int index = col+1;
+            	while(index < contents.length() && !checkChar(contents.charAt(index))){
+            		index++;
+            	}
+            	if(index == contents.length()) end = index-1;
+            	else end = index;
+            	index = col-1;
+            	while(index > -1 && !checkChar(contents.charAt(index))){
+            		index--;
+            	}
+            	begin = index+1;
+            	tokenBegin = begin;
+            	token = contents.substring(begin, end);
+            	index = col+1-tokenBegin;
+            	while(index < token.length() && !checkCharSubToken(token.charAt(index))){
+            		index++;
+            	}
+            	if(index == token.length()) end = index-1;
+            	else end = index;
+            	index = col-1-tokenBegin;
+            	while(index > -1 && !checkChar(token.charAt(index))){
+            		index--;
+            	}
+            	if(index == -1) begin = 0;
+            	else{
+            		if(token.charAt(index) == '_') begin = index+1;
+            		else begin = index;
+            	}
+            	subtoken = token.substring(begin, end);
+            }
+            System.out.println(subtoken);
             // (0, 0) relative to the control in absolute screen
             // coordinates.
             Point relativeRoot = new Point(absoluteX - relativeX, absoluteY
