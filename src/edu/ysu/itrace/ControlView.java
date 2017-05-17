@@ -1,18 +1,11 @@
 package edu.ysu.itrace;
 
-import java.awt.Dimension;
-import java.awt.Toolkit;
 import java.io.File;
 import java.io.IOException;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.ArrayList;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.LinkedBlockingQueue;
 
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.jface.action.IStatusLineManager;
+import org.eclipse.e4.core.services.events.IEventBroker;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.custom.StyledText;
@@ -20,49 +13,38 @@ import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.ShellEvent;
-import org.eclipse.swt.events.ShellListener;
-import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Spinner;
-import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.IPartListener2;
+import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchPartReference;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.ide.FileStoreEditorInput;
 import org.eclipse.ui.part.ViewPart;
-import org.eclipse.ui.progress.UIJob;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventHandler;
 
-import edu.ysu.itrace.exceptions.CalibrationException;
-import edu.ysu.itrace.exceptions.EyeTrackerConnectException;
 import edu.ysu.itrace.filters.IFilter;
 import edu.ysu.itrace.filters.fixation.JSONBasicFixationFilter;
 import edu.ysu.itrace.filters.fixation.OldJSONBasicFixationFilter;
 import edu.ysu.itrace.filters.fixation.OldXMLBasicFixationFilter;
 import edu.ysu.itrace.filters.fixation.XMLBasicFixationFilter;
-import edu.ysu.itrace.gaze.IGazeHandler;
-import edu.ysu.itrace.gaze.IGazeResponse;
-import edu.ysu.itrace.solvers.ISolver;
-import edu.ysu.itrace.solvers.JSONGazeExportSolver;
-import edu.ysu.itrace.solvers.XMLGazeExportSolver;
-import edu.ysu.itrace.trackers.IEyeTracker;
 
 /**
  * ViewPart for managing and controlling the plugin.
  */
-public class ControlView extends ViewPart implements IPartListener2,
-        ShellListener {
-    private static final int POLL_GAZES_MS = 5;
+public class ControlView extends ViewPart implements IPartListener2, EventHandler{
     public static final String KEY_AST = "itraceAST";
     public static final String KEY_SO_DOM = "itraceSO";
     public static final String KEY_BR_DOM = "itraceBR";
@@ -70,158 +52,49 @@ public class ControlView extends ViewPart implements IPartListener2,
             + "Restart the plugin and try again. If "
             + "the problem persists, submit a bug report.";
 
-    private IEyeTracker tracker = null;
     private Shell rootShell;
 
     private CopyOnWriteArrayList<Control> grayedControls =
             new CopyOnWriteArrayList<Control>();
-
-    private GazeTransport gazeTransport = null;
-    private LinkedBlockingQueue<Gaze> standardTrackingQueue = null;
-    private LinkedBlockingQueue<Gaze> crosshairQueue = null;
-
-    private volatile boolean trackingInProgress;
-    private LinkedBlockingQueue<IGazeResponse> gazeResponses =
-            new LinkedBlockingQueue<IGazeResponse>();
-
+    
+    private ArrayList<IEditorReference> setupEditors = new ArrayList<IEditorReference>();
+    
     private Spinner xDrift;
     private Spinner yDrift;
-
-    private JSONGazeExportSolver jsonSolver;
-    private XMLGazeExportSolver xmlSolver;
-
-    private CopyOnWriteArrayList<ISolver> availableSolvers =
-            new CopyOnWriteArrayList<ISolver>();
-
-    private CopyOnWriteArrayList<ISolver> activeSolvers =
-            new CopyOnWriteArrayList<ISolver>();
     
     private CopyOnWriteArrayList<IFilter> availableFilters =
     		new CopyOnWriteArrayList<IFilter>();
-    
-    private SessionInfoHandler sessionInfo = new SessionInfoHandler();
-    
-    private IActionBars actionBars;
-    private IStatusLineManager statusLineManager;
-    private long registerTime = 2000;
 
-
-    /*
-     * Gets gazes from the eye tracker, calls gaze handlers, and adds responses
-     * to the queue for the response handler thread to process.
-     */
-    private UIJob gazeHandlerJob = new UIJob("Tracking Gazes") {
-        {
-            setPriority(INTERACTIVE);
-        }
-
-        @Override
-        public IStatus runInUIThread(IProgressMonitor monitor) {
-            if (standardTrackingQueue == null)
-                return Status.OK_STATUS;
-
-            int loops = 0;
-            Gaze g = null;
-            do {
-                // Method returns above if standardTrackingQueue is none.
-                g = standardTrackingQueue.poll();
-                if (g != null) {
-                    Dimension screenRect =
-                            Toolkit.getDefaultToolkit().getScreenSize();
-                    int screenX = (int) (g.getX() * screenRect.width);
-                    int screenY = (int) (g.getY() * screenRect.height);
-                    IGazeResponse response = handleGaze(screenX, screenY, g);
-
-                    if (response != null) {
-                        try {
-                        	statusLineManager
-                        		.setMessage(String.valueOf(response.getGaze().getSessionTime()));
-                        	registerTime = System.currentTimeMillis();
-                        	PlatformUI.getWorkbench()
-                        		.getActiveWorkbenchWindow().getActivePage()
-                        			.getActiveEditor().getEditorSite().getActionBars()
-                        				.getStatusLineManager()
-                        					.setMessage(String.valueOf(response.getGaze().getSessionTime()));
-                            gazeResponses.add(response);
-
-                        } catch (IllegalStateException ise) {
-                            System.err.println("Error! Gaze response queue is "
-                                    + "full!");
-                        }
-                    }
-                }else{
-                	if((System.currentTimeMillis()-registerTime) > 2000){
-                		statusLineManager.setMessage("");
-                		PlatformUI.getWorkbench()
-                		.getActiveWorkbenchWindow().getActivePage()
-                			.getActiveEditor().getEditorSite().getActionBars()
-                				.getStatusLineManager()
-                					.setMessage(String.valueOf(""));
-                	}
-                }
-
-                if (trackingInProgress || g != null) {
-                    schedule(POLL_GAZES_MS);
-                } else {
-                    gazeHandlerJob.cancel();
-                }
-                ++loops;
-            } while (loops < 15 && g != null);
-
-            return Status.OK_STATUS;
-        }
-    };
-
-    private class ResponseHandlerThread extends Thread {
-        @Override
-        public void run() {
-            for (ISolver solver : activeSolvers) {
-                solver.init();
-            }
-
-            while (true) {
-                if (!trackingInProgress && gazeResponses.size() <= 0) {
-                    break;
-                }
-
-                IGazeResponse response = gazeResponses.poll();
-
-                if (response != null) {
-                    for (ISolver solver : activeSolvers) {
-                        solver.process(response);
-                    }
-                }
-            }
-            for (ISolver solver : activeSolvers) {
-                solver.dispose();
-            }
-        }
-    }
-
-    private ResponseHandlerThread responseHandlerThread = null;
+    private IEventBroker eventBroker;
 
     @Override
     public void createPartControl(Composite parent) {
+    	eventBroker = PlatformUI.getWorkbench().getService(IEventBroker.class);
+    	eventBroker.subscribe("iTrace/error", this);
         // find root shell
         rootShell = parent.getShell();
         while (rootShell.getParent() != null) {
             rootShell = rootShell.getParent().getShell();
         }
-        rootShell.addShellListener(this);
+
+        ITrace.getDefault().setRootShell(rootShell);
+        ITrace.getDefault().monitorBounds = rootShell.getMonitor().getBounds();
 
         // add listener for determining part visibility
         getSite().getWorkbenchWindow().getPartService().addPartListener(this);
-
+        
         final String DONT_DO_THAT_MSG =
                 "You can't do that until you've "
                         + "selected a tracker in preferences.";
 
         // set up UI
         parent.setLayout(new RowLayout());
-
+        
+        //Button Composite start.
         final Composite buttonComposite = new Composite(parent, SWT.NONE);
         buttonComposite.setLayout(new GridLayout(2, false));
 
+        //Calibration Button
         Button calibrateButton = new Button(buttonComposite, SWT.PUSH);
         calibrateButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true,
                 true, 1, 1));
@@ -229,88 +102,85 @@ public class ControlView extends ViewPart implements IPartListener2,
         calibrateButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                requestTracker();
-                if (tracker != null) {
-                    try {
-                        tracker.calibrate();
-                    } catch (CalibrationException e1) {
-                        displayError("Failed to calibrate. Reason: "
-                                + e1.getMessage());
-                    }
-                } else {
-                    // If tracker is none, requestTracker() would have already
-                    // raised an error.
-                }
+            	ITrace.getDefault().calibrateTracker();
             }
         });
         
-        final Button startButton = new Button(buttonComposite, SWT.PUSH);
-        startButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true,
+        //Tracking start and stop button.
+        final Button trackingButton = new Button(buttonComposite, SWT.PUSH);
+        trackingButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true,
                 1, 1));
-        startButton.setText("Start Tracking");
-        startButton.addSelectionListener(new SelectionAdapter() {
+        trackingButton.setText("Start Tracking");
+        trackingButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-            	actionBars = getViewSite().getActionBars();
-            	statusLineManager = actionBars.getStatusLineManager();
-                startTracking();
+            	ITrace.getDefault().setActionBars(getViewSite().getActionBars());
+            	if(ITrace.getDefault().toggleTracking()){
+            		if(trackingButton.getText() == "Start Tracking"){
+            			trackingButton.setText("Stop Tracking");
+            			for (Control c : grayedControls) {
+                            c.setEnabled(false);
+                        }
+            		}
+                	else{
+                		trackingButton.setText("Start Tracking");
+                		for (Control c : grayedControls) {
+                            c.setEnabled(true);
+                        }
+                	}
+            	}
+            	
             }
         });
         
-        /*
-        final Button displayStatus = new Button(buttonComposite, SWT.PUSH);
-        displayStatus.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true,
-                true, 1, 1));
-        displayStatus.setText("Display Status");
-        displayStatus.addSelectionListener(new SelectionAdapter() {
+      //Session Info Button
+        final Button infoButton = new Button(buttonComposite, SWT.PUSH);
+        infoButton.setText("Session Info");
+        infoButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                if (gazeTransport != null) {
-                    (new EyeStatusView(rootShell, gazeTransport)).open();
-                } else {
-                    displayError(DONT_DO_THAT_MSG);
-                }
+            	ITrace.getDefault().configureSessionInfo();
             }
-        });*/
-
+        });  
+        grayedControls.addIfAbsent(infoButton);
+        
+        //Eye Status Button
+        final Button statusButton = new Button(buttonComposite, SWT.PUSH);
+        statusButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true,
+                1, 1));
+        statusButton.setText("Eye Status");
+        statusButton.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+            	ITrace.getDefault().displayEyeStatus();
+            }
+        });
+        //Button Composite End.
+        
         final String DONT_CHANGE_THAT_MSG =
                 "Don't change this value until "
                         + "you've selected a tracker in preferences.";
-
+        
+        //Tuning Composite Start.
         final Composite tuningComposite = new Composite(parent, SWT.NONE);
         tuningComposite.setLayout(new RowLayout(SWT.VERTICAL));
 
-        final Button display_crosshair = new Button(tuningComposite, SWT.CHECK);
-        display_crosshair.setText("Display Crosshair");
-        display_crosshair.addSelectionListener(new SelectionAdapter() {
+        final Button highlight_tokens = new Button(tuningComposite, SWT.CHECK);
+        highlight_tokens.setText("Highlight Tokens");
+        highlight_tokens.addSelectionListener(new SelectionAdapter(){
+        	@Override
+            public void widgetSelected(SelectionEvent e) {
+        		ITrace.getDefault().activateHighlights();
+        	}
+        });
+        
+        final Button displayCrosshair = new Button(tuningComposite, SWT.CHECK);
+        displayCrosshair.setText("Display Crosshair");
+        displayCrosshair.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-                if (tracker == null)
-                    requestTracker();
-
-                if (tracker != null) {
-                    tracker.displayCrosshair(
-                            display_crosshair.getSelection());
-                    // Create a client for the crosshair so that it will
-                    // continue to run when tracking is disabled. Remove when
-                    // done.
-                    if (display_crosshair.getSelection()) {
-                        if (gazeTransport != null)
-                            crosshairQueue =
-                                    gazeTransport.createClient();
-                    } else {
-                        if (crosshairQueue != null) {
-                            gazeTransport.removeClient(
-                                    crosshairQueue);
-                            crosshairQueue = null;
-                        }
-                    }
-                } else {
-                    if (display_crosshair.getSelection()) {
-                        displayError(DONT_CHANGE_THAT_MSG);
-                        display_crosshair.setSelection(false);
-                    }
-                }
+            	boolean success = ITrace.getDefault().displayCrosshair(displayCrosshair.getSelection());
+            	if(success != displayCrosshair.getSelection()) displayCrosshair.setSelection(false);
             }
         });
 
@@ -324,8 +194,8 @@ public class ControlView extends ViewPart implements IPartListener2,
         final Spinner xDrift = new Spinner(driftComposite, SWT.NONE);
         xDrift.addModifyListener(new ModifyListener() {
             public void modifyText(ModifyEvent e) {
-                if (tracker != null) {
-                    tracker.setXDrift(xDrift.getSelection());
+                if (ITrace.getDefault().getTracker() != null) {
+                    ITrace.getDefault().setTrackerXDrift(xDrift.getSelection());
                 } else {
                     if (xDrift.getSelection() != 0) {
                         displayError(DONT_CHANGE_THAT_MSG);
@@ -345,8 +215,8 @@ public class ControlView extends ViewPart implements IPartListener2,
         final Spinner yDrift = new Spinner(driftComposite, SWT.NONE);
         yDrift.addModifyListener(new ModifyListener() {
             public void modifyText(ModifyEvent e) {
-                if (tracker != null) {
-                    tracker.setYDrift(yDrift.getSelection());
+            	if (ITrace.getDefault().getTracker() != null) {
+            		ITrace.getDefault().setTrackerXDrift(xDrift.getSelection());
                 } else {
                     if (yDrift.getSelection() != 0) {
                         displayError(DONT_CHANGE_THAT_MSG);
@@ -359,110 +229,87 @@ public class ControlView extends ViewPart implements IPartListener2,
         yDrift.setMaximum(100);
         yDrift.setSelection(0);
         this.yDrift = yDrift;
-
+        //Tuning composite end.
+        
+        //Solvers composite begin.
         final Composite solversComposite = new Composite(parent, SWT.NONE);
         solversComposite.setLayout(new GridLayout(2, false));
-
         // Configure solvers here.
-        jsonSolver = new JSONGazeExportSolver();
-        availableSolvers.add(jsonSolver);
-
-        xmlSolver = new XMLGazeExportSolver();
-        availableSolvers.add(xmlSolver);
-
-        for (final ISolver solver : availableSolvers) {
-            final Button solverEnabled =
+        
+        final Button jsonSolverEnabled =
                     new Button(solversComposite, SWT.CHECK);
-            solverEnabled.setText(solver.friendlyName());
-            solverEnabled.addSelectionListener(new SelectionAdapter() {
-                @Override
-                public void widgetSelected(SelectionEvent e) {
-                	if (sessionInfo.isConfigured()) {
-                		if (solverEnabled.getSelection()) {
-                			activeSolvers.addIfAbsent(solver);
-                		} else {
-                			while (activeSolvers.contains(solver)) {
-                				activeSolvers.remove(solver);
-                			}
-                		}
-                	} else {
-                		while (activeSolvers.contains(solver)) {
-                			activeSolvers.remove(solver);
-                		}
-                		solverEnabled.setSelection(false);
-                		displayError("You must configure your Sesssion "
-                				+ "Info. first.");
-                	}
-                }
-            });
-            grayedControls.addIfAbsent(solverEnabled);
-            final Button solverConfig = new Button(solversComposite, SWT.PUSH);
-            solverConfig.setText("...");
-            solverConfig.addSelectionListener(new SelectionAdapter() {
-                @Override
-                public void widgetSelected(SelectionEvent e) {
-                	if (sessionInfo.isConfigured()) {
-                		solver.displayExportFile();
-                	} else {
-                		displayError("You must configure your Session Info. "
-                				+ "first.");
-                	}
-                }
-            });
-            grayedControls.addIfAbsent(solverConfig);
-        }
-        
-        //Session Info Button
-        final Button infoButton = new Button(buttonComposite, SWT.PUSH);
-        infoButton.setText("Session Info");
-        infoButton.addSelectionListener(new SelectionAdapter() {
+        jsonSolverEnabled.setText("JSON Export");
+        jsonSolverEnabled.setSelection(true);
+        jsonSolverEnabled.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
-            	sessionInfo.config();
-            	if (sessionInfo.isConfigured()) {
-            		// set all solver check buttons to checked
-            		for (final Control controls : solversComposite.getChildren()) {
-            			Button button = (Button) controls;
-            			button.setSelection(true);
-            		}
-            		
-            		// Configure all available solvers
-            		for (final ISolver solver: availableSolvers) {
-            			solver.config(sessionInfo.getSessionID(),
-                				sessionInfo.getDevUsername());
-            			activeSolvers.addIfAbsent(solver);
-            		}
-            	}
-            }
-        });  
-        grayedControls.addIfAbsent(infoButton);
-        
-        //Stop Tracking Button
-        final Button stopButton = new Button(buttonComposite, SWT.PUSH);
-        stopButton.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true,
-                1, 1));
-        stopButton.setText("Stop Tracking");
-        stopButton.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                stopTracking();
-                statusLineManager.setMessage("");
-                PlatformUI.getWorkbench()
-        		.getActiveWorkbenchWindow().getActivePage()
-        			.getActiveEditor().getEditorSite().getActionBars()
-        				.getStatusLineManager()
-        					.setMessage(String.valueOf(""));
-                for (final Control controls : solversComposite.getChildren()) {
-            		Button button = (Button) controls;
-            		button.setSelection(false);
-            	}
-                for (final ISolver solver: activeSolvers) {
-                	if(activeSolvers.contains(solver)) {
-        				activeSolvers.remove(solver);
-        			}
-                }
+               	if (ITrace.getDefault().sessionInfoConfigured()) {
+               		if (jsonSolverEnabled.getSelection()) {
+               			ITrace.getDefault().setJsonOutput(true);
+               		} else {
+               			ITrace.getDefault().setJsonOutput(false);
+               		}
+               	} else {
+               		ITrace.getDefault().setJsonOutput(false);
+               		jsonSolverEnabled.setSelection(false);
+                	displayError("You must configure your Sesssion "
+               				+ "Info. first.");
+               	}
             }
         });
+        grayedControls.addIfAbsent(jsonSolverEnabled);
+        final Button jsonSolverConfig = new Button(solversComposite, SWT.PUSH);
+        jsonSolverConfig.setText("...");
+        jsonSolverConfig.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+             	if (ITrace.getDefault().sessionInfoConfigured()) {
+               		ITrace.getDefault().displayJsonExportFile();
+               	} else {
+               		displayError("You must configure your Session Info. "
+               				+ "first.");
+               	}
+            }
+        });
+        grayedControls.addIfAbsent(jsonSolverConfig);
+            
+       final Button xmlSolverEnabled =
+    		   new Button(solversComposite, SWT.CHECK);
+       xmlSolverEnabled.setText("XML Export");
+       xmlSolverEnabled.setSelection(true);
+       xmlSolverEnabled.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+               	if (ITrace.getDefault().sessionInfoConfigured()) {
+               		if (xmlSolverEnabled.getSelection()) {
+               			ITrace.getDefault().setXmlOutput(true);
+               		} else {
+               			ITrace.getDefault().setXmlOutput(false);
+               		}
+               	} else {
+               		ITrace.getDefault().setXmlOutput(false);
+               		xmlSolverEnabled.setSelection(false);
+               		displayError("You must configure your Sesssion "
+              				+ "Info. first.");
+             	}
+           }
+       });
+       grayedControls.addIfAbsent(xmlSolverEnabled);
+       final Button xmlSolverConfig = new Button(solversComposite, SWT.PUSH);
+       xmlSolverConfig.setText("...");
+       xmlSolverConfig.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+               	if (ITrace.getDefault().sessionInfoConfigured()) {
+               		ITrace.getDefault().displayXmlExportFile();
+               	} else {
+               		displayError("You must configure your Session Info. "
+               				+ "first.");
+             	}
+            }
+       });
+       grayedControls.addIfAbsent(xmlSolverConfig);
+       //Solver Composite end. 
         
         //Configure Filters Here
         OldJSONBasicFixationFilter oldjsonBFFilter =
@@ -478,6 +325,7 @@ public class ControlView extends ViewPart implements IPartListener2,
         availableFilters.add(oldxmlBFFilter);
         availableFilters.add(xmlBFFilter);
         
+        //Filter composite begin.
         final Composite filterComposite = new Composite(parent, SWT.NONE);
         filterComposite.setLayout(new GridLayout(2, false));
         
@@ -506,23 +354,11 @@ public class ControlView extends ViewPart implements IPartListener2,
         	});
         	grayedControls.add(filterButton);
         }
+        //Filter composite end.
     }
 
     @Override
     public void dispose() {
-        if (gazeTransport != null)
-            gazeTransport.quit();
-        // Else there's nothing to quit.
-
-        if (trackingInProgress) {
-            stopTracking();
-        }
-        
-        if (tracker != null)
-            tracker.close();
-
-        // Else there's nothing to close.
-
         getSite().getWorkbenchWindow().getPartService()
                 .removePartListener(this);
         super.dispose();
@@ -534,14 +370,34 @@ public class ControlView extends ViewPart implements IPartListener2,
 
     @Override
     public void partActivated(IWorkbenchPartReference partRef) {
+    	if(partRef.getPart(false) instanceof IEditorPart) {
+    		ITrace.getDefault().setActiveEditor((IEditorPart)partRef.getPart(false));
+    		IEditorPart ep = (IEditorPart)partRef.getPart(true);
+    		ITrace.getDefault().setLineManager(ep.getEditorSite().getActionBars().getStatusLineManager());
+    	}
     }
 
     @Override
     public void partBroughtToTop(IWorkbenchPartReference partRef) {
+    	if(partRef.getPart(false) instanceof IEditorPart) {
+    		ITrace.getDefault().setActiveEditor((IEditorPart)partRef.getPart(false));
+    		IEditorPart ep = (IEditorPart)partRef.getPart(true);
+    		ITrace.getDefault().setLineManager(ep.getEditorSite().getActionBars().getStatusLineManager());;
+    	}
     }
 
     @Override
     public void partClosed(IWorkbenchPartReference partRef) {
+    	if(partRef instanceof IEditorReference){
+    		setupEditors.remove(partRef);
+    		ITrace.getDefault().setActionBars(getViewSite().getActionBars());
+        	IEditorPart ep = (IEditorPart)partRef.getPart(true);
+        	ITrace.getDefault().removeHighlighter(ep);
+        	ITrace.getDefault().setActiveEditor(
+        			PlatformUI.getWorkbench().getActiveWorkbenchWindow()
+        			.getActivePage().getActiveEditor()
+        	);
+    	}
     }
 
     @Override
@@ -567,84 +423,80 @@ public class ControlView extends ViewPart implements IPartListener2,
         HandlerBindManager.unbind(partRef);
     }
 
-    @Override
-    public void shellActivated(ShellEvent e) {
-        gazeHandlerJob.schedule(POLL_GAZES_MS);
-    }
-
-    @Override
-    public void shellClosed(ShellEvent e) {
-        gazeHandlerJob.cancel();
-    }
-
-    @Override
-    public void shellDeactivated(ShellEvent e) {
-        gazeHandlerJob.cancel();
-    }
-
-    @Override
-    public void shellDeiconified(ShellEvent e) {
-        gazeHandlerJob.schedule(POLL_GAZES_MS);
-    }
-
-    @Override
-    public void shellIconified(ShellEvent e) {
-        gazeHandlerJob.cancel();
-    }
 
     /**
-     * Find styled text or browser controls within a part, set it up to be used by iTrace,
+     * Find controls within a part, set it up to be used by iTrace,
      * and extract meta-data from it.
      * 
-     * @param partRef Highest-level part reference possible.
+     * @param partRef partRef that just became visible.
      */
     private void setupControls(IWorkbenchPartReference partRef) {
-        //set up styled text manager if there is one
-    	IEditorReference[] editors = PlatformUI.getWorkbench()
-                .getActiveWorkbenchWindow().getActivePage()
-                .getEditorReferences();
-        for (IEditorReference editor : editors) {
-            IEditorPart editorPart = editor.getEditor(true);
-            if (editorPart.getAdapter(Control.class) instanceof StyledText) { //make sure editorPart contains an instance of StyledText
-            	StyledText text = (StyledText) editorPart.getAdapter(Control.class); 
-            	setupStyledText(editorPart, text);
-            }
-            //ignore anything else
-        }
-        //set up browser manager if there is one
-        Shell workbenchShell = partRef.getPage().getWorkbenchWindow().
-                getShell();
-        for (Control control : workbenchShell.getChildren()) {
-        	setupBrowser(control);
+    	IWorkbenchPart part = partRef.getPart(true);
+        Control control = part.getAdapter(Control.class);
+        //set up manager for control and managers for each child control if necessary
+        if (control != null) {
+        	setupControls(part, control);
+        } else {
+        	//Browser - always set up browser managers, no matter the partRef that
+        	//has become visible
+        	//not possible to get Browser control from a partRef
+        	Shell workbenchShell = partRef.getPage().getWorkbenchWindow().getShell();
+        	for (Control ctrl: workbenchShell.getChildren()) {
+        		setupBrowsers(ctrl);
+        	}
         }
     }
     
-    
-
     /**
-     * Find browser control, set it up to be used by iTrace,
-     * and extract meta-data from it.
-     * Recursive helper method for setupControls(IWorkbenchPartReference).
-     * 
-     * @param control control that might be a Browser
+     * Recursive helper function to find and set up Browser control managers
+     * @param control
      */
-    private void setupBrowser(Control control) {
-        	//If composite
-            if (control instanceof Composite) {
-                Composite composite = (Composite) control;
+    private void setupBrowsers(Control control) {
+    
+    	if (control instanceof Browser) {
+    		setupControls(null, control);
+    	}
+    	
+    	//If composite, look through children.
+        if (control instanceof Composite) {
+            Composite composite = (Composite) control;
 
-                Control[] children = composite.getChildren();
-                if (children.length > 0 && children[0] != null) {
-                   for (Control curControl : children) 
-                       setupBrowser(curControl);
-                }
+            Control[] children = composite.getChildren();
+            if (children.length > 0 && children[0] != null) {
+               for (Control curControl : children)
+                   setupBrowsers(curControl);
             }
+        }
+    }
+    
+    /**
+     * Recursive function for setting up children controls for a control if it is
+     * a composite and setting up the main control's manager.
+     * @param part
+     * @param control
+     */
+    private void setupControls(IWorkbenchPart part, Control control) {
+    	//If composite, setup children controls.
+        if (control instanceof Composite) {
+            Composite composite = (Composite) control;
+
+            Control[] children = composite.getChildren();
+            if (children.length > 0 && children[0] != null) {
+               for (Control curControl : children)
+                   setupControls(part, curControl);
+            }
+        }
+        
+        if (control instanceof StyledText) {
+        	//set up styled text manager if there is one
+        	setupStyledText((IEditorPart) part, (StyledText) control);
         	
-           if (control instanceof Browser) {
-        	   Browser browse = (Browser) control;
-        	   setupBrowser(browse);
-           }
-				
+        } else if (control instanceof Browser) {
+        	//set up browser manager if there is one
+        	setupBrowser((Browser) control);
+        }
+        //TODO: no control set up for a ProjectExplorer, since there isn't an need for 
+        //a Manager right now, might be needed in the future
     }
     
     /**
@@ -652,10 +504,9 @@ public class ControlView extends ViewPart implements IPartListener2,
      * 
      * @param editor IEditorPart which owns the StyledText in the next
      *               parameter.
-     * @param control StyledText to set up.
+     * @param styledText StyledText to set up.
      */
-    private void setupStyledText(IEditorPart editor, StyledText control) {
-        StyledText styledText = (StyledText) control;
+    private void setupStyledText(IEditorPart editor, StyledText styledText) {
         if (styledText.getData(KEY_AST) == null)
             styledText.setData(KEY_AST, new AstManager(editor, styledText));
     }
@@ -665,165 +516,27 @@ public class ControlView extends ViewPart implements IPartListener2,
      * 
      * @param editor IEditorPart which owns the Browser in the next
      *               parameter.
-     * @param control Browser to set up.
+     * @param control browser to set up.
      */
-    private void setupBrowser(Browser control) {
-        Browser browser = (Browser) control;
+    private void setupBrowser(Browser browser) {
         if (browser.getData(KEY_SO_DOM) == null)
             browser.setData(KEY_SO_DOM, new SOManager(browser));
         if (browser.getData(KEY_BR_DOM) == null)
         	browser.setData(KEY_BR_DOM, new BRManager(browser));
     }
     
-    /**
-     * Finds the control under the specified screen coordinates and calls its
-     * gaze handler on the localized point. Returns the gaze response or null if
-     * the gaze is not handled.
-     */
-    private IGazeResponse handleGaze(int screenX, int screenY, Gaze gaze) {
-
-        Queue<Control[]> childrenQueue = new LinkedList<Control[]>();
-        childrenQueue.add(rootShell.getChildren());
-
-        Rectangle monitorBounds = rootShell.getMonitor().getBounds();
-
-        while (!childrenQueue.isEmpty()) {
-            for (Control child : childrenQueue.remove()) {
-                Rectangle childScreenBounds = child.getBounds();
-                Point screenPos = child.toDisplay(0, 0);
-                childScreenBounds.x = screenPos.x - monitorBounds.x;
-                childScreenBounds.y = screenPos.y - monitorBounds.y;
-                if (childScreenBounds.contains(screenX, screenY)) {
-                    if (child instanceof Composite) {
-                        Control[] nextChildren =
-                                ((Composite) child).getChildren();
-                        if (nextChildren.length > 0 && nextChildren[0] != null) {
-                            childrenQueue.add(nextChildren);
-                        }
-                    }
-
-                    IGazeHandler handler =
-                            (IGazeHandler) child
-                                    .getData(HandlerBindManager.KEY_HANDLER);
-                    if (child.isVisible() && handler != null) {
-                        return handler.handleGaze(screenX, screenY,
-                                screenX - childScreenBounds.x, screenY
-                                        - childScreenBounds.y, gaze);
-                    }
-                }
-            }
-        }
-
-        return null;
-    }
-
-    private boolean requestTracker() {
-        if (tracker != null) {
-            // Already have a tracker. Don't need another.
-            return true;
-        }
-
-        try {
-            tracker = EyeTrackerFactory.getConcreteEyeTracker();
-            if (tracker != null) {
-                tracker.setXDrift(xDrift.getSelection());
-                tracker.setYDrift(yDrift.getSelection());
-
-                gazeTransport = new GazeTransport(tracker);
-                gazeTransport.start();
-                return true;
-            } else {
-                displayError("Either an eye tracker was not selected or an "
-                        + "invalid eye tracker was selected.");
-                return false;
-            }
-        } catch (EyeTrackerConnectException e) {
-            displayError("Could not connect to eye tracker.");
-            return false;
-        } catch (IOException e) {
-            displayError("Could not connect to eye tracker.");
-            return false;
-        }
-    }
-
-    private void startTracking() {
-        if (trackingInProgress) {
-            displayError("Tracking is already in progress.");
-            return;
-        }
-        if (!requestTracker()) {
-            // Error handling occurs in requestTracker(). Just return and
-            // pretend
-            // nothing happened.
-            return;
-        }
-        
-        if (!sessionInfo.isConfigured()) {
-        	displayError("You have not configured your Session Info.");
-        	return;
-        }
-
-        for (Control c : grayedControls) {
-            c.setEnabled(false);
-        }
-        
-        try {
-        	sessionInfo.export();
-        } catch(IOException e) {
-        	displayError(e.getMessage());
-        }
-
-        if (gazeTransport != null) {
-            standardTrackingQueue = gazeTransport.createClient();
-
-            if (standardTrackingQueue != null && responseHandlerThread == null) {
-                responseHandlerThread = new ResponseHandlerThread();
-                responseHandlerThread.start();
-                gazeHandlerJob.schedule(POLL_GAZES_MS);
-                trackingInProgress = true;
-            } else {
-                displayError(FATAL_ERROR_MSG);
-            }
-        } else {
-            // If tracking is in progress, the gaze transport should be some.
-            displayError(FATAL_ERROR_MSG);
-        }
-        Activator.getDefault().sessionStartTime = System.nanoTime();
-    }
-
-    private void stopTracking() {
-        if (!trackingInProgress) {
-            displayError("Tracking is not in progress.");
-            return;
-        }
-
-        for (Control c : grayedControls) {
-            c.setEnabled(true);
-        }
-
-        sessionInfo.reset();
-        
-        if (tracker != null) {
-            if (gazeTransport != null) {
-                if (gazeTransport.removeClient(
-                        standardTrackingQueue)) {
-                    trackingInProgress = false;
-                    standardTrackingQueue = null;
-                    responseHandlerThread = null;
-                }
-            } else {
-                // If gaze transport is null, it shouldn't be tracking.
-                displayError(FATAL_ERROR_MSG);
-            }
-        } else {
-            // If there is no tracker, tracking should not be occurring anyways.
-            displayError(FATAL_ERROR_MSG);
-        }
-    }
 
     private void displayError(String message) {
         MessageBox error_box = new MessageBox(rootShell, SWT.ICON_ERROR);
         error_box.setMessage(message);
         error_box.open();
     }
+
+	@Override
+	public void handleEvent(Event event) {
+		String[] propertyNames = event.getPropertyNames();
+		String message = (String)event.getProperty(propertyNames[0]);
+		displayError(message);
+	}
+
 }

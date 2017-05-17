@@ -14,6 +14,10 @@ import javax.swing.JTextField;
 import javax.swing.UIManager;
 
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.e4.core.services.events.IEventBroker;
+import org.eclipse.ui.PlatformUI;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventHandler;
 
 import com.google.gson.stream.JsonWriter;
 
@@ -28,16 +32,19 @@ import edu.ysu.itrace.gaze.IStyledTextGazeResponse;
 /**
  * Solver that simply dumps gaze data to disk in JSON format.
  */
-public class JSONGazeExportSolver implements IFileExportSolver {
+public class JSONGazeExportSolver implements IFileExportSolver, EventHandler {
     private JsonWriter responseWriter;
     private File outFile;
     private String filename = "gaze-responses-USERNAME"
     		+ "-yyMMddTHHmmss-SSSS-Z.json";
     private Dimension screenRect;
     private String sessionID;
+    private IEventBroker eventBroker;
 
     public JSONGazeExportSolver() {
     	UIManager.put("swing.boldMetal", new Boolean(false)); //make UI font plain
+    	eventBroker = PlatformUI.getWorkbench().getService(IEventBroker.class);
+    	//eventBroker.subscribe("iTrace/newdata", this);
     }
 
     @Override
@@ -144,7 +151,7 @@ public class JSONGazeExportSolver implements IFileExportSolver {
                     for (SourceCodeEntity sce : styledResponse.getSCEs()) {
                         responseWriter.beginObject()
                                       .name("name")
-                                      .value(sce.name)
+                                      .value(sce.getName())
                                       .name("type")
                                       .value(sce.type.toString())
                                       .name("how")
@@ -228,6 +235,7 @@ public class JSONGazeExportSolver implements IFileExportSolver {
             throw new RuntimeException("Log file footer could not be written: "
                     + e.getMessage());
         }
+        outFile = null;
     }
 
     @Override
@@ -268,4 +276,12 @@ public class JSONGazeExportSolver implements IFileExportSolver {
     		//do nothing
     	}
     }
+
+	@Override
+	public void handleEvent(Event event) {
+		if(outFile == null) this.init();
+		String[] propertyNames = event.getPropertyNames();
+		IGazeResponse response = (IGazeResponse)event.getProperty(propertyNames[0]);
+		this.process(response);
+	}
 }
