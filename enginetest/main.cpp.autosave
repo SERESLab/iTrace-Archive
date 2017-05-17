@@ -25,7 +25,6 @@ GetSystemTimestamp *getSystemTime = GetSystemTimeStub;
 int main(int argc, char *argv[])
 {
     TobiiResearchEyeTrackers* eyetrackers = NULL;
-    //tobii_research_find_all_eyetrackers(&eyetrackers);
     HMODULE tobiiLibrary = LoadLibraryA("C:\\TobiiPro.SDK.C_Binding.Windows_1.0.4.97\\64\\lib\\tobii_research.dll");
     findAllTrackers = (FindAllTrackers *)GetProcAddress(tobiiLibrary, "tobii_research_find_all_eyetrackers");
     TobiiResearchStatus result = findAllTrackers(&eyetrackers);

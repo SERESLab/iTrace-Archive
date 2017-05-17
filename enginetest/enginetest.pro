@@ -24,6 +24,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 QT += network
 
+
 SOURCES += main.cpp\
         mainwindow.cpp \
     mousetracker.cpp
@@ -32,3 +33,8 @@ HEADERS  += mainwindow.h \
     mousetracker.h
 
 FORMS    += mainwindow.ui
+
+win32: LIBS += -L$$PWD/64/lib/ -ltobii_research
+
+INCLUDEPATH += $$PWD/64/include
+DEPENDPATH += $$PWD/64/include

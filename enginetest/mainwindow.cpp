@@ -1,9 +1,10 @@
 #include "mainwindow.h"
-#include <windows.h>
+
 #include <QtNetwork>
 #include "ui_mainwindow.h"
 #include "mousetracker.h"
 #include <sstream>
+
 
 using namespace std;
 
@@ -11,6 +12,8 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
+
+
     mouseTracker = new MouseTracker();
     ui->setupUi(this);
     connect(ui->pushButton, SIGNAL(released()), this, SLOT(startTracker()));
