@@ -223,7 +223,7 @@ public abstract class BasicFixationFilter implements IFilter {
 				
 				//account for end fixations
 				if (r != peakIndices.get(0)) {
-					processedGazes.add(mergeRawGazes(r,peakIndices.get(0)));
+					processedGazes.add(0, mergeRawGazes(r,peakIndices.get(0)));
 				}
 				if (peakIndices.get(peakIndices.size()-1) != rawGazes.size()-r-1) {
 					processedGazes.add(mergeRawGazes(peakIndices.get(peakIndices.size()-1),
