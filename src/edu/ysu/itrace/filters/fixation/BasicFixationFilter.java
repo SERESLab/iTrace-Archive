@@ -212,45 +212,50 @@ public abstract class BasicFixationFilter implements IFilter {
 	 */
 	public void spatialPos() {
 		if (peakIndices != null) {
-			double shortestDist = 0;
-			
-			while (shortestDist < radius) {
-				processedGazes.clear();
-
-				for (int i = 1; i < peakIndices.size(); i++) {
-					processedGazes.add(mergeRawGazes(peakIndices.get(i-1),peakIndices.get(i)));
-				}
+			if (!peakIndices.isEmpty()) {
+				double shortestDist = 0;
 				
-				//account for end fixations
-				if (r != peakIndices.get(0)) {
-					processedGazes.add(0, mergeRawGazes(r,peakIndices.get(0)));
-				}
-				if (peakIndices.get(peakIndices.size()-1) != rawGazes.size()-r-1) {
-					processedGazes.add(mergeRawGazes(peakIndices.get(peakIndices.size()-1),
-								rawGazes.size()-r-1));
-				}
-
-				shortestDist = Integer.MAX_VALUE;
-				int index = -1;
-				
-				for (int j = 1; j < processedGazes.size(); j++) {
-					double x =
-							processedGazes.get(j).getRawGaze().getX() -
-							processedGazes.get(j-1).getRawGaze().getX();
-					double y =
-							processedGazes.get(j).getRawGaze().getY() -
-							processedGazes.get(j-1).getRawGaze().getY();
-					double distance = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+				while (shortestDist < radius) {
+					processedGazes.clear();
+	
+					for (int i = 1; i < peakIndices.size(); i++) {
+						processedGazes.add(mergeRawGazes(peakIndices.get(i-1),peakIndices.get(i)));
+					}
 					
-					if (distance < shortestDist) {
-						shortestDist = distance;
-						index = j;
+					//account for end fixations
+					if (r != peakIndices.get(0)) {
+						processedGazes.add(0, mergeRawGazes(r,peakIndices.get(0)));
+					}
+					if (peakIndices.get(peakIndices.size()-1) != rawGazes.size()-r-1) {
+						processedGazes.add(mergeRawGazes(peakIndices.get(peakIndices.size()-1),
+									rawGazes.size()-r-1));
+					}
+	
+					shortestDist = Integer.MAX_VALUE;
+					int index = -1;
+					
+					for (int j = 1; j < processedGazes.size(); j++) {
+						double x =
+								processedGazes.get(j).getRawGaze().getX() -
+								processedGazes.get(j-1).getRawGaze().getX();
+						double y =
+								processedGazes.get(j).getRawGaze().getY() -
+								processedGazes.get(j-1).getRawGaze().getY();
+						double distance = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+						
+						if (distance < shortestDist) {
+							shortestDist = distance;
+							index = j;
+						}
+					}
+					
+					if (shortestDist < radius) {
+						peakIndices.remove(index); //should probably check that it actually found and removed something
 					}
 				}
-				
-				if (shortestDist < radius) {
-					peakIndices.remove(index); //should probably check that it actually found and removed something
-				}
+			} else {
+				//merge raw gazes from r to size-1-r
+				processedGazes.add(mergeRawGazes(r, rawGazes.size()-r-1));
 			}
 		}
 	}
