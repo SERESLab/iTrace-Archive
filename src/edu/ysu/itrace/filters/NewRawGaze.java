@@ -20,7 +20,8 @@ public class NewRawGaze extends RawGaze {
 			double leftPupilDiam, double rightPupilDiam, String timeStamp,
 			long sessionTime, long trackerTime, long systemTime,
 			long nanoTime, String path, int lineHeight, int fontHeight,
-			int lineBaseX, int line, int col, int lineBaseY, ArrayList<SourceCodeEntity> sces) {
+			int lineBaseX, int line, int col, int lineBaseY,
+			ArrayList<SourceCodeEntity> sces) {
 		
 		super(name, type, x, y, leftValidity, rightValidity,
 				leftPupilDiam, rightPupilDiam, trackerTime,
