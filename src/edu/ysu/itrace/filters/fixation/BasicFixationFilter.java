@@ -112,7 +112,7 @@ public abstract class BasicFixationFilter implements IFilter {
 	 * Interpolate missing data
 	 */
 	public void interpolate() {
-		if (rawGazes != null) {
+		if (rawGazes != null && !rawGazes.isEmpty()) {
 			RawGaze lastPosition = rawGazes.get(0);
 			for (int i = 0; i < rawGazes.size(); i++) {
 				if (rawGazes.get(i).getLeftValid() == 1 ||
@@ -129,7 +129,7 @@ public abstract class BasicFixationFilter implements IFilter {
 	 * Calculate the difference vector
 	 */
 	public void diffVector() {
-		if (rawGazes != null) {
+		if (rawGazes != null && !rawGazes.isEmpty()) {
 			diffVector = new double[rawGazes.size()];
 			Point2D.Double mBefore = new Point2D.Double();
 			Point2D.Double mAfter = new Point2D.Double();
