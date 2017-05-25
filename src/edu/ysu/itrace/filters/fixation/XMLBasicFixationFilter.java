@@ -211,8 +211,6 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 			                        String.valueOf(rawGaze.getSystemTime()));
 			                writer.writeAttribute("nano-time",
 			                        String.valueOf(rawGaze.getNanoTime()));
-			                writer.writeAttribute("duration",
-			                		String.valueOf(rawGaze.getDuration()));
 			                writer.writeAttribute("path", rawGaze.getPath());
 			                writer.writeAttribute("line_height",
 			                		String.valueOf(rawGaze.getLineHeight()));
@@ -278,6 +276,7 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 						}
 					}
 				}
+				
 			//export fixations
 			outFile = new File(fileDir + "/processed-fixations-"
 					+ devUsername + "-" + sessionID + ".xml");

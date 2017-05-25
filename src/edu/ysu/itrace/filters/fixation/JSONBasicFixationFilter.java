@@ -249,7 +249,8 @@ public class JSONBasicFixationFilter extends BasicFixationFilter {
 	
 	@Override
 	public void export() throws IOException {
-		if (getProcessedGazes() != null) {
+		if (getProcessedGazes() != null && getRawGazeFixations() != null) {
+			//export raw gazes with associated fixations
 			File outFile = new File(fileDir + "/processed-gazes-"
 					+ devUsername + "-" + sessionID + ".json");
 				if (outFile.exists()) {
@@ -283,55 +284,60 @@ public class JSONBasicFixationFilter extends BasicFixationFilter {
 								.beginArray();
 						
 						//export processed gazes
-						for (final Fixation fixation : getProcessedGazes()) {
+						for (final NewRawGazeFixation rawGaze : getRawGazeFixations()) {
 							writer.beginObject()
 									.name("file")
-									.value(fixation.getRawGaze().getFile())
+									.value(rawGaze.getFile())
 									.name("type")
-									.value(fixation.getRawGaze().getType())
+									.value(rawGaze.getType())
 									.name("x")
-									.value(fixation.getRawGaze().getX())
+									.value(rawGaze.getX())
 									.name("y")
-									.value(fixation.getRawGaze().getY())
+									.value(rawGaze.getY())
 									.name("left_validation")
-									.value(fixation.getRawGaze().getLeftValid())
+									.value(rawGaze.getLeftValid())
 									.name("right_validation")
-									.value(fixation.getRawGaze().getRightValid())
+									.value(rawGaze.getRightValid())
 									.name("left_pupil_diameter")
-									.value(fixation.getRawGaze().getLeftPupilDiam())
+									.value(rawGaze.getLeftPupilDiam())
 									.name("right_pupil_diameter")
-									.value(fixation.getRawGaze().getRightPupilDiam())
+									.value(rawGaze.getRightPupilDiam())
 									.name("timestamp")
-									.value(((NewRawGaze)fixation.getRawGaze()).getTimeStamp())
+									.value(rawGaze.getTimeStamp())
 									.name("session_time")
-									.value(((NewRawGaze)fixation.getRawGaze()).getSessionTime())
+									.value(rawGaze.getSessionTime())
 									.name("tracker_time")
-									.value(fixation.getRawGaze().getTrackerTime())
+									.value(rawGaze.getTrackerTime())
 									.name("system_time")
-									.value(fixation.getRawGaze().getSystemTime())
+									.value(rawGaze.getSystemTime())
 									.name("nano_time")
-									.value(fixation.getRawGaze().getNanoTime())
-									.name("duration")
-									.value(fixation.getDuration())
+									.value(rawGaze.getNanoTime())
 									.name("path")
-									.value(((NewRawGaze)fixation.getRawGaze()).getPath())
+									.value(rawGaze.getPath())
 									.name("line_height")
-									.value(((NewRawGaze)fixation.getRawGaze()).getLineHeight())
+									.value(rawGaze.getLineHeight())
 									.name("font_height")
-									.value(((NewRawGaze)fixation.getRawGaze()).getFontHeight())
+									.value(rawGaze.getFontHeight())
 									.name("line")
-									.value(fixation.getRawGaze().getLine())
+									.value(rawGaze.getLine())
 									.name("col")
-									.value(fixation.getRawGaze().getCol())
+									.value(rawGaze.getCol())
 									.name("line_base_x")
-									.value(fixation.getRawGaze().getLineBaseX())
+									.value(rawGaze.getLineBaseX())
 									.name("line_base_y")
-									.value(fixation.getRawGaze().getLineBaseY())
+									.value(rawGaze.getLineBaseY())
+									.name("fix_index")
+									.value(rawGaze.getFixIndex())
+									.name("fix_x")
+									.value(rawGaze.getFixX())
+									.name("fix_y")
+									.value(rawGaze.getFixY())
+									.name("duration")
+									.value(rawGaze.getDuration())
 									.name("sces")
 									.beginArray();
 							
-							for (final SourceCodeEntity sce : ((NewRawGaze)fixation.getRawGaze())
-									.getSces()) {
+							for (final SourceCodeEntity sce : rawGaze.getSces()) {
 								writer.beginObject()
 										.name("name")
 										.value(sce.getName())
@@ -365,6 +371,128 @@ public class JSONBasicFixationFilter extends BasicFixationFilter {
 							}
 						} catch (IOException e) {
 							throw new IOException("Failed to write processed gazes to file.");
+						}
+					}
+				}
+			
+			//export fixations
+			outFile = new File(fileDir + "/processed-fixations-"
+					+ devUsername + "-" + sessionID + ".json");
+				if (outFile.exists()) {
+					System.out.println("You cannot overwrite this file. If you "
+							+ "wish to continue, delete the file " + "manually.");
+					return;
+				} else {
+					System.out.println("Putting files at "
+							+ outFile.getAbsolutePath());
+					outFile.createNewFile();
+					
+					//export to new file
+					JsonWriter writer = null;
+					try {
+						writer = new JsonWriter(new FileWriter(outFile));
+						writer.setIndent("  ");
+						
+						//export header
+						writer.beginObject()
+								.name("environment")
+								.beginObject()
+									.name("screen_size")
+									.beginObject()
+										.name("width")
+										.value(width)
+										.name("height")
+										.value(height)
+									.endObject()
+								.endObject()
+								.name("fixations")
+								.beginArray();
+						
+						//export processed gazes
+						for (final Fixation fixation : getProcessedGazes()) {
+							writer.beginObject()
+									.name("file")
+									.value(fixation.getRawGaze().getFile())
+									.name("type")
+									.value(fixation.getRawGaze().getType())
+									.name("x")
+									.value(fixation.getRawGaze().getX())
+									.name("y")
+									.value(fixation.getRawGaze().getY())
+									.name("left_validation")
+									.value(fixation.getRawGaze().getLeftValid())
+									.name("right_validation")
+									.value(fixation.getRawGaze().getRightValid())
+									.name("left_pupil_diameter")
+									.value(fixation.getRawGaze().getLeftPupilDiam())
+									.name("right_pupil_diameter")
+									.value(fixation.getRawGaze().getRightPupilDiam())
+									.name("timestamp")
+									.value(((NewRawGaze)fixation.getRawGaze()).getTimeStamp())
+									.name("session_time")
+									.value(((NewRawGaze)fixation.getRawGaze()).getSessionTime())
+									.name("tracker_time")
+									.value(fixation.getRawGaze().getTrackerTime())
+									.name("system_time")
+									.value(fixation.getRawGaze().getSystemTime())
+									.name("nano_time")
+									.value(fixation.getRawGaze().getNanoTime())
+									.name("path")
+									.value(((NewRawGaze)fixation.getRawGaze()).getPath())
+									.name("line_height")
+									.value(((NewRawGaze)fixation.getRawGaze()).getLineHeight())
+									.name("font_height")
+									.value(((NewRawGaze)fixation.getRawGaze()).getFontHeight())
+									.name("line")
+									.value(fixation.getRawGaze().getLine())
+									.name("col")
+									.value(fixation.getRawGaze().getCol())
+									.name("line_base_x")
+									.value(fixation.getRawGaze().getLineBaseX())
+									.name("line_base_y")
+									.value(fixation.getRawGaze().getLineBaseY())
+									.name("fix_index")
+									.value(fixation.getFixIndex())
+									.name("duration")
+									.value(fixation.getDuration())
+									.name("sces")
+									.beginArray();
+							
+							for (final SourceCodeEntity sce : ((NewRawGaze)fixation.getRawGaze())
+									.getSces()) {
+								writer.beginObject()
+										.name("name")
+										.value(sce.getName())
+										.name("type")
+										.value(sce.getType())
+										.name("how")
+										.value(sce.getHow())
+										.name("total_length")
+										.value(sce.getTotalLength())
+										.name("start_line")
+										.value(sce.getStartLine())
+										.name("end_line")
+										.value(sce.getEndLine())
+										.name("start_col")
+										.value(sce.getStartCol())
+										.name("end_col")
+										.value(sce.getEndCol())
+										.endObject();
+							}
+								writer.endArray().endObject();
+						}
+					} catch ( IOException e) {
+						throw new IOException("Failed to write processed fixations to file.");
+					}
+					finally {
+						try {
+							if ( writer != null) {
+								writer.endArray().endObject();
+								writer.close( );
+								System.out.println("Processed fixations saved.");
+							}
+						} catch (IOException e) {
+							throw new IOException("Failed to write processed fixations to file.");
 						}
 					}
 				}
