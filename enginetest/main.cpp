@@ -6,7 +6,7 @@
 #include <cstring>
 #include <sstream>
 #include "tobiipro.h"
-
+#include "calibrationscreen.h"
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
@@ -14,10 +14,9 @@ int main(int argc, char *argv[])
     TobiiResearchEyeTrackers* eyetrackers;
     TobiiPro* tobiiPro = TobiiPro::getTobiiPro();
     result = tobiiPro->findAllTrackers(&eyetrackers);
-    qDebug() << "TobiiPro address:\t" << tobiiPro;
-    qDebug() << "Find all trackers result:\t" << (result == TOBII_RESEARCH_STATUS_OK);
     MainWindow w;
     w.show();
-
+    CalibrationScreen calibScreen;
+    calibScreen.showFullScreen();
     return a.exec();
 }
