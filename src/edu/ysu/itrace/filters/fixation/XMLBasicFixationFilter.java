@@ -343,8 +343,6 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 			                        String.valueOf(fixation.getRawGaze().getSystemTime()));
 			                writer.writeAttribute("nano-time",
 			                        String.valueOf(fixation.getRawGaze().getNanoTime()));
-			                writer.writeAttribute("duration",
-			                		String.valueOf(fixation.getDuration()));
 			                writer.writeAttribute("path",
 			                		((NewRawGaze)fixation.getRawGaze()).getPath());
 			                writer.writeAttribute("line_height",
@@ -363,6 +361,8 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 			                		String.valueOf(fixation.getRawGaze().getLineBaseY()));
 			                writer.writeAttribute("fix_index",
 			                		String.valueOf(fixation.getFixIndex()));
+			                writer.writeAttribute("duration",
+			                		String.valueOf(fixation.getDuration()));
 			                writer.writeStartElement("sces");
 			                
 			                for (final SourceCodeEntity sce : ((NewRawGaze)fixation.getRawGaze())
