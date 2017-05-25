@@ -27,11 +27,15 @@ QT += network
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    mousetracker.cpp
+    mousetracker.cpp \
+    tobiipro.cpp \
+    calibrationscreen.cpp
 
 HEADERS  += mainwindow.h \
     mousetracker.h \
-    tobiifunctions.h
+    tobiifunctions.h \
+    tobiipro.h \
+    calibrationscreen.h
 
 FORMS    += mainwindow.ui
 
