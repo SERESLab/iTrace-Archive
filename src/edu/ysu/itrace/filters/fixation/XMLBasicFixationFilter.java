@@ -149,7 +149,8 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 	
 	@Override
 	public void export() throws IOException {
-		if (getProcessedGazes() != null) {
+		if (getProcessedGazes() != null && getRawGazeFixations() != null) {
+			//export raw gazes with associated fixations
 			File outFile = new File(fileDir + "/processed-gazes-"
 					+ devUsername + "-" + sessionID + ".xml");
 				if (outFile.exists()) {
@@ -166,7 +167,7 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 					try {
 						XMLOutputFactory factory = XMLOutputFactory.newInstance();
 						writer =
-								factory.createXMLStreamWriter(new FileOutputStream(outFile), "UTF-8");;
+								factory.createXMLStreamWriter(new FileOutputStream(outFile), "UTF-8");
 						
 						//export header
 						writer.writeStartDocument("utf-8", "1.0");
@@ -187,6 +188,134 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 					    writer.writeCharacters(EOL);
 						
 						//export processed gazes
+						for (final NewRawGazeFixation rawGaze : getRawGazeFixations()) {
+							writer.writeStartElement("response");
+			                writer.writeAttribute("name", rawGaze.getFile());
+			                writer.writeAttribute("type", rawGaze.getType());
+			                writer.writeAttribute("x", String.valueOf(rawGaze.getX()));
+			                writer.writeAttribute("y", String.valueOf(rawGaze.getY()));
+			                writer.writeAttribute("left-validation",
+			                        String.valueOf(rawGaze.getLeftValid()));
+			                writer.writeAttribute("right-validation",
+			                        String.valueOf(rawGaze.getRightValid()));
+			                writer.writeAttribute("left_pupil_diameter",
+			                        String.valueOf(rawGaze.getLeftPupilDiam()));
+			                writer.writeAttribute("right_pupil_diameter",
+			                        String.valueOf(rawGaze.getRightPupilDiam()));
+			                writer.writeAttribute("timestamp",	rawGaze.getTimeStamp());
+			                writer.writeAttribute("session_time",
+			                		String.valueOf(rawGaze.getSessionTime()));
+			                writer.writeAttribute("tracker-time",
+			                        String.valueOf(rawGaze.getTrackerTime()));
+			                writer.writeAttribute("system-time",
+			                        String.valueOf(rawGaze.getSystemTime()));
+			                writer.writeAttribute("nano-time",
+			                        String.valueOf(rawGaze.getNanoTime()));
+			                writer.writeAttribute("duration",
+			                		String.valueOf(rawGaze.getDuration()));
+			                writer.writeAttribute("path", rawGaze.getPath());
+			                writer.writeAttribute("line_height",
+			                		String.valueOf(rawGaze.getLineHeight()));
+			                writer.writeAttribute("font_height",
+			                		String.valueOf(rawGaze.getFontHeight()));
+			                writer.writeAttribute("line",
+			                		String.valueOf(rawGaze.getLine()));
+			                writer.writeAttribute("col",
+			                		String.valueOf(rawGaze.getCol()));
+			                writer.writeAttribute("line_base_x",
+			                		String.valueOf(rawGaze.getLineBaseX()));
+			                writer.writeAttribute("line_base_y",
+			                		String.valueOf(rawGaze.getLineBaseY()));
+			                writer.writeAttribute("fix_index",
+			                		String.valueOf(rawGaze.getFixIndex()));
+			                writer.writeAttribute("fix_x",
+			                		String.valueOf(rawGaze.getFixX()));
+			                writer.writeAttribute("fix_y",
+			                		String.valueOf(rawGaze.getFixY()));
+			                writer.writeAttribute("duration",
+			                		String.valueOf(rawGaze.getDuration()));
+			                writer.writeStartElement("sces");
+			                
+			                for (final SourceCodeEntity sce : rawGaze.getSces()) {
+			                	writer.writeStartElement("sce");
+			                	writer.writeAttribute("name", sce.getName());
+			                	writer.writeAttribute("type", sce.getType());
+			                	writer.writeAttribute("how", sce.getHow());
+			                	writer.writeAttribute("total_length",
+			                			String.valueOf(sce.getTotalLength()));
+			                	writer.writeAttribute("start_line",
+			                			String.valueOf(sce.getStartLine()));
+			                	writer.writeAttribute("end_line",
+			                			String.valueOf(sce.getEndLine()));
+			                	writer.writeAttribute("start_col",
+			                			String.valueOf(sce.getStartCol()));
+			                	writer.writeAttribute("end_col",
+			                			String.valueOf(sce.getEndCol()));
+			                	writer.writeEndElement();
+			                }
+			                writer.writeEndElement();
+			                writer.writeEndElement();
+			                writer.writeCharacters(EOL);
+						}
+					} catch ( XMLStreamException e) {
+						throw new IOException("Failed to write processed gazes to file.");
+					}
+					finally {
+						try {
+							if (writer != null) {
+								writer.writeEndElement();
+					            writer.writeCharacters(EOL);
+					            writer.writeEndElement();
+					            writer.writeCharacters(EOL);
+					            writer.writeEndDocument();
+					            writer.writeCharacters(EOL);
+					            writer.flush();
+					            writer.close();
+								System.out.println("Processed gazes saved.");
+							}
+						} catch (XMLStreamException e) {
+							throw new IOException("Failed to write processed gazes to file.");
+						}
+					}
+				}
+			//export fixations
+			outFile = new File(fileDir + "/processed-fixations-"
+					+ devUsername + "-" + sessionID + ".xml");
+				if (outFile.exists()) {
+					System.out.println("You cannot overwrite this file. If you "
+							+ "wish to continue, delete the file " + "manually.");
+					return;
+				} else {
+					System.out.println("Putting files at "
+							+ outFile.getAbsolutePath());
+					outFile.createNewFile();
+					
+					//export to new file
+					XMLStreamWriter writer = null;
+					try {
+						XMLOutputFactory factory = XMLOutputFactory.newInstance();
+						writer =
+								factory.createXMLStreamWriter(new FileOutputStream(outFile), "UTF-8");
+						
+						//export header
+						writer.writeStartDocument("utf-8", "1.0");
+					    writer.writeCharacters(EOL);
+					    writer.writeStartElement("itrace-records");
+					    writer.writeCharacters(EOL);
+					    writer.writeStartElement("environment");
+					    writer.writeCharacters(EOL);
+					    writer.writeEmptyElement("screen-size");
+					    writer.writeAttribute("width",
+					            String.valueOf(width));
+					    writer.writeAttribute("height",
+					            String.valueOf(height));
+					    writer.writeCharacters(EOL);
+					    writer.writeEndElement();
+					    writer.writeCharacters(EOL);
+					    writer.writeStartElement("fixations");
+					    writer.writeCharacters(EOL);
+						
+						//export processed fixations
 						for (final Fixation fixation : getProcessedGazes()) {
 							writer.writeStartElement("response");
 			                writer.writeAttribute("name", fixation.getRawGaze().getFile());
@@ -232,6 +361,8 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 			                		String.valueOf(fixation.getRawGaze().getLineBaseX()));
 			                writer.writeAttribute("line_base_y",
 			                		String.valueOf(fixation.getRawGaze().getLineBaseY()));
+			                writer.writeAttribute("fix_index",
+			                		String.valueOf(fixation.getFixIndex()));
 			                writer.writeStartElement("sces");
 			                
 			                for (final SourceCodeEntity sce : ((NewRawGaze)fixation.getRawGaze())
@@ -257,7 +388,7 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 			                writer.writeCharacters(EOL);
 						}
 					} catch ( XMLStreamException e) {
-						throw new IOException("Failed to write processed gazes to file.");
+						throw new IOException("Failed to write processed fixations to file.");
 					}
 					finally {
 						try {
@@ -270,10 +401,10 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 					            writer.writeCharacters(EOL);
 					            writer.flush();
 					            writer.close();
-								System.out.println("Processed gazes saved.");
+								System.out.println("Processed fixations saved.");
 							}
 						} catch (XMLStreamException e) {
-							throw new IOException("Failed to write processed gazes to file.");
+							throw new IOException("Failed to write processed fixations to file.");
 						}
 					}
 				}
