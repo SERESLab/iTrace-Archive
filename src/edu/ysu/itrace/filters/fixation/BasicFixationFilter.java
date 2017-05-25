@@ -10,6 +10,8 @@ import edu.ysu.itrace.filters.IFilter;
 import edu.ysu.itrace.filters.NewRawGaze;
 import edu.ysu.itrace.filters.OldRawGaze;
 import edu.ysu.itrace.filters.RawGaze;
+import edu.ysu.itrace.filters.exceptions.FixationException;
+import edu.ysu.itrace.filters.exceptions.RawGazeException;
 
 /**
  * Class that defines functionality needed for a post-processing 
@@ -36,6 +38,14 @@ public abstract class BasicFixationFilter implements IFilter {
 	 */
 	public ArrayList<RawGaze> getRawGazes() {
 		return rawGazes;
+	}
+	
+	/**
+	 * 
+	 * @return rawGazeFixations, the raw gazes with overlayed fixations
+	 */
+	public ArrayList<NewRawGazeFixation> getRawGazeFixations() {
+		return rawGazeFixations;
 	}
 	
 	/**
@@ -400,15 +410,74 @@ public abstract class BasicFixationFilter implements IFilter {
 	
 	/**
 	 * Removed gazes below a certain duration threshold
+	 * Re-index raw gazes when removing short fixations
+	 * if not running on old gazes
 	 */
 	public void removeShortFixations() {
-		ArrayList<Fixation> toremove = new ArrayList<Fixation>();
-		for (int i = 0; i < processedGazes.size(); i++) {
-			if (processedGazes.get(i).getDuration() < durationThresh) {
-				toremove.add(processedGazes.get(i));
+		if (rawGazes != null && !rawGazes.isEmpty()) {
+			ArrayList<Fixation> toremove = new ArrayList<Fixation>();
+			if (rawGazes.get(0) instanceof OldRawGaze) {
+				for (int i = 0; i < processedGazes.size(); i++) {
+					if (processedGazes.get(i).getDuration() < durationThresh) {
+						toremove.add(processedGazes.get(i));
+					}
+				}
+				
+				processedGazes.removeAll(toremove);
+			} else {
+				for (int i = 0; i < processedGazes.size(); i++) {
+					if (processedGazes.get(i).getDuration() < durationThresh) {
+						toremove.add(processedGazes.get(i));
+						//find and remove fixation association information for raw gazes associated with fixation i
+						try {
+							editRawGazeFixations(processedGazes.get(i).getFixIndex(), -1, -1, -1, -1);
+						} catch(RawGazeException e) {
+							//shouldn't throw an exception so ignore
+						}
+					}
+				}
+				
+				processedGazes.removeAll(toremove);
+				
+				//Re-index the fixations and raw gazes associated to them
+				for (int i = 0; i < processedGazes.size(); i++) {
+					try {
+						Fixation currFixation = processedGazes.get(i);
+						int oldIndex = currFixation.getFixIndex();
+						processedGazes.get(i).setFixIndex(i+1);
+						editRawGazeFixations(
+								oldIndex,
+								i+1,
+								currFixation.getRawGaze().getX(),
+								currFixation.getRawGaze().getY(),
+								currFixation.getDuration());
+					} catch(FixationException e) {
+						//shouldn't throw an exception so ignore
+					} catch(RawGazeException e) {
+						//shouldn't throw an exception so ignore
+					}
+				}
 			}
 		}
-		processedGazes.removeAll(toremove);
+	}
+	
+	/**
+	 * Helper function to edit raw gaze information associated with specified fixation index
+	 * @param fixIndex, current fixation index raw gazes are associated with
+	 * @param newIndex, new fixation index to associate the raw gazes with
+	 * @param newX, new fixation x coordinate to associate the raw gazes with
+	 * @param newY, new fixation y coordinate to associate the raw gazes with
+	 * @param newDuration, new fixation duration to associate the raw gazes with
+	 */
+	private void editRawGazeFixations(int fixIndex, int newIndex, double newX, double newY, long newDuration) throws RawGazeException {
+		for (NewRawGazeFixation currRawGazeFixation : rawGazeFixations) {
+			if (currRawGazeFixation.getFixIndex() == fixIndex) {
+				currRawGazeFixation.setFixIndex(newIndex);
+				currRawGazeFixation.setFixX(newX);
+				currRawGazeFixation.setFixY(newY);
+				currRawGazeFixation.setDuration(newDuration);
+			}
+		}
 	}
 	
 	//Overridden function

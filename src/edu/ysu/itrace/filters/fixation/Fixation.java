@@ -1,6 +1,7 @@
 package edu.ysu.itrace.filters.fixation;
 
 import edu.ysu.itrace.filters.RawGaze;
+import edu.ysu.itrace.filters.exceptions.FixationException;
 
 public class Fixation {
 	private int fixIndex;
@@ -13,6 +14,7 @@ public class Fixation {
 		this.duration = duration;
 	}
 	
+	//Getters
 	public int getFixIndex() {
 		return fixIndex;
 	}
@@ -23,5 +25,14 @@ public class Fixation {
 	
 	public long getDuration() {
 		return duration;
+	}
+	
+	//Setters
+	public void setFixIndex(int newIndex) throws FixationException {
+		if (newIndex >= 1) {
+			this.fixIndex = newIndex;
+		} else {
+			throw new FixationException("Fixation indices must be >= 1.");
+		}
 	}
 }
