@@ -30,11 +30,14 @@ SOURCES += main.cpp\
     mousetracker.cpp
 
 HEADERS  += mainwindow.h \
-    mousetracker.h
+    mousetracker.h \
+    tobiifunctions.h
 
 FORMS    += mainwindow.ui
 
-win32: LIBS += -L$$PWD/64/lib/ -ltobii_research
 
-INCLUDEPATH += $$PWD/64/include
-DEPENDPATH += $$PWD/64/include
+
+win32: LIBS += -L$$PWD/../../../TobiiPro/TobiiPro/64/lib/ -ltobii_research
+
+INCLUDEPATH += $$PWD/../../../TobiiPro/TobiiPro/64/include
+DEPENDPATH += $$PWD/../../../TobiiPro/TobiiPro/64/include
