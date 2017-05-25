@@ -32,6 +32,9 @@ public abstract class BasicFixationFilter implements IFilter {
 	private double radius = 10; //pixels, minimum distance between two fixations
 	private long durationThresh = 50; //ms, minimum duration of a fixation
 
+	//Fixation stats helper variables
+	private int discardedFix = -1; //number of fixations discarded when filtering out short fixations
+	
 	//Getters
 	/**
 	 * Return the raw gazes as an array list.
@@ -81,6 +84,15 @@ public abstract class BasicFixationFilter implements IFilter {
 	 */
 	public long getDurationThresh() {
 		return durationThresh;
+	}
+	
+	/**
+	 * Return the number of fixations discarded because their duration is below the
+	 * durationThresh
+	 * @return discardedFix
+	 */
+	public int getDiscardedFix() {
+		return discardedFix;
 	}
 	
 	//Setters
@@ -458,6 +470,7 @@ public abstract class BasicFixationFilter implements IFilter {
 					}
 				}
 			}
+			discardedFix = toremove.size();
 		}
 	}
 	
