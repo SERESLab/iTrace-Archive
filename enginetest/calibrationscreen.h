@@ -24,6 +24,8 @@ private:
     int t;
     int x;
     int y;
+    int dotx;
+    int doty;
     float size;
 };
 
