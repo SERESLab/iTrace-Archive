@@ -405,10 +405,27 @@ public class JSONBasicFixationFilter extends BasicFixationFilter {
 										.value(height)
 									.endObject()
 								.endObject()
+								.name("fix_stats")
+								.beginObject()
+									.name("discarded_fix")
+									.value(getDiscardedFix())
+									.name("total_fix")
+									.value(getProcessedGazes().size())
+									.name("filter")
+									.value(filterName)
+									.name("sliding_window")
+									.value(getSlidingWindow())
+									.name("peak_threshold")
+									.value(getThreshold())
+									.name("radius")
+									.value(getRadius())
+									.name("duration_threshold")
+									.value(getDurationThresh())
+								.endObject()
 								.name("fixations")
 								.beginArray();
 						
-						//export processed gazes
+						//export processed fixations
 						for (final Fixation fixation : getProcessedGazes()) {
 							writer.beginObject()
 									.name("file")
