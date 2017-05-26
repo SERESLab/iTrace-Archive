@@ -172,11 +172,11 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 						//export header
 						writer.writeStartDocument("utf-8", "1.0");
 					    writer.writeCharacters(EOL);
-					    writer.writeStartElement("itrace-records");
+					    writer.writeStartElement("itrace_records");
 					    writer.writeCharacters(EOL);
 					    writer.writeStartElement("environment");
 					    writer.writeCharacters(EOL);
-					    writer.writeEmptyElement("screen-size");
+					    writer.writeEmptyElement("screen_size");
 					    writer.writeAttribute("width",
 					            String.valueOf(width));
 					    writer.writeAttribute("height",
@@ -321,9 +321,9 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 			                writer.writeAttribute("type", fixation.getRawGaze().getType());
 			                writer.writeAttribute("x", String.valueOf(fixation.getRawGaze().getX()));
 			                writer.writeAttribute("y", String.valueOf(fixation.getRawGaze().getY()));
-			                writer.writeAttribute("left-validation",
+			                writer.writeAttribute("left_validation",
 			                        String.valueOf(fixation.getRawGaze().getLeftValid()));
-			                writer.writeAttribute("right-validation",
+			                writer.writeAttribute("right_validation",
 			                        String.valueOf(fixation.getRawGaze().getRightValid()));
 			                writer.writeAttribute("left_pupil_diameter",
 			                        String.valueOf(fixation.getRawGaze()
@@ -336,11 +336,11 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 			                writer.writeAttribute("session_time",
 			                		String.valueOf(((NewRawGaze)
 			                				fixation.getRawGaze()).getSessionTime()));
-			                writer.writeAttribute("tracker-time",
+			                writer.writeAttribute("tracker_time",
 			                        String.valueOf(fixation.getRawGaze().getTrackerTime()));
-			                writer.writeAttribute("system-time",
+			                writer.writeAttribute("system_time",
 			                        String.valueOf(fixation.getRawGaze().getSystemTime()));
-			                writer.writeAttribute("nano-time",
+			                writer.writeAttribute("nano_time",
 			                        String.valueOf(fixation.getRawGaze().getNanoTime()));
 			                writer.writeAttribute("path",
 			                		((NewRawGaze)fixation.getRawGaze()).getPath());
