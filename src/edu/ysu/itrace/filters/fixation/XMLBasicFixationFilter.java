@@ -194,9 +194,9 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 			                writer.writeAttribute("type", rawGaze.getType());
 			                writer.writeAttribute("x", String.valueOf(rawGaze.getX()));
 			                writer.writeAttribute("y", String.valueOf(rawGaze.getY()));
-			                writer.writeAttribute("left-validation",
+			                writer.writeAttribute("left_validation",
 			                        String.valueOf(rawGaze.getLeftValid()));
-			                writer.writeAttribute("right-validation",
+			                writer.writeAttribute("right_validation",
 			                        String.valueOf(rawGaze.getRightValid()));
 			                writer.writeAttribute("left_pupil_diameter",
 			                        String.valueOf(rawGaze.getLeftPupilDiam()));
@@ -205,11 +205,11 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 			                writer.writeAttribute("timestamp",	rawGaze.getTimeStamp());
 			                writer.writeAttribute("session_time",
 			                		String.valueOf(rawGaze.getSessionTime()));
-			                writer.writeAttribute("tracker-time",
+			                writer.writeAttribute("tracker_time",
 			                        String.valueOf(rawGaze.getTrackerTime()));
-			                writer.writeAttribute("system-time",
+			                writer.writeAttribute("system_time",
 			                        String.valueOf(rawGaze.getSystemTime()));
-			                writer.writeAttribute("nano-time",
+			                writer.writeAttribute("nano_time",
 			                        String.valueOf(rawGaze.getNanoTime()));
 			                writer.writeAttribute("path", rawGaze.getPath());
 			                writer.writeAttribute("line_height",
@@ -299,11 +299,11 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 						//export header
 						writer.writeStartDocument("utf-8", "1.0");
 					    writer.writeCharacters(EOL);
-					    writer.writeStartElement("itrace-records");
+					    writer.writeStartElement("itrace_records");
 					    writer.writeCharacters(EOL);
 					    writer.writeStartElement("environment");
 					    writer.writeCharacters(EOL);
-					    writer.writeEmptyElement("screen-size");
+					    writer.writeEmptyElement("screen_size");
 					    writer.writeAttribute("width",
 					            String.valueOf(width));
 					    writer.writeAttribute("height",
