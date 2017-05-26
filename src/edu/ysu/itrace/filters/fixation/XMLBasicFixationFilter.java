@@ -311,6 +311,21 @@ public class XMLBasicFixationFilter extends BasicFixationFilter {
 					    writer.writeCharacters(EOL);
 					    writer.writeEndElement();
 					    writer.writeCharacters(EOL);
+					    writer.writeEmptyElement("fix_stats");
+					    writer.writeAttribute("discarded_fix",
+					            String.valueOf(getDiscardedFix()));
+					    writer.writeAttribute("total_fix",
+					            String.valueOf(getProcessedGazes().size()));
+					    writer.writeAttribute("filter", filterName);
+					    writer.writeAttribute("sliding_window",
+					            String.valueOf(getSlidingWindow()));
+					    writer.writeAttribute("peak_threshold",
+					            String.valueOf(getThreshold()));
+					    writer.writeAttribute("radius",
+					            String.valueOf(getRadius()));
+					    writer.writeAttribute("duration_threshold",
+					            String.valueOf(getDurationThresh()));
+					    writer.writeCharacters(EOL);
 					    writer.writeStartElement("fixations");
 					    writer.writeCharacters(EOL);
 						
