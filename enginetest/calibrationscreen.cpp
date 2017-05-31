@@ -1,5 +1,14 @@
 #include "calibrationscreen.h"
 
+CalibrationScreen* CalibrationScreen::calibrationScreen = 0;
+
+CalibrationScreen* CalibrationScreen::getCalibrationScreen(){
+    if(!calibrationScreen){
+        calibrationScreen = new CalibrationScreen();
+    }
+    return calibrationScreen;
+}
+
 CalibrationScreen::CalibrationScreen(QWidget *parent) : QWidget(parent){
     resize(1000,1000);
     points[0] = QPointF(0.1,0.1);
@@ -11,11 +20,15 @@ CalibrationScreen::CalibrationScreen(QWidget *parent) : QWidget(parent){
     points[6] = QPointF(0.1,0.9);
     points[7] = QPointF(0.5,0.9);
     points[8] = QPointF(0.9,0.9);
-    t = 0;
     timer = new QTimer(this);
     size = 50;
     connect(timer, SIGNAL(timeout()), this, SLOT(updatePosition()));
+}
+
+void CalibrationScreen::startCalibration(EyeTracker* eyetracker){
     timer->start(16);
+    t = 0;
+    return;
 }
 
 void CalibrationScreen::paintEvent(QPaintEvent * /*event*/){

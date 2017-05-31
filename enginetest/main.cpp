@@ -24,7 +24,5 @@ int main(int argc, char *argv[])
     result = tobiiPro->findAllTrackers(&eyetrackers);
     MainWindow w;
     w.show();
-    //CalibrationScreen calibScreen;
-    //calibScreen.showFullScreen();
     return a.exec();
 }
