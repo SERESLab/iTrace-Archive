@@ -5,22 +5,21 @@
 #include <cstdlib>
 #include <QDebug>
 #include "tobiifunctions.h"
+#include "eyetracker.h"
 class TobiiPro
 {
 private:
     static TobiiPro* tobiiPro;
-    TobiiPro();
     HMODULE tobiiLibrary;
+    TobiiPro();
     void ExtractTobiiFunctions();
     void SetFunctionsToStubs();
+
 public:
+    HMODULE getTobiiLibrary();
     static TobiiPro* getTobiiPro();
     FindAllTrackers* findAllTrackers;
-    GetTrackerAddress* getTrackerAddress;
-    GetTrackerName* getTrackerName;
-    GetTrackerSerialNumber* getTrackerSerialNumber;
-    GetTrackerModel* getTrackerModel;
-    GetTrackerFirmwareVersion* getTrackerFirmwareVersion;
+
     GetTracker* getTracker;
     GetSystemTimestamp* getSystemTimestamp;
 };

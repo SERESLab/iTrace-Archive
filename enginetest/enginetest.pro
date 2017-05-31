@@ -29,19 +29,18 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     mousetracker.cpp \
     tobiipro.cpp \
-    calibrationscreen.cpp
+    calibrationscreen.cpp \
+    eyetracker.cpp
 
 HEADERS  += mainwindow.h \
     mousetracker.h \
     tobiifunctions.h \
     tobiipro.h \
-    calibrationscreen.h
+    calibrationscreen.h \
+    eyetracker.h
 
 FORMS    += mainwindow.ui
 
 
 
-win32: LIBS += -L$$PWD/../../../TobiiPro/TobiiPro/64/lib/ -ltobii_research
 
-INCLUDEPATH += $$PWD/../../../TobiiPro/TobiiPro/64/include
-DEPENDPATH += $$PWD/../../../TobiiPro/TobiiPro/64/include

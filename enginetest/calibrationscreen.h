@@ -9,8 +9,8 @@ class CalibrationScreen : public QWidget
 {
     Q_OBJECT
 public:
-    explicit CalibrationScreen(QWidget *parent = 0);
-
+    static CalibrationScreen* getCalibrationScreen();
+    void startCalibration(EyeTracker* eyetracker);
 signals:
 
 public slots:
@@ -19,6 +19,8 @@ protected:
     void paintEvent(QPaintEvent* event) override;
 
 private:
+    static CalibrationScreen* calibrationScreen;
+    explicit CalibrationScreen(QWidget *parent = 0);
     QPointF points[9];
     QTimer * timer;
     int t;
