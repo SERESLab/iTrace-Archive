@@ -28,6 +28,7 @@ QT += network
 SOURCES += main.cpp\
         mainwindow.cpp \
     mousetracker.cpp \
+<<<<<<< Updated upstream
     tobiipro.cpp \
     calibrationscreen.cpp
 
@@ -36,12 +37,23 @@ HEADERS  += mainwindow.h \
     tobiifunctions.h \
     tobiipro.h \
     calibrationscreen.h
+=======
+    sessionsetup.cpp
 
-FORMS    += mainwindow.ui
+HEADERS  += mainwindow.h \
+    mousetracker.h \
+    sessionsetup.h
+>>>>>>> Stashed changes
 
+FORMS    += mainwindow.ui \
+    sessionsetup.ui
+
+<<<<<<< Updated upstream
 
 
 win32: LIBS += -L$$PWD/../../../TobiiPro/TobiiPro/64/lib/ -ltobii_research
 
 INCLUDEPATH += $$PWD/../../../TobiiPro/TobiiPro/64/include
 DEPENDPATH += $$PWD/../../../TobiiPro/TobiiPro/64/include
+=======
+>>>>>>> Stashed changes

@@ -21,6 +21,7 @@ public slots:
     void startTracker();
     void displayMouse();
 
+
 private:
     Ui::MainWindow *ui;
     MouseTracker * mouseTracker;

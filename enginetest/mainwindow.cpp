@@ -16,7 +16,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     mouseTracker = new MouseTracker();
     ui->setupUi(this);
-    connect(ui->pushButton, SIGNAL(released()), this, SLOT(startTracker()));
+    connect(ui->startServerButton, SIGNAL(released()), this, SLOT(startTracker()));
     socket = new QTcpSocket(this);
     connect(socket, SIGNAL(readyRead()), this, SLOT(displayMouse()));
 }
