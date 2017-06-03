@@ -6,7 +6,7 @@
 #include "tracker.h"
 #include <windows.h>
 
-class tobiiEyeTracker: tracker
+class tobiiEyeTracker: Tracker
 {
     TobiiPro* tobiiPro;
     HMODULE tobiiLibrary;

@@ -2,7 +2,7 @@
 #define TRACKER_H
 
 
-class tracker
+class Tracker
 {
 public:
     virtual void enterCalibration() = 0;

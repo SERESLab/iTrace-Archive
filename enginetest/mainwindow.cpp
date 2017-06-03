@@ -12,13 +12,12 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
-
-
     mouseTracker = new MouseTracker();
     ui->setupUi(this);
     connect(ui->startServerButton, SIGNAL(released()), this, SLOT(startTracker()));
     socket = new QTcpSocket(this);
     connect(socket, SIGNAL(readyRead()), this, SLOT(displayMouse()));
+    this->setFixedSize(this->geometry().width(),this->geometry().height());
 }
 
 MainWindow::~MainWindow()

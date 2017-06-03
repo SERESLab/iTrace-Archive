@@ -31,7 +31,8 @@ SOURCES += main.cpp\
     tobiipro.cpp \
     calibrationscreen.cpp \
     tobiiEyetracker.cpp \
-    tracker.cpp
+    tracker.cpp \
+    gazeserver.cpp
 
 HEADERS  += mainwindow.h \
     mousetracker.h \
@@ -39,7 +40,8 @@ HEADERS  += mainwindow.h \
     tobiipro.h \
     calibrationscreen.h \
     tobiiEyetracker.h \
-    tracker.h
+    tracker.h \
+    gazeserver.h
 
 HEADERS  += mainwindow.h \
     mousetracker.h \

@@ -25,7 +25,9 @@ CalibrationScreen::CalibrationScreen(QWidget *parent) : QWidget(parent){
     connect(timer, SIGNAL(timeout()), this, SLOT(updatePosition()));
 }
 
-void CalibrationScreen::startCalibration(tobiiEyeTracker* eyetracker){
+void CalibrationScreen::startCalibration(Tracker* selectedTracker){
+    tracker = selectedTracker;
+    tracker->enterCalibration();
     timer->start(16);
     t = 0;
     return;

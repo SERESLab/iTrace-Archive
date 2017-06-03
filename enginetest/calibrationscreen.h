@@ -11,7 +11,7 @@ class CalibrationScreen : public QWidget
     Q_OBJECT
 public:
     static CalibrationScreen* getCalibrationScreen();
-    void startCalibration(tobiiEyeTracker* eyetracker);
+    void startCalibration(Tracker* tracker);
 signals:
 
 public slots:
@@ -24,6 +24,7 @@ private:
     explicit CalibrationScreen(QWidget *parent = 0);
     QPointF points[9];
     QTimer * timer;
+    Tracker* tracker;
     int t;
     int x;
     int y;

@@ -8,18 +8,16 @@
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <vector>
+#include "gazeserver.h"
 
 using namespace std;
 
 class MouseTracker: QObject
 {
     Q_OBJECT
-    //volatile bool running;
     QPoint cursor;
     QTimer * timer;
-    QTcpServer * server;
-    QTcpSocket * clientConnection;
-    vector<QTcpSocket *> clients;
+    GazeServer* gazeServer;
 
 private slots:
 
@@ -33,8 +31,6 @@ public:
 
 public slots:
     void trackMouse();
-    void newConnections();
-    void removedConnection();
 
 
 };
