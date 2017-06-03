@@ -1,30 +1,44 @@
-#ifndef EYETRACKER_H
-#define EYETRACKER_H
+#ifndef TOBIIEYETRACKER_H
+#define TOBIIEYETRACKER_H
 #include "tobii_research.h"
 #include "tobii_research_eyetracker.h"
 #include "tobiipro.h"
-#include "tobiifunctions.h"
+#include "tracker.h"
 #include <windows.h>
 
-class EyeTracker
+class tobiiEyeTracker: tracker
 {
     TobiiPro* tobiiPro;
     HMODULE tobiiLibrary;
     void ExtractTobiiFunctions();
     void SetFunctionsToStubs();
-public:
-    EyeTracker();
-    void calibrate();
+    TobiiResearchEyeTracker* eyetracker;
     GetTrackerAddress* getTrackerAddress;
     GetTrackerSerialNumber* getTrackerSerialNumber;
     GetTrackerName* getTrackerName;
     GetTrackerModel* getTrackerModel;
     GetTrackerFirmwareVersion* getTrackerFirmwareVersion;
+    char* name;
+    char* address;
+    char* serialNumber;
+    char* model;
+    char* firmwareVersion;
     EnterCalibrationMode* enterCalibrationMode;
     LeaveCalibrationMode* leaveCalibrationMode;
     CollectCalibrationData* collectCalibrationData;
     DiscardCalibrationData* discardCalibrationData;
     ComputeCalibration* computeCalibration;
+public:
+    tobiiEyeTracker(TobiiResearchEyeTracker* eyetracker);
+    void enterCalibration() override;
+    void leaveCalibration() override;
+    void useCalibrationPoint(float x, float y) override;
+    void discardCalibrationPoint(float x, float y) override;
+    char* getName();
+    char* getAddress();
+    char* getSerialNumber();
+    char* getModel();
+    char* getFirmwareVersion();
 };
 
-#endif // EYETRACKER_H
+#endif // TOBIIEYETRACKER_H

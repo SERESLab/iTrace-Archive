@@ -5,7 +5,6 @@
 #include <cstdlib>
 #include <QDebug>
 #include "tobiifunctions.h"
-#include "eyetracker.h"
 class TobiiPro
 {
 private:

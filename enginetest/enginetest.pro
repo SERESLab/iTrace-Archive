@@ -28,26 +28,24 @@ QT += network
 SOURCES += main.cpp\
         mainwindow.cpp \
     mousetracker.cpp \
-<<<<<<< Updated upstream
     tobiipro.cpp \
     calibrationscreen.cpp \
-    eyetracker.cpp
+    tobiiEyetracker.cpp \
+    tracker.cpp
 
 HEADERS  += mainwindow.h \
     mousetracker.h \
     tobiifunctions.h \
     tobiipro.h \
     calibrationscreen.h \
-    eyetracker.h
+    tobiiEyetracker.h \
+    tracker.h
 
 HEADERS  += mainwindow.h \
     mousetracker.h \
     sessionsetup.h
->>>>>>> Stashed changes
 
 FORMS    += mainwindow.ui \
     sessionsetup.ui
-
-<<<<<<< Updated upstream
 
 

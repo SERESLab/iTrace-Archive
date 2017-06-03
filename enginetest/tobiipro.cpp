@@ -5,9 +5,7 @@ FIND_ALL_TRACKERS(FindAllTrackersStub)
 {
     return (TobiiResearchStatus)1;
 }
-GET_TRACKER_ATTRIBUTE(GetTrackerAttributeStub){
-    return (TobiiResearchStatus)1;
-}
+
 GET_TRACKER(GetTrackerStub){
     return (TobiiResearchStatus)1;
 }

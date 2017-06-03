@@ -5,12 +5,13 @@
 #include <QPainter>
 #include <QTimer>
 #include <QDebug>
+#include "tobiiEyetracker.h"
 class CalibrationScreen : public QWidget
 {
     Q_OBJECT
 public:
     static CalibrationScreen* getCalibrationScreen();
-    void startCalibration(EyeTracker* eyetracker);
+    void startCalibration(tobiiEyeTracker* eyetracker);
 signals:
 
 public slots:
