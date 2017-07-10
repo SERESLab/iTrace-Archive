@@ -1,5 +1,4 @@
 #include "mousetracker.h"
-
 #include <QCursor>
 #include <QDebug>
 #include <QtNetwork>

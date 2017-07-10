@@ -19,6 +19,7 @@ GazeServer::GazeServer()
     clientConnection = 0;
 }
 
+
 void GazeServer::newConnections(){
     while(tcpServer->hasPendingConnections()){
         QTcpSocket* client = tcpServer->nextPendingConnection();

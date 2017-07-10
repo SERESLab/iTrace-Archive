@@ -8,6 +8,8 @@ GET_TRACKER_ATTRIBUTE(GetTrackerAttributeStub){
     return (TobiiResearchStatus)1;
 }
 
+vector<tobiiEyeTracker*> tobiiEyeTracker::tobiiEyeTrackers;
+
 tobiiEyeTracker::tobiiEyeTracker(TobiiResearchEyeTracker* eyetracker){
     this->eyetracker = eyetracker;
     tobiiPro = TobiiPro::getTobiiPro();

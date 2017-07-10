@@ -3,6 +3,8 @@
 #include <QtNetwork>
 #include "ui_mainwindow.h"
 #include "mousetracker.h"
+#include "tobiiEyetracker.h"
+#include "reticle.h"
 #include <sstream>
 
 
@@ -18,6 +20,9 @@ MainWindow::MainWindow(QWidget *parent) :
     socket = new QTcpSocket(this);
     connect(socket, SIGNAL(readyRead()), this, SLOT(displayMouse()));
     this->setFixedSize(this->geometry().width(),this->geometry().height());
+    for(int i=0; i<tobiiEyeTracker::tobiiEyeTrackers.size(); i++){
+        ui->trackerBox->addItem(tobiiEyeTracker::tobiiEyeTrackers[i]->getName());
+    }
 }
 
 MainWindow::~MainWindow()
@@ -37,13 +42,7 @@ void MainWindow::startTracker(){
 void MainWindow::displayMouse(){
     QDataStream in(socket);
     in.setVersion(QDataStream::Qt_5_8);
-    quint32 mousex;
-    quint32 mousey;
-    //in >> mousex;
-    //in >> mousey;
     char * data = new char[100];
     in.readRawData(data,100);
-    //stringstream ss;
-    //ss << mousex << '\t' << mousey;
     ui->textBrowser->setText(data);
 }

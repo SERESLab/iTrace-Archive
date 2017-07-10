@@ -5,6 +5,9 @@
 #include "tobiipro.h"
 #include "tracker.h"
 #include <windows.h>
+#include <vector>
+
+using namespace std;
 
 class tobiiEyeTracker: Tracker
 {
@@ -29,6 +32,7 @@ class tobiiEyeTracker: Tracker
     DiscardCalibrationData* discardCalibrationData;
     ComputeCalibration* computeCalibration;
 public:
+    static vector<tobiiEyeTracker*> tobiiEyeTrackers;
     tobiiEyeTracker(TobiiResearchEyeTracker* eyetracker);
     void enterCalibration() override;
     void leaveCalibration() override;
