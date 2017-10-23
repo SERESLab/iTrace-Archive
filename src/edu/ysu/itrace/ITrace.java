@@ -101,8 +101,8 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
         emotionPopupHandler = new EmotionPopupHandler();
     	eventBroker.subscribe("iTrace/jsonOutput", jsonSolver);
     	eventBroker.subscribe("iTrace/xmlOutput", xmlSolver);
-        eventBroker.subscribe("iTrace/sessionTimeServer", sessionTimeServer);
-        eventBroker.subscribe("iTrace/emotionPopup", emotionPopupHandler);
+        eventBroker.subscribe("iTrace/sessionTimeServer", (SessionTimeServer) sessionTimeServer);
+        eventBroker.subscribe("iTrace/emotionPopup", (EmotionPopupHandler) emotionPopupHandler);
     }
 
     /*
