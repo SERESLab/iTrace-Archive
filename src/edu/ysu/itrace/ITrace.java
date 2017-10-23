@@ -275,6 +275,10 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
     				sessionInfo.getDevUsername());
     		jsonSolver.config(sessionInfo.getSessionID(),
     				sessionInfo.getDevUsername());
+    		sessionTimeServer.config(sessionInfo.getSessionID(),
+    				sessionInfo.getDevUsername());
+    		emotionPopupHandler.config(sessionInfo.getSessionID(),
+    				sessionInfo.getDevUsername());
     	}
     }
     
