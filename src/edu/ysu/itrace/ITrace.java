@@ -34,6 +34,8 @@ import edu.ysu.itrace.gaze.IGazeHandler;
 import edu.ysu.itrace.gaze.IGazeResponse;
 import edu.ysu.itrace.gaze.IStyledTextGazeResponse;
 import edu.ysu.itrace.preferences.PluginPreferences;
+import edu.ysu.itrace.solvers.sessionserver.ISessionTimeServer;
+import edu.ysu.itrace.solvers.sessionserver.SessionTimeServer;
 import edu.ysu.itrace.solvers.ISolver;
 import edu.ysu.itrace.solvers.JSONGazeExportSolver;
 import edu.ysu.itrace.solvers.XMLGazeExportSolver;
@@ -69,6 +71,8 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
     
     private Shell rootShell;
     
+    private ISessionTimeServer sessionTimeServer;
+    
     /**
      * The constructor
      */
@@ -90,8 +94,10 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
     	eventBroker.subscribe("iTrace/newgaze", this);
     	jsonSolver = new JSONGazeExportSolver();
     	xmlSolver = new XMLGazeExportSolver();
+        sessionTimeServer = new SessionTimeServer();
     	eventBroker.subscribe("iTrace/jsonOutput", jsonSolver);
     	eventBroker.subscribe("iTrace/xmlOutput", xmlSolver);
+        eventBroker.subscribe("iTrace/newgaze", sessionTimeServer);
     }
 
     /*
@@ -211,6 +217,9 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
         	System.out.println(e.getMessage());
         }
         ITrace.getDefault().sessionStartTime = System.nanoTime();
+        
+        sessionTimeServer.init();
+        
         recording = true;
         return recording;
     }
@@ -224,6 +233,7 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
         
         xmlSolver.dispose();
         jsonSolver.dispose();
+        sessionTimeServer.dispose();
         
         if (tracker != null) {
         } else {
