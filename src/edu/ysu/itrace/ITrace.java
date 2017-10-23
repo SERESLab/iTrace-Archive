@@ -39,6 +39,8 @@ import edu.ysu.itrace.solvers.sessionserver.SessionTimeServer;
 import edu.ysu.itrace.solvers.ISolver;
 import edu.ysu.itrace.solvers.JSONGazeExportSolver;
 import edu.ysu.itrace.solvers.XMLGazeExportSolver;
+import edu.ysu.itrace.solvers.emotionpopup.EmotionPopupHandler;
+import edu.ysu.itrace.solvers.emotionpopup.IEmotionPopupHandler;
 import edu.ysu.itrace.trackers.IEyeTracker;
 
 /**
@@ -72,6 +74,7 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
     private Shell rootShell;
     
     private ISessionTimeServer sessionTimeServer;
+    private IEmotionPopupHandler emotionPopupHandler;
     
     /**
      * The constructor
@@ -95,9 +98,11 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
     	jsonSolver = new JSONGazeExportSolver();
     	xmlSolver = new XMLGazeExportSolver();
         sessionTimeServer = new SessionTimeServer();
+        emotionPopupHandler = new EmotionPopupHandler();
     	eventBroker.subscribe("iTrace/jsonOutput", jsonSolver);
     	eventBroker.subscribe("iTrace/xmlOutput", xmlSolver);
-        eventBroker.subscribe("iTrace/newgaze", sessionTimeServer);
+        eventBroker.subscribe("iTrace/sessionTimeServer", sessionTimeServer);
+        eventBroker.subscribe("iTrace/emotionPopup", emotionPopupHandler);
     }
 
     /*
@@ -219,6 +224,7 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
         ITrace.getDefault().sessionStartTime = System.nanoTime();
         
         sessionTimeServer.init();
+        emotionPopupHandler.init();
         
         recording = true;
         return recording;
@@ -234,6 +240,7 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
         xmlSolver.dispose();
         jsonSolver.dispose();
         sessionTimeServer.dispose();
+        emotionPopupHandler.dispose();
         
         if (tracker != null) {
         } else {
@@ -405,6 +412,8 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
 		                 		registerTime = System.currentTimeMillis();
 		                 		if(xmlOutput) eventBroker.post("iTrace/xmlOutput", response);
 		                 		if(jsonOutput) eventBroker.post("iTrace/jsonOutput", response);
+                                eventBroker.post("iTrace/sessionTimeServer", response);
+                                eventBroker.post("iTrace/emotionPopup", response);
 		                	 }
 		                     
 		                     if(response instanceof IStyledTextGazeResponse && response != null && showTokenHighlights){
