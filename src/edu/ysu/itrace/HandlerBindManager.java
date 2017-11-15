@@ -29,7 +29,7 @@ public class HandlerBindManager {
     public static void bind(IWorkbenchPartReference partRef) {
         IWorkbenchPart part = partRef.getPart(true);
         Control control = part.getAdapter(Control.class);
-        
+        System.out.println(control);
         //is an EditorPart
         if (control != null) {
         	bindControl(partRef, control, false);

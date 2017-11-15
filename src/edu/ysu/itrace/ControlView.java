@@ -384,7 +384,7 @@ public class ControlView extends ViewPart implements IPartListener2, EventHandle
     		IEditorPart ep = (IEditorPart)partRef.getPart(true);
     		ITrace.getDefault().setLineManager(ep.getEditorSite().getActionBars().getStatusLineManager());;
     	}
-    }
+   }
 
     @Override
     public void partClosed(IWorkbenchPartReference partRef) {
