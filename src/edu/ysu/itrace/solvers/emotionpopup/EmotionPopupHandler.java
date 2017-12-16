@@ -24,6 +24,7 @@ public class EmotionPopupHandler implements IEmotionPopupHandler, EventHandler {
     private File outFile;
     private String filename = "emotion-responses-USERNAME-yyMMddTHHmmss-SSSS-Z.json";
     private String sessionID;
+    private IGazeResponse lastGazeResponse;
 
     public EmotionPopupHandler() {
     	UIManager.put("swing.boldMetal", new Boolean(false)); //make UI font plain
@@ -67,8 +68,11 @@ public class EmotionPopupHandler implements IEmotionPopupHandler, EventHandler {
 
     @Override
     public void process(IGazeResponse response) {
-        if(lastPopup <= response.getGaze().getSessionTime() + SECONDS_BETWEEN_POPUP * 1000) {
-            new EmotionPopupWindow(this, response);
+        lastGazeResponse = response;
+        if(lastPopup + SECONDS_BETWEEN_POPUP * 1000 <= response.getGaze().getSystemTime()) {
+            lastPopup = response.getGaze().getSystemTime();
+            // TODO: Only create the thread once and reuse it.
+            new EmotionPopupWindow(this, response).start();
         }
     }
 
@@ -132,15 +136,19 @@ public class EmotionPopupHandler implements IEmotionPopupHandler, EventHandler {
 
     public void writeResponse(IGazeResponse response, String emotion, String[] options) {
         try {
-                responseWriter.beginObject()
-                              .name("session_time")
+                responseWriter.beginObject()    
+                              .name("popup_session_time")
                               .value(response.getGaze().getSessionTime())
-                              .name("tracker_time")
+                              .name("popup_tracker_time")
                               .value(response.getGaze().getTrackerTime())
-                              .name("system_time")
+                              .name("popup_system_time")
                               .value(response.getGaze().getSystemTime())
-                              .name("nano_time")
-                              .value(response.getGaze().getNanoTime())
+                              .name("response_session_time")
+                              .value(lastGazeResponse.getGaze().getSessionTime())
+                              .name("response_tracker_time")
+                              .value(lastGazeResponse.getGaze().getTrackerTime())
+                              .name("response_system_time")
+                              .value(lastGazeResponse.getGaze().getSystemTime())
                               .name("selected_emotion")
                               .value(emotion)
                               .name("emotion_display_order")
