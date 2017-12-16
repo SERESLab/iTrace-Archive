@@ -1,9 +1,13 @@
 package edu.ysu.itrace.solvers.sessionserver;
 
 import edu.ysu.itrace.gaze.IGazeResponse;
+
+import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -75,8 +79,11 @@ public class SessionTimeServer implements ISessionTimeServer, EventHandler {
                 }
                 
                 try {
-                    DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-                    out.writeLong(time);
+                	ByteBuffer buffer = ByteBuffer.allocate(8);
+                	buffer.order(ByteOrder.LITTLE_ENDIAN);
+                	buffer.putLong(time);
+                	socket.getOutputStream().write(buffer.array());
+                	socket.getOutputStream().flush();
                 } catch(IOException e) {
                     try {
                         socket.close();
