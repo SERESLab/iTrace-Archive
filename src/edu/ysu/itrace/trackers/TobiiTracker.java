@@ -148,7 +148,12 @@ public class TobiiTracker implements IEyeTracker {
     private long time = 0;
     private IEventBroker eventBroker;
 
-    static { System.loadLibrary("TobiiTracker"); }
+    static {
+    	System.loadLibrary("libboost_thread-mt");
+    	System.loadLibrary("libboost_system-mt");
+    	System.loadLibrary("tetio");
+    	System.loadLibrary("TobiiTracker");
+	}
 
     public TobiiTracker() throws EyeTrackerConnectException,
                                  IOException {

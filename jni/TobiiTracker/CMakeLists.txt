@@ -14,7 +14,7 @@ if(BUILD_TOBIITRACKER)
 		set(CMAKE_SHARED_LINKER_FLAGS
 			"-D_JNI_IMPLEMENTATION_ -Wl,--kill-at,--allow-multiple-definition")
 	endif()
-	find_package(Boost 1.40 REQUIRED COMPONENTS filesystem regex thread system)
+	find_package(Boost REQUIRED COMPONENTS filesystem regex thread system)
 	find_package(JNI REQUIRED)
 	include_directories(${JNI_INCLUDE_DIRS})
 	add_library(TobiiTracker SHARED edu_ysu_itrace_trackers_TobiiTracker.cpp)
