@@ -64,6 +64,8 @@ public class EmotionPopupHandler implements IEmotionPopupHandler, EventHandler {
             throw new RuntimeException("Log file header could not be written: "
                     + e.getMessage());
         }
+        
+        lastPopup = 0;
     }
 
     @Override
