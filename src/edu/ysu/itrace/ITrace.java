@@ -41,6 +41,8 @@ import edu.ysu.itrace.solvers.JSONGazeExportSolver;
 import edu.ysu.itrace.solvers.XMLGazeExportSolver;
 import edu.ysu.itrace.solvers.emotionpopup.EmotionPopupHandler;
 import edu.ysu.itrace.solvers.emotionpopup.IEmotionPopupHandler;
+import edu.ysu.itrace.solvers.externallauncher.ExternalLauncher;
+import edu.ysu.itrace.solvers.externallauncher.IExternalLauncher;
 import edu.ysu.itrace.trackers.IEyeTracker;
 
 /**
@@ -75,6 +77,7 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
     
     private ISessionTimeServer sessionTimeServer;
     private IEmotionPopupHandler emotionPopupHandler;
+    private IExternalLauncher externalLauncher;
     
     /**
      * The constructor
@@ -99,10 +102,12 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
     	xmlSolver = new XMLGazeExportSolver();
         sessionTimeServer = new SessionTimeServer();
         emotionPopupHandler = new EmotionPopupHandler();
+        externalLauncher = new ExternalLauncher();
     	eventBroker.subscribe("iTrace/jsonOutput", jsonSolver);
     	eventBroker.subscribe("iTrace/xmlOutput", xmlSolver);
         eventBroker.subscribe("iTrace/sessionTimeServer", (SessionTimeServer) sessionTimeServer);
         eventBroker.subscribe("iTrace/emotionPopup", (EmotionPopupHandler) emotionPopupHandler);
+        eventBroker.subscribe("iTrace/externalLauncher", (ExternalLauncher) externalLauncher);
     }
 
     /*
@@ -225,6 +230,7 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
         
         sessionTimeServer.init();
         emotionPopupHandler.init();
+        externalLauncher.init();
         
         recording = true;
         return recording;
@@ -241,6 +247,7 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
         jsonSolver.dispose();
         sessionTimeServer.dispose();
         emotionPopupHandler.dispose();
+        externalLauncher.dispose();
         
         if (tracker != null) {
         } else {
@@ -278,6 +285,8 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
     		sessionTimeServer.config(sessionInfo.getSessionID(),
     				sessionInfo.getDevUsername());
     		emotionPopupHandler.config(sessionInfo.getSessionID(),
+    				sessionInfo.getDevUsername());
+    		externalLauncher.config(sessionInfo.getSessionID(), 
     				sessionInfo.getDevUsername());
     	}
     }
