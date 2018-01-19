@@ -21,25 +21,29 @@ class SessionTimeServerThread extends Thread {
     }
     
     public void run() {
-        try {
-            ServerSocket listener = new ServerSocket(port, SessionTimeServerThread.BACKLOG);
+        while(true) {
             try {
-                while(true) {
-                    if(shouldStop) {
-                        break;
+                ServerSocket listener = new ServerSocket(port, SessionTimeServerThread.BACKLOG);
+                try {
+                    while(true) {
+                        if(shouldStop) {
+                            break;
+                        }
+
+                        Socket conn = listener.accept();
+                        sessionServer.getClients().add(conn);
                     }
-                    
-                    Socket conn = listener.accept();
-                    sessionServer.getClients().add(conn);
+                } catch(IOException e2) {
+                    e2.printStackTrace();
                 }
-            } catch(IOException e2) {
-                e2.printStackTrace();
-            } finally {
+            	System.out.println("Session Time Server listener closed.");
                 listener.close();
+            } catch(IOException e) {
+                e.printStackTrace();
             }
-        } catch(IOException e) {
-            e.printStackTrace();
+            while(shouldStop) {
+            	// TODO: Look into why wait/notify caused issues with the Affectiva app being unable to connect every other time tracking was started.
+            }
         }
-        this.setShouldStop(false);
     }
 }

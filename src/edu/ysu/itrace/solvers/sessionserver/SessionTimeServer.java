@@ -21,6 +21,8 @@ public class SessionTimeServer implements ISessionTimeServer, EventHandler {
     private final List<Socket> clients;
     private final SessionTimeServerThread thread;
     
+    private boolean firstStart = true;
+    
     public SessionTimeServer() {
         clients = Collections.synchronizedList(new ArrayList());
         thread = new SessionTimeServerThread(SERVER_PORT, this);
@@ -64,7 +66,12 @@ public class SessionTimeServer implements ISessionTimeServer, EventHandler {
         synchronized(clients) {
             clients.clear();
         }
-        thread.start();
+        if(firstStart) {
+            firstStart = false;
+            thread.start();
+        } else {
+            thread.setShouldStop(false);
+        }
     }
     
     public void emitTime(long time) {
@@ -91,7 +98,8 @@ public class SessionTimeServer implements ISessionTimeServer, EventHandler {
                         e2.printStackTrace();
                     }
                     i.remove();
-                    e.printStackTrace();
+                    System.out.println("Client disconnected from session time server");
+                    //e.printStackTrace();
                 }
             }
         }
