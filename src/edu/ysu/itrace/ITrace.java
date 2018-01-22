@@ -228,6 +228,8 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
         }
         ITrace.getDefault().sessionStartTime = System.nanoTime();
         
+        jsonSolver.init();
+        xmlSolver.init();
         sessionTimeServer.init();
         emotionPopupHandler.init();
         externalLauncher.init();
