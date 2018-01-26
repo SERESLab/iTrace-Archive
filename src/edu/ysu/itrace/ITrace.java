@@ -211,6 +211,8 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
         	System.out.println(e.getMessage());
         }
         ITrace.getDefault().sessionStartTime = System.nanoTime();
+        jsonSolver.init();
+        xmlSolver.init();
         recording = true;
         return recording;
     }

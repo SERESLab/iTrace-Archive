@@ -272,7 +272,7 @@ public class XMLGazeExportSolver implements IFileExportSolver, EventHandler {
 
 	@Override
 	public void handleEvent(Event event) {
-		if(outFile == null) this.init();
+		if(outFile == null) return;
 		String[] propertyNames = event.getPropertyNames();
 		IGazeResponse response = (IGazeResponse)event.getProperty(propertyNames[0]);
 		this.process(response);
