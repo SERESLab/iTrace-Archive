@@ -35,7 +35,8 @@ public class EmotionPopupWindow extends Thread {
         f.setLocation(0, 0);
         
         // TODO: Data structure for icons that handles loading of images.
-        String[] icons = {"Joy", "Anger", "Disgust", "Surprise", "Fear", "Sadness", "Contempt"};
+        String[] icons = {"Joy", "Anger", "Disgust", "Surprise", "Fear", "Sadness", "Contempt", "Neutral"};
+        //String[] icons = {"Circle", "Cross", "Diamond", "Heart", "Hexagon", "Octagon", "Square", "Triangle"};
         Collections.shuffle(Arrays.asList(icons));
         
         Object[] options = {EmotionPopupWindow.getImageIcon(icons[0]),
@@ -44,10 +45,12 @@ public class EmotionPopupWindow extends Thread {
                             EmotionPopupWindow.getImageIcon(icons[3]),
                             EmotionPopupWindow.getImageIcon(icons[4]),
                             EmotionPopupWindow.getImageIcon(icons[5]),
-                            EmotionPopupWindow.getImageIcon(icons[6])};
+                            EmotionPopupWindow.getImageIcon(icons[6]),
+                            EmotionPopupWindow.getImageIcon(icons[7])};
         int selected = JOptionPane.showOptionDialog(f,
+            //"Pick the emoji that best describes your current mood:",        		
             "Pick the emoji that best describes your current mood:",
-            "Current Mood",
+            "",
             JOptionPane.DEFAULT_OPTION,
             JOptionPane.QUESTION_MESSAGE,
             null,

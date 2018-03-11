@@ -12,12 +12,15 @@ import org.eclipse.jface.action.IStatusLineManager;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.text.ITextOperationTarget;
 import org.eclipse.jface.text.source.projection.ProjectionViewer;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IEditorPart;
@@ -36,6 +39,8 @@ import edu.ysu.itrace.gaze.IStyledTextGazeResponse;
 import edu.ysu.itrace.preferences.PluginPreferences;
 import edu.ysu.itrace.solvers.sessionserver.ISessionTimeServer;
 import edu.ysu.itrace.solvers.sessionserver.SessionTimeServer;
+import edu.ysu.itrace.solvers.windowfocus.IWindowFocusTracker;
+import edu.ysu.itrace.solvers.windowfocus.WindowFocusTracker;
 import edu.ysu.itrace.solvers.ISolver;
 import edu.ysu.itrace.solvers.JSONGazeExportSolver;
 import edu.ysu.itrace.solvers.XMLGazeExportSolver;
@@ -43,6 +48,8 @@ import edu.ysu.itrace.solvers.emotionpopup.EmotionPopupHandler;
 import edu.ysu.itrace.solvers.emotionpopup.IEmotionPopupHandler;
 import edu.ysu.itrace.solvers.externallauncher.ExternalLauncher;
 import edu.ysu.itrace.solvers.externallauncher.IExternalLauncher;
+import edu.ysu.itrace.solvers.keytracking.IKeyTrackingSolver;
+import edu.ysu.itrace.solvers.keytracking.KeyTrackingSolver;
 import edu.ysu.itrace.trackers.IEyeTracker;
 
 /**
@@ -78,6 +85,8 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
     private ISessionTimeServer sessionTimeServer;
     private IEmotionPopupHandler emotionPopupHandler;
     private IExternalLauncher externalLauncher;
+    private IKeyTrackingSolver keyTracker;
+    private IWindowFocusTracker windowFocusTracker;
     
     /**
      * The constructor
@@ -103,13 +112,17 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
         sessionTimeServer = new SessionTimeServer();
         emotionPopupHandler = new EmotionPopupHandler();
         externalLauncher = new ExternalLauncher();
+        keyTracker = new KeyTrackingSolver();
+        windowFocusTracker = new WindowFocusTracker();
     	eventBroker.subscribe("iTrace/jsonOutput", jsonSolver);
     	eventBroker.subscribe("iTrace/xmlOutput", xmlSolver);
         eventBroker.subscribe("iTrace/sessionTimeServer", (SessionTimeServer) sessionTimeServer);
         eventBroker.subscribe("iTrace/emotionPopup", (EmotionPopupHandler) emotionPopupHandler);
         eventBroker.subscribe("iTrace/externalLauncher", (ExternalLauncher) externalLauncher);
+        eventBroker.subscribe("iTrace/keyTracker", (KeyTrackingSolver) keyTracker);
+        eventBroker.subscribe("iTrace/windowFocusTracker", (WindowFocusTracker) windowFocusTracker);
     }
-
+    
     /*
      * (non-Javadoc)
      * @see org.eclipse.ui.plugin.AbstractUIPlugin#start(org.osgi.framework.BundleContext)
@@ -227,13 +240,13 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
         	System.out.println(e.getMessage());
         }
         ITrace.getDefault().sessionStartTime = System.nanoTime();
-        
         jsonSolver.init();
         xmlSolver.init();
         sessionTimeServer.init();
         emotionPopupHandler.init();
         externalLauncher.init();
-        
+        keyTracker.init();
+        windowFocusTracker.init();
         recording = true;
         return recording;
     }
@@ -250,6 +263,8 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
         sessionTimeServer.dispose();
         emotionPopupHandler.dispose();
         externalLauncher.dispose();
+        keyTracker.dispose();
+        windowFocusTracker.dispose();
         
         if (tracker != null) {
         } else {
@@ -289,6 +304,10 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
     		emotionPopupHandler.config(sessionInfo.getSessionID(),
     				sessionInfo.getDevUsername());
     		externalLauncher.config(sessionInfo.getSessionID(), 
+    				sessionInfo.getDevUsername());
+    		keyTracker.config(sessionInfo.getSessionID(), 
+    				sessionInfo.getDevUsername());
+    		windowFocusTracker.config(sessionInfo.getSessionID(), 
     				sessionInfo.getDevUsername());
     	}
     }
@@ -429,6 +448,8 @@ public class ITrace extends AbstractUIPlugin implements EventHandler {
 		                 		if(jsonOutput) eventBroker.post("iTrace/jsonOutput", response);
                                 eventBroker.post("iTrace/sessionTimeServer", response);
                                 eventBroker.post("iTrace/emotionPopup", response);
+                                eventBroker.post("iTrace/keyTracker", response);
+                                eventBroker.post("iTrace/windowFocusTracker", response);
 		                	 }
 		                     
 		                     if(response instanceof IStyledTextGazeResponse && response != null && showTokenHighlights){

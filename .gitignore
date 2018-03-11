@@ -174,3 +174,7 @@ cmake_install.cmake
 
 #Generated Docs
 docs/*html
+
+#Custom
+*.exe
+/InTheHand.Net.Personal.xml

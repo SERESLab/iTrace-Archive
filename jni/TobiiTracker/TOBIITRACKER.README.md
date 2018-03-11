@@ -32,8 +32,11 @@
   - run: cd jni\TobiiTracker
   - run: mkdir build
   - run: cd build
-  - run: cmake .. -G "MinGW Makefiles"
+  - run: cmake .. -G "MinGW Makefiles" (Make sure Cmake is in path)
   - run: mingw32-make
+  - set boost/lib to path
+  - set TobiiAnalytics/CPP/lib to path
+  
 
   This will generate a dll called libTobiiTracker.dll
   - Rename the dll to TobiiTracker.dll
